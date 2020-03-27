@@ -164,7 +164,7 @@ class EstimProcedure:
     def store_hawkes_parameters(self):
         cdef int d_E = self.num_event_types
         cdef int d_S = self.num_states
-        assert len(self.results_of_estimation) == d_E
+        assert len(self.results_of_estimation) == d_E #One partial result of estimation for every component of the hawkes process
         cdef np.ndarray[DTYPEf_t, ndim=1] base_rates = np.zeros(d_E, dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=3] imp_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=3] dec_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)

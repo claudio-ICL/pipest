@@ -56,76 +56,97 @@ import lob_model
 
 # In[ ]:
 
+def main():
+    list_of_n_states=[3,5]
+    n_events = 4 
+    n_levels = 2
 
-list_of_n_states=[3,5]
-n_events = 4 
-n_levels = 2
+    sd_model = model.SDHawkes(number_of_event_types=n_events,
+                     number_of_lob_levels=n_levels,
+                     volume_imbalance_upto_level=2,
+                     list_of_n_states=list_of_n_states
+                    )
 
-model = model.SDHawkes(number_of_event_types=n_events,
-                 number_of_lob_levels=n_levels,
-                 volume_imbalance_upto_level=2,
-                 list_of_n_states=list_of_n_states
-                )
+    tot_n_states=model.state_enc.tot_n_states
 
-tot_n_states=model.state_enc.tot_n_states
-
-# The base rates $\nu$
-nus = 0.0018025*np.random.randint(low=2,high=6,size=n_events)
-# The impact coefficients $\alpha$
-alphas = np.random.uniform(0.0002,0.2435,size=(n_events, tot_n_states, n_events)).astype(np.float)
-# The decay coefficients $\beta$
-betas = np.random.uniform(1.265,1.805,size=(n_events, tot_n_states, n_events)).astype(np.float)
-model.set_hawkes_parameters(nus,alphas,betas)
-# The transition probabilities $\phi$
-phis = model.state_enc.generate_random_transition_prob(n_events=n_events).astype(np.float)
-model.set_transition_probabilities(phis)
-model.enforce_symmetry_in_transition_probabilities()
-# The Dirichlet parameters $\kappa$
-kappas = np.random.lognormal(size=(tot_n_states,2*n_levels))
-model.set_dirichlet_parameters(kappas)
-
-
-time_start = 0.0
-time_end = time_start + 2*60*60
-max_number_of_events = 4000
+    # The base rates $\nu$
+    nus = 0.0018025*np.random.randint(low=2,high=6,size=n_events)
+    # The impact coefficients $\alpha$
+    alphas = np.random.uniform(0.0002,0.2435,size=(n_events, tot_n_states, n_events)).astype(np.float)
+    # The decay coefficients $\beta$
+    betas = np.random.uniform(1.265,1.805,size=(n_events, tot_n_states, n_events)).astype(np.float)
+    sd_model.set_hawkes_parameters(nus,alphas,betas)
+    # The transition probabilities $\phi$
+    phis = model.state_enc.generate_random_transition_prob(n_events=n_events).astype(np.float)
+    sd_model.set_transition_probabilities(phis)
+    sd_model.enforce_symmetry_in_transition_probabilities()
+    # The Dirichlet parameters $\kappa$
+    kappas = np.random.lognormal(size=(tot_n_states,2*n_levels))
+    sd_model.set_dirichlet_parameters(kappas)
 
 
-
-print("\nSIMULATION\n")
-
-times, events, states, volumes = model.simulate(
-    time_start, time_end,max_number_of_events=max_number_of_events,
-    add_initial_cond=True,
-    store_results=True, report_full_volumes=False)
-time_end=np.array(times[-1],copy=True)
-
-model.create_goodness_of_fit(type_of_input='simulated')
-model.goodness_of_fit.ks_test_on_residuals()
-model.goodness_of_fit.ad_test_on_residuals()
+    time_start = 0.0
+    time_end = time_start + 2*60*60
+    max_number_of_events = 4000
 
 
-print("\nMLE ESTIMATION\n")
-    
-run_time = -time.time()
-model.create_mle_estim(type_of_input = 'simulated')
-model.mle_estim.set_estimation_of_hawkes_param(
-    time_start, time_end,
-    maxiter=4,
-    number_of_random_guesses=3,
-    parallel=True,
-    pre_estim_ord_hawkes=True,
-    pre_estim_parallel=True,
-    copy_lt = True
-)
-model.mle_estim.store_hawkes_parameters()
-run_time+=time.time()
-model.mle_estim.store_runtime(run_time)
-model.mle_estim.create_goodness_of_fit()
 
-now=datetime.datetime.now()
-print("Estimation terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
-    now.year,now.month,now.day,now.hour,now.minute
-))
+    print("\nSIMULATION\n")
+
+    times, events, states, volumes = sd_model.simulate(
+        time_start, time_end,max_number_of_events=max_number_of_events,
+        add_initial_cond=True,
+        store_results=True, report_full_volumes=False)
+    time_end=np.array(times[-1],copy=True)
+
+    sd_model.create_goodness_of_fit(type_of_input='simulated')
+    sd_model.goodness_of_fit.ks_test_on_residuals()
+    sd_model.goodness_of_fit.ad_test_on_residuals()
+
+
+    print("\nMLE ESTIMATION\n")
+    "Initialise the class"
+    model.create_mle_estim(type_of_input = 'simulated')
+    d_E = sd_model.number_of_event_types
+    d_S = sd_model.number_of_states 
+    "Fictious initial guess"
+    nus = np.random.uniform(low=0.0, high = 1.0, size=(d_E,))
+    alphas = np.random.uniform(low=0.0, high = 2.0, size=(d_E,d_S,d_S))
+    betas = np.random.uniform(low=1.1, high = 5.0, size=(d_E,d_S,d_S))
+    guess = computation.param_to_array(nus.alphas,betas)
+    list_init_guesses = [guess]
+    "Set the estimation"    
+    sd_model.mle_estim.set_estimation_of_hawkes_param(
+        time_start, time_end,
+        list_of_init_guesses = list_init_guesses,
+        maxiter=10,
+        number_of_random_guesses=3,
+        parallel=True,
+        pre_estim_ord_hawkes=True,
+        pre_estim_parallel=True,
+        number_of_attempts = 2
+    )
+    "Laungh the estimation"
+    run_time = -time.time()
+    model.mle_estim.launch_estimation_of_hawkes_param(all_components=True, timeout=18000.0)
+    run_time+=time.time()
+    model.mle_estim.store_runtime(run_time)
+#     model.mle_estim.create_goodness_of_fit()
+
+                           
+                           
+if __name__=="__main__":
+    print("I am executing 'test_mle_estim.py'")
+    now=datetime.datetime.now()
+    print("Test launched on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
+        now.year,now.month,now.day,now.hour,now.minute
+    ))
+    main()
+    now=datetime.datetime.now()
+    print("Test terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
+        now.year,now.month,now.day,now.hour,now.minute
+    ))
+                           
 
 # print('\n\nI will let the model estimate the parameters from the sample just produced')
 # br,ic,dc=model.estimate_hawkes_parameters(times, events, states,
