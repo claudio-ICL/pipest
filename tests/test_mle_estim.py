@@ -41,7 +41,7 @@ import copy
 
 import model
 import lob_model
-# import computation
+import computation
 # import simulation
 # import prepare_from_lobster as from_lobster
 # from computation import parameters_to_array_partial
@@ -67,7 +67,7 @@ def main():
                      list_of_n_states=list_of_n_states
                     )
 
-    tot_n_states=model.state_enc.tot_n_states
+    tot_n_states=sd_model.state_enc.tot_n_states
 
     # The base rates $\nu$
     nus = 0.0018025*np.random.randint(low=2,high=6,size=n_events)
@@ -77,7 +77,7 @@ def main():
     betas = np.random.uniform(1.265,1.805,size=(n_events, tot_n_states, n_events)).astype(np.float)
     sd_model.set_hawkes_parameters(nus,alphas,betas)
     # The transition probabilities $\phi$
-    phis = model.state_enc.generate_random_transition_prob(n_events=n_events).astype(np.float)
+    phis = sd_model.state_enc.generate_random_transition_prob(n_events=n_events).astype(np.float)
     sd_model.set_transition_probabilities(phis)
     sd_model.enforce_symmetry_in_transition_probabilities()
     # The Dirichlet parameters $\kappa$
@@ -103,34 +103,39 @@ def main():
     sd_model.goodness_of_fit.ks_test_on_residuals()
     sd_model.goodness_of_fit.ad_test_on_residuals()
 
-
+#     exit()
+    
     print("\nMLE ESTIMATION\n")
     "Initialise the class"
-    model.create_mle_estim(type_of_input = 'simulated')
+    sd_model.create_mle_estim(type_of_input = 'simulated')
     d_E = sd_model.number_of_event_types
     d_S = sd_model.number_of_states 
     "Fictious initial guess"
     nus = np.random.uniform(low=0.0, high = 1.0, size=(d_E,))
-    alphas = np.random.uniform(low=0.0, high = 2.0, size=(d_E,d_S,d_S))
-    betas = np.random.uniform(low=1.1, high = 5.0, size=(d_E,d_S,d_S))
-    guess = computation.param_to_array(nus.alphas,betas)
+    alphas = np.random.uniform(low=0.0, high = 2.0, size=(d_E,d_S,d_E))
+    betas = np.random.uniform(low=1.1, high = 5.0, size=(d_E,d_S,d_E))
+    guess = computation.parameters_to_array(nus, alphas, betas)
     list_init_guesses = [guess]
     "Set the estimation"    
     sd_model.mle_estim.set_estimation_of_hawkes_param(
         time_start, time_end,
         list_of_init_guesses = list_init_guesses,
+        learning_rate = 0.0005,
         maxiter=10,
-        number_of_random_guesses=3,
+        number_of_additional_guesses=3,
         parallel=True,
         pre_estim_ord_hawkes=True,
         pre_estim_parallel=True,
         number_of_attempts = 2
     )
-    "Laungh the estimation"
+    
+#     exit()
+    
+    "Launch estimation"
     run_time = -time.time()
-    model.mle_estim.launch_estimation_of_hawkes_param(all_components=True, timeout=18000.0)
+    sd_model.mle_estim.launch_estimation_of_hawkes_param(all_components=True)
     run_time+=time.time()
-    model.mle_estim.store_runtime(run_time)
+    sd_model.mle_estim.store_runtime(run_time)
 #     model.mle_estim.create_goodness_of_fit()
 
                            

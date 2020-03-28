@@ -65,10 +65,10 @@ class EstimProcedure:
             times, events, states)
         self.labelled_times=labelled_times
         self.count=count
-        self.times=np.array(times,copy=True,dtupe=DTYPEf)
+        self.times=np.array(times,copy=True,dtype=DTYPEf)
         self.time_horizon=copy.copy(times[len(times)-1])
-        self.events=np.array(events,copy=True,dtupe=DTYPEf)
-        self.states=np.array(states,copy=True,dtupe=DTYPEf)
+        self.events=np.array(events,copy=True,dtype=DTYPEi)
+        self.states=np.array(states,copy=True,dtype=DTYPEi)
         self.hawkes_kernel=model.HawkesKernel(num_event_types, num_states)
         self.store_transition_probabilities()
         print("EstimProcedure has been successfully initialised")
@@ -84,11 +84,12 @@ class EstimProcedure:
     def set_estimation_of_hawkes_param(self,
                                        DTYPEf_t time_start, DTYPEf_t time_end,
                                        list list_of_init_guesses=[],
+                                       DTYPEf_t learning_rate = 0.001,
                                        int maxiter=100,
                                        int number_of_additional_guesses=3,
                                        parallel=False, 
                                        pre_estim_ord_hawkes=False, pre_estim_parallel=False, 
-                                       int number_of_attempts = 2):
+                                       int number_of_attempts = 2, DTYPEf_t tol = 1.0e-07):
         print('I am setting the estimation of hawkes parameters, with time_start={}, time_end={}.'
               .format(time_start,time_end))
         print('The boundaries of arrival times are {}-{}'.format(self.times[0],self.times[len(self.times)-1]))
@@ -96,6 +97,7 @@ class EstimProcedure:
         self.time_end = time_end
         self.given_list_of_guesses =\
         store_given_list_of_guesses(self.num_event_types,self.num_states,list_of_init_guesses)
+        self.learning_rate = learning_rate
         self.maxiter=maxiter
         self.number_of_additional_guesses=number_of_additional_guesses
         self.parallel, self.pre_estim_ord_hawkes, self.pre_estim_parallel = \
@@ -103,6 +105,7 @@ class EstimProcedure:
         self.number_of_attempts = number_of_attempts
         cdef list results_of_estimation = []
         self.results_of_estimation = results_of_estimation
+        self.tol = tol
         
     def prepare_list_init_guesses_partial(self,int e):
         cdef list list_init_guesses = copy.copy(self.given_list_of_guesses.get(e))
@@ -114,7 +117,7 @@ class EstimProcedure:
                 self.events,
                 self.time_start,
                 self.time_end,
-                num_init_guesses = 1+self.number_additional_guesses,
+                num_init_guesses = 1+self.number_of_additional_guesses,
                 parallel = self.pre_estim_parallel,
                 learning_rate = self.learning_rate,
                 maxiter = self.maxiter,
@@ -130,7 +133,7 @@ class EstimProcedure:
         np.maximum(0.05*np.amin(np.abs(guess)),self.tol)*np.eye(len(guess))
         cdef int j=0
         cdef int break_point = 1+self.num_event_types*self.num_states
-        for j in range(self.number_additional_guesses):
+        for j in range(self.number_of_additional_guesses):
             new_guess = np.random.multivariate_normal(guess,cov)
             new_guess[0:break_point] = np.maximum(0.0,new_guess[0:break_point])
             new_guess[break_point:] = np.maximum(1.01,new_guess[break_point:])
@@ -152,7 +155,7 @@ class EstimProcedure:
         )
         self.results_of_estimation.append(res)
         
-    def launch_estimation_of_hawkes_param(self, all_components=False, int e=0, DTYPEf_t timeout=36000.0):
+    def launch_estimation_of_hawkes_param(self, all_components=False, int e=0):
         if all_components:
             for e in range(self.num_event_types):
                 self.estimate_hawkes_param_partial(e)
@@ -400,12 +403,16 @@ def preguess_ordinary_hawkes_param(int event_index,
     reg=LinearRegression(fit_intercept = False).fit(X,Y)
     cdef DTYPEf_t c_0 = reg.coef_[0]
     cdef DTYPEf_t c_1 = reg.coef_[1]
+    assert c_0>0
     if c_0 < c_1:
         print("mle_estimation.preguess_ordinary_hawkes_param: Error! c_0 < c_1 after linear regression")
+        print("  c_0={}, \n c_1={}".format(c_0,c_1))
         raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_0 < c_1 after linear regression")
+    if c_1<0:
+        print("mle_estimation.preguess_ordinary_hawkes_param: WARNING! c_1<0 after linear regression")
     cdef DTYPEf_t base_rate = max(tol, c_0 - c_1)
     cdef np.ndarray[DTYPEf_t, ndim=2] alphas = np.zeros((d_E,1), dtype=DTYPEf)
-    alphas[e,0] = min(max_imp_coef, c_1 / base_rate)
+    alphas[e,0] = min(max_imp_coef, max(0.0,c_1) / base_rate)
     cdef np.ndarray[DTYPEf_t, ndim=2] betas = 2.0*np.ones((d_E,1), dtype=DTYPEf)
     if print_res:
         print("preguess_ordinary_hawkes_param: component e={}, base_rate={}, imp_coef[e,0,e]={}".
@@ -459,7 +466,7 @@ def pre_estimate_ordinary_hawkes(
     cdef np.ndarray[DTYPEf_t, ndim=1] init_guess = np.ones(1+2*n_event_types*1,dtype=DTYPEf)
     cdef list list_init_guesses = []
     for n in range(num_init_guesses):
-        guess_imp_coef = np.maximum(0.0,np.random.multivariate_normal(mean,cov).reshape(n_event_types, 1))
+        guess_imp_coef = np.maximum(tol,np.random.multivariate_normal(mean,cov).reshape(n_event_types, 1))
         guess_dec_coef = np.random.uniform(low=1.5,high=2.5,size=(n_event_types,1))
         init_guess = computation.parameters_to_array_partial(preguess_base_rate/(n+1),guess_imp_coef,guess_dec_coef)
         list_init_guesses.append(init_guess)   
