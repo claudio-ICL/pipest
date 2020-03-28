@@ -223,7 +223,6 @@ def compute_f_and_grad(np.ndarray[DTYPEf_t, ndim=1] x,
         len_labelled_times,
         time_start,
         time_end)
-#         print("compute_f_and_grad: ready to return")
     return -log_likelihood,-grad_loglikelihood    
     
     
@@ -287,6 +286,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
                                        time_start,
                                        time_end
                                       )
+        print("grad_descent_partial pid{}: component_e={}, First evaluation of f and grad done".format(process_id,event_type))
         norm_grad = np.linalg.norm(grad,2)
         f[1:] = np.repeat(f[0],maxiter-1)
         f_min =  copy.copy(f_memview[0])

@@ -102,80 +102,15 @@ def main():
         sd_model.number_of_event_types,sd_model.number_of_states,
         event_type,
         list_init_guesses = list_init_guesses,
-        learning_rate = 0.0004,
-        maxiter = 5,
+        learning_rate = 0.0001,
+        maxiter = 8,
         tol = 1.0e-7,
-        copy_lt = True,
     )
     run_time = -time.time()
     MinimProc.launch_minimisation(parallel=True, return_results = False)
     run_time+=time.time()
     print("Minimisation terminates. run_time = {}".format(run_time))
 
-    
-
-    print("\nESTIMATION HAWKES PARAMETERS\n")
-    del MinimProc
-    times=copy.copy(sd_model.sampled_times)
-    events=copy.copy(sd_model.sampled_events)
-    d_E = copy.copy(sd_model.number_of_event_types)
-    d_S = copy.copy(sd_model.number_of_states)
-    e = copy.copy(event_type)
-    t_start=copy.copy(time_start)
-    t_end=copy.copy(time_end)
-    res=mle_estim.pre_estimate_ordinary_hawkes(
-        e,
-        d_E, 
-        times,
-        events,
-        t_start,
-        t_end,
-        num_init_guesses = 5,
-        parallel = True,
-        learning_rate = 0.0001,
-        maxiter = 4,
-        tol = 1.0e-07,
-        n_states = d_S, #used to reshape the results
-        reshape_to_sd = True,
-        return_as_flat_array = True
-    )
-#     print("I am printing result of pre_estim_ord: \n {}".format(res))
-#     exit()
-#     list_init_guesses.append(res)
-    new_list_init_guesses = mle_estim.produce_list_init_guesses(
-        sd_model.number_of_event_types, sd_model.number_of_states,
-        num_additional_guesses = 4,
-        given_list_of_guesses = list_init_guesses,
-        print_list = False
-    )
-    del res
-    run_time = -time.time()
-    base_rate,imp_coef,dec_coef=mle_estim.estimate_hawkes_param_partial(
-        event_type,
-        sd_model.number_of_event_types, sd_model.number_of_states,
-        time_start,
-        time_end,
-        sd_model.labelled_times,
-        sd_model.count,
-        list_init_guesses = new_list_init_guesses,
-        num_additional_guesses = 4,
-        maxiter = 5,
-        learning_rate = 0.0005,
-        pre_estim_ord_hawkes = True,
-        return_minim_proc = 0,
-        parallel= True,
-        pre_estim_parallel = True,
-        copy_lt = True,
-        prepare_list_of_guesses = False,
-        print_list = False,
-        timeout= 20.0
-    )
-    run_time+=time.time()
-    print("Estimation of hawkes parameters terminates. run_time={}".format(run_time))
-#     print("base_rate={}".format(base_rate))
-#     print("imp_coef={}".format(imp_coef))
-#     print("dec_coef={}".format(dec_coef))
-    
 
     
 if __name__=="__main__":
