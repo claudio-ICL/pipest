@@ -25,6 +25,7 @@ from libc.math cimport isnan
 from libc.math cimport pow
 from libc.math cimport exp
 from libc.math cimport log
+from libc.stdlib cimport rand, RAND_MAX
 
 
 DTYPEf = np.float
@@ -208,6 +209,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
 #         cdef np.ndarray[DTYPEf_t, ndim=2] imp_coef = np.zeros((num_event_types,num_states),dtype=DTYPEf)
 #         cdef np.ndarray[DTYPEf_t, ndim=2] dec_coef = np.ones((num_event_types,num_states),dtype=DTYPEf)
         base_rate, imp_coef, dec_coef = computation.array_to_parameters_partial(num_event_types, num_states, x)
+#         print("compute_f_and_grad: Enered and param initialised")
         cdef np.ndarray[DTYPEf_t, ndim=2] ratio = imp_coef/(dec_coef-1.0)
 #         cdef DTYPEf_t log_likelihood  = 0.0
 #         cdef np.ndarray[DTYPEf_t, ndim=1] grad_log_likelihood = np.zeros(len(x),dtype=DTYPEf)
@@ -262,11 +264,11 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         norm_grad = np.linalg.norm(grad,2)
         f[1:] = np.repeat(f[0],maxiter-1)
         f_min =  copy.copy(f_memview[0])
-        x = np.array(initial_guess,copy=True,dtype=DTYPEf)
-        x_min = np.array(x,copy=True,dtype=DTYPEf)
+        x = np.array(initial_guess, copy=True,dtype=DTYPEf)
+        x_min = np.array(initial_guess, copy=True,dtype=DTYPEf)
         grad_min = np.array(grad,copy=True,dtype=DTYPEf)
         while (norm_grad>=tol) & (n<=idx_alt):
-    #         print("grad_descent_partial pid{}: count={}".format(process_id,n))
+            print("grad_descent_partial pid{}: count={}".format(process_id,n))
             with nogil:
                 n+=1
                 m = 0
@@ -275,11 +277,11 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
                 x_new = x-learning_rate*grad
                 x_new[0] = max(x_new[0], tol)
                 x_new[1:break_point]=np.minimum(max_imp_coef,np.maximum(x_new[1:break_point],tol))
-                x_new[break_point:]=np.maximum(x_new[break_point:len(x_new)],1.0001)
+                x_new[break_point:len(x_new)]=np.maximum(x_new[break_point:len(x_new)],1.0001)
                 f_new, grad_new = compute_f_and_grad(x_new)
                 if m > 0:
                     learning_rate=np.maximum(2*tol,0.9*learning_rate)
-                m+=1
+                m+=1   
             with nogil:
                 if (m>=maxiter_inner - 1):
                     learning_rate/= pow(0.9,max(m-2,1))
@@ -288,13 +290,14 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
             decrease of objective function, use random update near previous evaluation point
             """
             if f_new > 0.05*np.abs(f_memview[n-1])+f_memview[n-1]:
-                cov = np.maximum(np.amin(np.abs(x)),tol)*eye_d
-                x_new = np.random.multivariate_normal(x,cov)
-                x_new[:break_point]=np.minimum(10.0,np.maximum(x_new[:break_point],tol))
-                x_new[break_point:]=np.maximum(x_new[break_point:],1.0001)
+                print("grad_descent_partial pid{}: count={}. Entering random update".format(process_id,n))
+                x_new= x - tol*grad*rand()/float(RAND_MAX)
+                x_new[0]=max(tol,x_new[0])
+                x_new[1:break_point]=np.minimum(max_imp_coef,np.maximum(x_new[1:break_point],tol))
+                x_new[break_point:len(x_new)]=np.maximum(x_new[break_point:len(x_new)],1.0001)
                 f_new, grad_new = compute_f_and_grad(x_new)
                 
-                
+#             print("grad_descent_partial pid{}: count={}. Ready to update x and grad".format(process_id,n))    
             f[n] = copy.copy(f_new)
             x = np.array(x_new,copy=True)
             grad = np.array(grad_new,copy=True)
