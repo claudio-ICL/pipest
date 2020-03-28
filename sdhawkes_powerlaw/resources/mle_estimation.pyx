@@ -399,18 +399,19 @@ def preguess_ordinary_hawkes_param(int event_index,
     cdef np.ndarray[DTYPEf_t, ndim=1] Y = np.arange(1,1+count[e,0], dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=2] X = np.zeros((count[e,0],2), dtype=DTYPEf)
     X[:,0] = np.array(lt[e,0,0:count[e,0]],copy=True)
-    X[:,1] = -np.log(lt[e,0,0:count[e,0]]+1.0)
+    X[:,1] = np.array(lt[e,0,0:count[e,0]],copy=True)-np.log(lt[e,0,0:count[e,0]]+1.0)
     reg=LinearRegression(fit_intercept = False).fit(X,Y)
     cdef DTYPEf_t c_0 = reg.coef_[0]
     cdef DTYPEf_t c_1 = reg.coef_[1]
-    assert c_0>0
-    if c_0 < c_1:
-        print("mle_estimation.preguess_ordinary_hawkes_param: Error! c_0 < c_1 after linear regression")
+    if c_0 < -tol:
+        print("mle_estimation.preguess_ordinary_hawkes_param: Error! c_0 < 0.0 after linear regression")
         print("  c_0={}, \n c_1={}".format(c_0,c_1))
-        raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_0 < c_1 after linear regression")
-    if c_1<0:
-        print("mle_estimation.preguess_ordinary_hawkes_param: WARNING! c_1<0 after linear regression")
-    cdef DTYPEf_t base_rate = max(tol, c_0 - c_1)
+        raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_0 < 0.0 after linear regression")
+    if c_1< -tol:
+        print("mle_estimation.preguess_ordinary_hawkes_param: Error! c_1 < 0.0 after linear regression")
+        print("  c_0={}, \n c_1={}".format(c_0,c_1))
+        raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_1 < 0.0 after linear regression")
+    cdef DTYPEf_t base_rate = max(tol, c_0 )
     cdef np.ndarray[DTYPEf_t, ndim=2] alphas = np.zeros((d_E,1), dtype=DTYPEf)
     alphas[e,0] = min(max_imp_coef, max(0.0,c_1) / base_rate)
     cdef np.ndarray[DTYPEf_t, ndim=2] betas = 2.0*np.ones((d_E,1), dtype=DTYPEf)
