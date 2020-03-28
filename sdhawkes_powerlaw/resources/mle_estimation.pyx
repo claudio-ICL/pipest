@@ -148,7 +148,6 @@ class EstimProcedure:
             self.labelled_times, self.count,
             list_init_guesses = list_init_guesses,
             maxiter = self.maxiter,
-            return_minim_proc = 0,
             parallel = self.parallel,
             number_of_attempts = self.number_of_attempts,
             tol = self.tol
@@ -451,15 +450,17 @@ def pre_estimate_ordinary_hawkes(
     labelled_times,count=computation.distribute_times_per_event_state(
         n_event_types, 1,
         times, events, states)
-    cdef np.ndarray [DTYPEf_t, ndim=3] lt_copy = np.array(labelled_times, copy=True)
-    cdef np.ndarray [DTYPEi_t, ndim=2] count_copy = np.array(count, copy=True)
-    preguess_base_rate, preguess_imp_coef, preguess_dec_coef =\
-    preguess_ordinary_hawkes_param(event_index,
-                                   lt_copy, count_copy,
-                                   max_imp_coef = max_imp_coef,
-                                   tol = tol,
-                                   print_res = True,
-                                  )
+#     cdef np.ndarray [DTYPEf_t, ndim=3] lt_copy = np.array(labelled_times, copy=True)
+#     cdef np.ndarray [DTYPEi_t, ndim=2] count_copy = np.array(count, copy=True)
+#     preguess_base_rate, preguess_imp_coef, preguess_dec_coef =\
+#     preguess_ordinary_hawkes_param(event_index,
+#                                    lt_copy, count_copy,
+#                                    max_imp_coef = max_imp_coef,
+#                                    tol = tol,
+#                                    print_res = True,
+#                                   )
+    cdef DTYPEf_t preguess_base_rate = 1.0
+    cdef np.ndarray[DTYPEf_t, ndim=2] preguess_imp_coef = np.random.uniform(low=0.0, high=2.0, size=(n_event_types, 1))
     cdef np.ndarray[DTYPEf_t, ndim=1] mean = preguess_imp_coef.flatten()
     cdef np.ndarray[DTYPEf_t, ndim=2] cov = np.maximum(0.01*np.amin(mean),tol)*np.eye(len(mean))
     cdef np.ndarray[DTYPEf_t, ndim=2] guess_imp_coef = np.zeros((n_event_types,1),dtype=DTYPEf)
@@ -470,7 +471,7 @@ def pre_estimate_ordinary_hawkes(
         guess_imp_coef = np.maximum(tol,np.random.multivariate_normal(mean,cov).reshape(n_event_types, 1))
         guess_dec_coef = np.random.uniform(low=1.5,high=2.5,size=(n_event_types,1))
         init_guess = computation.parameters_to_array_partial(preguess_base_rate/(n+1),guess_imp_coef,guess_dec_coef)
-        list_init_guesses.append(init_guess)   
+        list_init_guesses.append(np.array(init_guess,copy=True,dtype=DTYPEf))   
     minim = minim_algo.MinimisationProcedure(
         labelled_times,count,
         time_start,time_end,
@@ -542,7 +543,7 @@ def estimate_hawkes_param_partial(
         tol= tol,
         number_of_attempts = number_of_attempts
     )
-    print('mle_estimation.estimate_hawkes_param_partial: event_type {}: MinimisationProcedure has been initialised')
+    print('mle_estimation.estimate_hawkes_param_partial: event_type {}: MinimisationProcedure has been initialised'.format(event_index))
     cdef double run_time = -time.time()
     minim.launch_minimisation(parallel=parallel, return_results = False)
     run_time+=time.time()

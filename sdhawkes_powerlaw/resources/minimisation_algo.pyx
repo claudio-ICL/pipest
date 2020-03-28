@@ -128,9 +128,9 @@ class MinimisationProcedure:
     
 
 def parallel_minimisation(int event_type, int num_event_types, int num_states,
-                          labelled_times,
-                          count,
-                          arrival_times,
+                          np.ndarray[DTYPEf_t, ndim=3] labelled_times,
+                          np.ndarray[DTYPEi_t, ndim=2] count,
+                          np.ndarray[DTYPEf_t, ndim=1] arrival_times,
                           int num_arrival_times, int len_labelled_times,
                           DTYPEf_t time_start, DTYPEf_t time_end,
                           list list_init_guesses,
@@ -139,6 +139,9 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
                           int maxiter=100, int number_of_attempts = 3,
                           int num_processes = 0, 
                          ):
+    lt_copy = np.array(labelled_times, copy=True)
+    count_copy = np.array(count, copy=True)
+    arrtimes_copy = np.array(arrival_times, copy=True)
     cdef int tot_tasks = len(list_init_guesses)
     if num_processes <= 0:
         num_processes = max(1,min(mp.cpu_count(),tot_tasks))
@@ -164,8 +167,8 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
                     grad_descent_partial,
                     args=(
                            event_type, num_event_types, num_states,
-                           labelled_times, count,
-                           arrival_times, num_arrival_times, len_labelled_times,
+                           lt_copy, count_copy,
+                           arrtimes_copy, num_arrival_times, len_labelled_times,
                            time_start, time_end,
                            x,
                            max_imp_coef,
@@ -251,12 +254,13 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
     cdef int idx_alt = max(1,maxiter-2)
     cdef int attempt_num=0
     minimisation_conclusive = False
-    while (attempt_num<=number_of_attempts) & (not minimisation_conclusive):
+    while (attempt_num<number_of_attempts) & (not minimisation_conclusive):
+        print("grad_descent_partial pid{}: component_e={}, attempt_num={}".format(process_id,event_type,1+attempt_num))
         n, m = 0, 0
         f = np.zeros(maxiter,dtype=DTYPEf)
-        f_memview[0],grad = compute_f_and_grad(x)
+        f[0],grad = compute_f_and_grad(x)
         norm_grad = np.linalg.norm(grad,2)
-        f[1:] = np.repeat(f_memview[0],maxiter-1)
+        f[1:] = np.repeat(f[0],maxiter-1)
         f_min =  copy.copy(f_memview[0])
         x = np.array(initial_guess,copy=True,dtype=DTYPEf)
         x_min = np.array(x,copy=True,dtype=DTYPEf)
@@ -291,14 +295,16 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
                 f_new, grad_new = compute_f_and_grad(x_new)
                 
                 
-            f_memview[n] = copy.copy(f_new)
-            x = x_new
-            grad = grad_new
+            f[n] = copy.copy(f_new)
+            x = np.array(x_new,copy=True)
+            grad = np.array(grad_new,copy=True)
             if (f_min > f_memview[n]):
                 f_min = f_memview[n]
-                x_min = x
-                grad_min = grad
+                x_min = np.arrray(x,copy=True)
+                grad_min = np.array(grad,copy=True)
             norm_grad = np.linalg.norm(grad,2).astype(float)
+            if n<maxiter:
+                print("grad_descent_partial pid{}: f[{}]={},  x_n[0]={}, norm(grad_n)={}".format(process_id,n,f[n],x[0],norm_grad))
             if (isnan(f_memview[n])):
                 print("grad_descent_partial pid{}: f_memview[{}]=nan".format(process_id,n))
                 raise ValueError('nan')   
@@ -306,11 +312,12 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
             f[n:] = np.repeat(f[n],maxiter-n)
         if f_min>=f[0]:
             attempt_num+=1
-            print('grad_descent_partial pid{}: attempt_num {}/{} has failed'.format(process_id,attempt_num,number_of_attempts))
+            if attempt_num<=number_of_attempts:
+                print('grad_descent_partial pid{}: attempt_num {}/{} has failed'.format(process_id,attempt_num,number_of_attempts))
         else:
             attempt_num+=1
             minimisation_conclusive = True
-            print("grad_descent_partial pid{}: Minimisation conclusive after {} attempts".format(attempt_num))   
+            print("grad_descent_partial pid{}: Minimisation conclusive after {} attempts".format(process_id, attempt_num))   
     res={
         'x_min':x_min,
         'f_min': f_min,

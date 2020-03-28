@@ -120,12 +120,12 @@ def main():
     sd_model.mle_estim.set_estimation_of_hawkes_param(
         time_start, time_end,
         list_of_init_guesses = list_init_guesses,
-        learning_rate = 0.0005,
+        learning_rate = 0.00005,
         maxiter=10,
         number_of_additional_guesses=3,
         parallel=True,
-        pre_estim_ord_hawkes=True,
-        pre_estim_parallel=True,
+        pre_estim_ord_hawkes=False,
+        pre_estim_parallel=False,
         number_of_attempts = 2
     )
     
@@ -133,7 +133,7 @@ def main():
     
     "Launch estimation"
     run_time = -time.time()
-    sd_model.mle_estim.launch_estimation_of_hawkes_param(all_components=True)
+    sd_model.mle_estim.launch_estimation_of_hawkes_param(e=0)
     run_time+=time.time()
     sd_model.mle_estim.store_runtime(run_time)
 #     model.mle_estim.create_goodness_of_fit()
