@@ -44,6 +44,7 @@ class MinimisationProcedure:
                  int num_event_types,
                  int num_states,
                  int event_type,
+                 DTYPEf_t max_imp_coef = 100.0,
                  list list_init_guesses=[],
                  DTYPEf_t learning_rate = 0.001,
                  int maxiter = 100,
@@ -82,7 +83,7 @@ class MinimisationProcedure:
         self.maxiter = maxiter
         self.tol = tol   
         self.number_of_attempts = number_of_attempts
-        
+        self.max_imp_coef = copy.copy(max_imp_coef)
     def launch_minimisation(self, parallel=False, return_results=True):
         print('I am launching minimisation. Number of initial guesses={}, parallel={}'.format(len(self.list_init_guesses),parallel))
         cdef list results = []
@@ -94,6 +95,7 @@ class MinimisationProcedure:
                 self.arrival_times, self.num_arrival_times, self.len_labelled_times,
                 self.time_start, self.time_end,
                 self.list_init_guesses,
+                self.max_imp_coef,
                 self.learning_rate, self.tol, self.maxiter, number_of_attempts = self.number_of_attempts,
             )
         else:        
@@ -104,6 +106,7 @@ class MinimisationProcedure:
                                self.arrival_times, self.num_arrival_times, self.len_labelled_times,
                                self.time_start, self.time_end,
                                x,
+                               self.max_imp_coef,
                                self.learning_rate, self.tol, self.maxiter),
                        self.list_init_guesses)
             results=list(solver)
@@ -131,6 +134,7 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
                           int num_arrival_times, int len_labelled_times,
                           DTYPEf_t time_start, DTYPEf_t time_end,
                           list list_init_guesses,
+                          DTYPEf_t max_imp_coef = 100.0,
                           DTYPEf_t learning_rate, DTYPEf_t tol, int maxiter, int number_of_attempts = 3,
                           int num_processes = 0, 
                          ):
@@ -163,6 +167,7 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
                            arrival_times, num_arrival_times, len_labelled_times,
                            time_start, time_end,
                            x,
+                           max_imp_coef,
                            learning_rate, tol, maxiter, number_of_attempts
                     ),
                     callback=store_res,
@@ -188,6 +193,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         DTYPEf_t time_start,
         DTYPEf_t time_end,
         np.ndarray[DTYPEf_t,ndim=1] initial_guess,
+        DTYPEf_t max_imp_coef = 100.0,                 
         DTYPEf_t learning_rate=0.001,
         DTYPEf_t tol = 1.0e-7,
         int maxiter = 100,
@@ -220,6 +226,9 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         return -log_likelihood,-grad_loglikelihood
     cdef int process_id = os.getpid()
     print("Launching grad_descent_partial. pid={}".format(process_id))
+    assert learning_rate>0.0
+    assert learning_rate<1.0
+    assert max_imp_coef>=1.0
     cdef int break_point = 1+num_event_types*num_states
     cdef int n = 0
     cdef int m = 0
@@ -259,7 +268,8 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
                 f_new = f_memview[n]
             while (f_min <= f_new) & (m<=maxiter_inner):
                 x_new = x-learning_rate*grad
-                x_new[:break_point]=np.minimum(10.0,np.maximum(x_new[0:break_point],tol))
+                x_new[0] = max(x_new[0], tol)
+                x_new[1:break_point]=np.minimum(max_imp_coef,np.maximum(x_new[1:break_point],tol))
                 x_new[break_point:]=np.maximum(x_new[break_point:len(x_new)],1.0001)
                 f_new, grad_new = compute_f_and_grad(x_new)
                 if m > 0:
