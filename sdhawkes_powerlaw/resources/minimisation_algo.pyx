@@ -186,52 +186,12 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
         async_res[i].successful()
     return results     
     
-    
-
-    
-def compute_f_and_grad(np.ndarray[DTYPEf_t, ndim=1] x,
-                       int event_type,
-                       int num_event_types,
-                       int num_states,
-                       np.ndarray[DTYPEf_t, ndim=3] labelled_times,
-                       np.ndarray[DTYPEi_t, ndim=2] count,
-                       np.ndarray[DTYPEf_t, ndim=1] arrival_times,
-                       int num_arrival_times,
-                       int len_labelled_times,
-                       DTYPEf_t time_start,
-                       DTYPEf_t time_end
-                      ):    
-#         cdef DTYPEf_t base_rate = 0.0
-#         cdef np.ndarray[DTYPEf_t, ndim=2] imp_coef = np.zeros((num_event_types,num_states),dtype=DTYPEf)
-#         cdef np.ndarray[DTYPEf_t, ndim=2] dec_coef = np.ones((num_event_types,num_states),dtype=DTYPEf)
-    base_rate, imp_coef, dec_coef = computation.array_to_parameters_partial(num_event_types, num_states, x)
-    cdef np.ndarray[DTYPEf_t, ndim=2] ratio = imp_coef/(dec_coef-1.0)
-#         cdef DTYPEf_t log_likelihood  = 0.0
-#         cdef np.ndarray[DTYPEf_t, ndim=1] grad_log_likelihood = np.zeros(len(x),dtype=DTYPEf)
-    log_likelihood, grad_loglikelihood = computation.compute_event_loglikelihood_partial_and_gradient_partial(
-        event_type,
-        num_event_types,
-        num_states,
-        base_rate,
-        imp_coef,
-        dec_coef,
-        ratio,
-        labelled_times,
-        count,
-        arrival_times,
-        num_arrival_times,
-        len_labelled_times,
-        time_start,
-        time_end)
-    return -log_likelihood,-grad_loglikelihood    
-    
-    
 
     
 def grad_descent_partial(int event_type, int num_event_types, int num_states,
-        np.ndarray[DTYPEf_t, ndim=3] labelled_times,
-        np.ndarray[DTYPEi_t, ndim=2] count,
-        np.ndarray[DTYPEf_t, ndim=1] arrival_times,
+        labelled_times,
+        count,
+        arrival_times,
         int num_arrival_times,
         int len_labelled_times,
         DTYPEf_t time_start,
@@ -243,7 +203,31 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         int maxiter = 100,
         int number_of_attempts = 2                 
 ):  
-    
+    def compute_f_and_grad(np.ndarray[DTYPEf_t, ndim=1] x):    
+#         cdef DTYPEf_t base_rate = 0.0
+#         cdef np.ndarray[DTYPEf_t, ndim=2] imp_coef = np.zeros((num_event_types,num_states),dtype=DTYPEf)
+#         cdef np.ndarray[DTYPEf_t, ndim=2] dec_coef = np.ones((num_event_types,num_states),dtype=DTYPEf)
+        base_rate, imp_coef, dec_coef = computation.array_to_parameters_partial(num_event_types, num_states, x)
+        cdef np.ndarray[DTYPEf_t, ndim=2] ratio = imp_coef/(dec_coef-1.0)
+#         cdef DTYPEf_t log_likelihood  = 0.0
+#         cdef np.ndarray[DTYPEf_t, ndim=1] grad_log_likelihood = np.zeros(len(x),dtype=DTYPEf)
+        log_likelihood, grad_loglikelihood = computation.compute_event_loglikelihood_partial_and_gradient_partial(
+            event_type,
+            num_event_types,
+            num_states,
+            base_rate,
+            imp_coef,
+            dec_coef,
+            ratio,
+            labelled_times,
+            count,
+            arrival_times,
+            num_arrival_times,
+            len_labelled_times,
+            time_start,
+            time_end)
+#         print("compute_f_and_grad: ready to return")
+        return -log_likelihood,-grad_loglikelihood
     cdef int process_id = os.getpid()
     print("Launching grad_descent_partial. pid={}".format(process_id))
     assert learning_rate>0.0
@@ -261,10 +245,10 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
     cdef np.ndarray[DTYPEf_t, ndim=1] f = np.zeros(maxiter,dtype=DTYPEf)
     cdef DTYPEf_t [:] f_memview = f
     cdef DTYPEf_t norm_grad  = 1.0
-    cdef DTYPEf_t f_new = copy.copy(f[0])
+    cdef DTYPEf_t f_new = copy.copy(f_memview[0])
     cdef np.ndarray[DTYPEf_t,ndim=1] x_new = np.array(initial_guess,copy=True,dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=1] grad_new = np.array(grad,copy=True,dtype=DTYPEf)
-    cdef DTYPEf_t f_min =  copy.copy(f[0])
+    cdef DTYPEf_t f_min =  copy.copy(f_memview[0])
     cdef np.ndarray[DTYPEf_t,ndim=1] x_min = np.array(x,copy=True,dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=1] grad_min = np.array(grad,copy=True,dtype=DTYPEf)
     cdef int idx_alt = max(1,maxiter-2)
@@ -274,19 +258,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         print("grad_descent_partial pid{}: component_e={}, attempt_num={}".format(process_id,event_type,1+attempt_num))
         n, m = 0, 0
         f = np.zeros(maxiter,dtype=DTYPEf)
-        f[0],grad = compute_f_and_grad(x,
-                                       event_type,
-                                       num_event_types,
-                                       num_states,
-                                       labelled_times,
-                                       count,
-                                       arrival_times,
-                                       num_arrival_times,
-                                       len_labelled_times,
-                                       time_start,
-                                       time_end
-                                      )
-        print("grad_descent_partial pid{}: component_e={}, First evaluation of f and grad done".format(process_id,event_type))
+        f[0],grad = compute_f_and_grad(x)
         norm_grad = np.linalg.norm(grad,2)
         f[1:] = np.repeat(f[0],maxiter-1)
         f_min =  copy.copy(f_memview[0])
@@ -304,18 +276,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
                 x_new[0] = max(x_new[0], tol)
                 x_new[1:break_point]=np.minimum(max_imp_coef,np.maximum(x_new[1:break_point],tol))
                 x_new[break_point:]=np.maximum(x_new[break_point:len(x_new)],1.0001)
-                f_new, grad_new = compute_f_and_grad(x_new,
-                                                     event_type,
-                                                     num_event_types,
-                                                     num_states,
-                                                     labelled_times,
-                                                     count,
-                                                     arrival_times,
-                                                     num_arrival_times,
-                                                     len_labelled_times,
-                                                     time_start,
-                                                     time_end
-                                                    )
+                f_new, grad_new = compute_f_and_grad(x_new)
                 if m > 0:
                     learning_rate=np.maximum(2*tol,0.9*learning_rate)
                 m+=1
@@ -331,18 +292,9 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
                 x_new = np.random.multivariate_normal(x,cov)
                 x_new[:break_point]=np.minimum(10.0,np.maximum(x_new[:break_point],tol))
                 x_new[break_point:]=np.maximum(x_new[break_point:],1.0001)
-                f_new, grad_new = compute_f_and_grad(x_new,
-                                                     event_type,
-                                                     num_event_types,
-                                                     num_states,
-                                                     labelled_times,
-                                                     count,
-                                                     arrival_times,
-                                                     num_arrival_times,
-                                                     len_labelled_times,
-                                                     time_start,
-                                                     time_end
-                                                    )
+                f_new, grad_new = compute_f_and_grad(x_new)
+                
+                
             f[n] = copy.copy(f_new)
             x = np.array(x_new,copy=True)
             grad = np.array(grad_new,copy=True)

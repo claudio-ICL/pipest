@@ -91,7 +91,7 @@ def main():
 
     print("\nMINIMISATION PROCEDURE\n")
     event_type=0
-    num_init_guesses = 5
+    num_init_guesses = 9
     list_init_guesses = []
     for n in range(num_init_guesses):
         list_init_guesses.append(
@@ -103,7 +103,7 @@ def main():
         event_type,
         list_init_guesses = list_init_guesses,
         learning_rate = 0.0001,
-        maxiter = 8,
+        maxiter = 6,
         tol = 1.0e-7,
     )
     run_time = -time.time()
