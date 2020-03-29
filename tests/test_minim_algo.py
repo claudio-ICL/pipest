@@ -52,11 +52,11 @@ def main():
     tot_n_states=sd_model.state_enc.tot_n_states
 
     # The base rates $\nu$
-    nus = 0.002*np.random.randint(low=2,high=6,size=n_events)
+    nus = 0.05*np.random.randint(low=2,high=8,size=n_events)
     # The impact coefficients $\alpha$
-    alphas = np.random.uniform(0.0002,0.2435,size=(n_events, tot_n_states, n_events)).astype(np.float)
+    alphas = np.random.uniform(0.002,0.2435,size=(n_events, tot_n_states, n_events)).astype(np.float)
     # The decay coefficients $\beta$
-    betas = np.random.uniform(1.265,1.805,size=(n_events, tot_n_states, n_events)).astype(np.float)
+    betas = np.random.uniform(1.265,2.805,size=(n_events, tot_n_states, n_events)).astype(np.float)
     sd_model.set_hawkes_parameters(nus,alphas,betas)
     # The transition probabilities $\phi$
     phis = sd_model.state_enc.generate_random_transition_prob(n_events=n_events).astype(np.float)
@@ -68,7 +68,7 @@ def main():
 
 
     time_start = 0.0
-    time_end = time_start + 2*60*60
+    time_end = time_start + 1.0*60*60
     max_number_of_events = 4000
 
 
@@ -107,7 +107,7 @@ def main():
         tol = 1.0e-7,
     )
     run_time = -time.time()
-    MinimProc.launch_minimisation(parallel=True, return_results = False)
+    MinimProc.launch_minimisation(parallel=True, num_processes = 8)
     run_time+=time.time()
     print("Minimisation terminates. run_time = {}".format(run_time))
 

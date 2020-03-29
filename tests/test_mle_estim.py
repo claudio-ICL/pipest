@@ -82,7 +82,7 @@ def main():
 
     time_start = 0.0
     time_end = time_start + 1.0*60*60
-    max_number_of_events = 4000
+    max_number_of_events = 2000
 
 
 

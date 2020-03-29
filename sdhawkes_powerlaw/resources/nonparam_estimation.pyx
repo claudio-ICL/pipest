@@ -174,6 +174,29 @@ class EstimProcedure:
             self.base_rates,self.hawkes_kernel.alphas,self.hawkes_kernel.betas,self.transition_probabilities,
             self.times,self.events,self.states,type_of_input=type_of_input
         )        
+    def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,
+                                                     DTYPEf_t max_imp_coef = 100.0, DTYPEf_t tol=1.0e-07,
+                                                    ):
+        cdef list list_init_guesses = []
+        cdef int d_E = self.num_event_types
+        cdef int d_S = self.num_states
+        cdef int break_point_1 = d_E
+        cdef int break_point_2 = d_E + d_E*d_S*d_E
+        cdef np.ndarray[DTYPEf_t, ndim=1] guess = np.zeros(d_E+2*d_E*d_S*d_E,dtype=DTYPEf)
+        guess = computation.parameters_to_array(self.base_rates, self.hawkes_kernel.alphas, self.hawkes_kernel.betas)
+        list_init_guesses.append(np.array(guess,copy=True))
+        cdef np.ndarray[DTYPEf_t, ndim=2] cov =\
+        max(tol,0.1*np.amin(np.abs(guess)))*np.eye(guess.shape[0],dtype=DTYPEf)
+        for k in range(num_additional_random_guesses):
+            guess=np.random.multivariate_normal(guess,cov)
+            guess[0:break_point_1] = np.maximum(tol, guess[0:break_point_1])
+            guess[break_point_1:break_point_2] = np.maximum(tol,
+                                                            np.minimum(max_imp_coef, guess[break_point_1:break_point_2])
+                                                           )
+            guess[break_point_2:] = np.maximum(1.0+tol, guess[break_point_2:])
+            list_init_guesses.append(np.array(guess, copy=True))
+        return list_init_guesses    
+                                 
     def store_base_rates(self):
         cdef np.ndarray[DTYPEf_t, ndim=1] base_rates = np.zeros(self.num_event_types,dtype=DTYPEf)
         if self.hawkes_kernel.spectral_radius>=1:
@@ -831,7 +854,7 @@ cdef void interpolate(
     
 class FitPowerlaw:
     def __init__(self,
-                 num_event_types, num_states,
+                 int num_event_types, int num_states,
                  quadrature,
                  np.ndarray[DTYPEf_t, ndim=4] hawkes_kernel_at_quadpnts,
                  DTYPEf_t ridge_param=1.0, DTYPEf_t tol=1.0e-9):

@@ -76,7 +76,7 @@ def main():
     n_levels = 2
     upto_level = 2
     time_start=np.random.uniform()
-    time_end=time_start+0.2*60*60
+    time_end=time_start+1.0*60*60
     model = sd_hawkes_model.SDHawkes(
         number_of_event_types=n_events,
         number_of_lob_levels=n_levels,
@@ -99,18 +99,18 @@ def main():
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-
+    max_number_of_events = 4000
     times, events, states, volumes = model.simulate(
-        time_start, time_end,max_number_of_events=1000,add_initial_cond=True,
+        time_start, time_end, max_number_of_events=max_number_of_events,
+        add_initial_cond=True,
         store_results=True,report_full_volumes=False)
-    time_end=np.array(times[-1],copy=True)
+    time_end=float(times[-1])
 
     model.create_goodness_of_fit(type_of_input='simulated')
     model.goodness_of_fit.ks_test_on_residuals()
     model.goodness_of_fit.ad_test_on_residuals()
 
     print("\nNON-PARAMETRIC ESTIMATION\n")
-
     upperbound_of_support_of_kernel=1.0e+00
     lowerbound_of_support_of_kernel=1.0e-01
     num_quadpnts = 80
@@ -136,24 +136,34 @@ def main():
     model.nonparam_estim.create_goodness_of_fit()
     
     print("\nMLE ESTIMATION\n")
-    
-    run_time = -time.time()
+    "Initialise the class"
     model.create_mle_estim(type_of_input = 'simulated')
-    time_start=model.sampled_times[0]
-    time_end=model.mle_estim.time_horizon
-    model.mle_estim.store_hawkes_parameters(
+    "Set the estimation"    
+    list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
+        num_additional_random_guesses = 3, max_imp_coef = 10.0)    
+    model.mle_estim.set_estimation_of_hawkes_param(
         time_start, time_end,
-        maximum_number_of_iterations=2,
-        number_of_random_guesses=2)
+        list_of_init_guesses = list_init_guesses,
+        learning_rate = 0.0001,
+        maxiter=10,
+        number_of_additional_guesses=3,
+        parallel=True,
+        pre_estim_ord_hawkes=True,
+        pre_estim_parallel=True,
+        number_of_attempts = 2,
+        num_processes = 8
+    )
+#     exit()
+    "Launch estimation"
+    run_time = -time.time()
+    model.mle_estim.launch_estimation_of_hawkes_param(e=0)
     run_time+=time.time()
     model.mle_estim.store_runtime(run_time)
-    model.mle_estim.create_goodness_of_fit()
+#     model.mle_estim.create_goodness_of_fit()
     
-    now=datetime.datetime.now()
-    print("Estimation terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
-        now.year,now.month,now.day,now.hour,now.minute
-    ))
     return model
+    
+
 
 
 
@@ -172,16 +182,16 @@ if __name__=='__main__':
     this_test_model=path_saved_tests+'/test_model_{}-{:02d}-{:02d}_{:02d}{:02d}'.format(
         now.year,now.month,now.day,now.hour,now.minute
     )
-    print("stdout is being redirected to "+this_test_readout) 
-    saveout=sys.stdout
-    fout=open(this_test_readout,'w')
-    sys.stdout=fout
+#     print("stdout is being redirected to "+this_test_readout) 
+#     saveout=sys.stdout
+#     fout=open(this_test_readout,'w')
+#     sys.stdout=fout
     model=main()
-    fout.close()
-    sys.stdout=saveout
-    print("I am dumping "+this_test_model)
-    with open(this_test_model, 'wb') as outfile:
-        pickle.dump(model,outfile)
+#     fout.close()
+#     sys.stdout=saveout
+#     print("I am dumping "+this_test_model)
+#     with open(this_test_model, 'wb') as outfile:
+#         pickle.dump(model,outfile)
     print("Test terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
         now.year,now.month,now.day,now.hour,now.minute
     ))
