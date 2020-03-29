@@ -3281,7 +3281,7 @@ static PyObject *__pyx_pf_11computation_26compute_tilda_intensities_given_lt(CYT
 static PyObject *__pyx_pf_11computation_28compute_tilda_intensity_partial(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_t, PyArrayObject *__pyx_v_times, PyArrayObject *__pyx_v_states, double __pyx_v_base_rate, PyArrayObject *__pyx_v_impact_coefficients, PyArrayObject *__pyx_v_decay_coefficients, PyArrayObject *__pyx_v_trans_prob, PyArrayObject *__pyx_v_labelled_times, PyArrayObject *__pyx_v_count); /* proto */
 static PyObject *__pyx_pf_11computation_30compute_l_plus_summand(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_t, int __pyx_v_index_event, PyArrayObject *__pyx_v_base_rates, PyArrayObject *__pyx_v_impact_coefficients, PyArrayObject *__pyx_v_decay_coefficients, PyArrayObject *__pyx_v_labelled_times); /* proto */
 static PyObject *__pyx_pf_11computation_32compute_l_plus_gradient_partial(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_index_event, double __pyx_v_time_start, double __pyx_v_base_rate, PyArrayObject *__pyx_v_impact_coefficients, PyArrayObject *__pyx_v_decay_coefficients, PyArrayObject *__pyx_v_labelled_times); /* proto */
-static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_intensity, __Pyx_memviewslice __pyx_v_intensity_inverse, __Pyx_memviewslice __pyx_v_arrival_times, __Pyx_memviewslice __pyx_v_impact_coefficients, __Pyx_memviewslice __pyx_v_decay_coefficients, __Pyx_memviewslice __pyx_v_labelled_times, __Pyx_memviewslice __pyx_v_count, int __pyx_v_num_event_types, int __pyx_v_num_states, CYTHON_UNUSED int __pyx_v_len_labelled_times, CYTHON_UNUSED int __pyx_v_num_arrival_times, __Pyx_memviewslice __pyx_v_ESSE, __Pyx_memviewslice __pyx_v_ESSE_one); /* proto */
+static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_intensity, __Pyx_memviewslice __pyx_v_intensity_inverse, __Pyx_memviewslice __pyx_v_arrival_times, __Pyx_memviewslice __pyx_v_impact_coefficients, __Pyx_memviewslice __pyx_v_decay_coefficients, __Pyx_memviewslice __pyx_v_labelled_times, __Pyx_memviewslice __pyx_v_count, int __pyx_v_num_event_types, int __pyx_v_num_states, CYTHON_UNUSED int __pyx_v_len_labelled_times, int __pyx_v_num_arrival_times, __Pyx_memviewslice __pyx_v_ESSE, __Pyx_memviewslice __pyx_v_ESSE_one); /* proto */
 static PyObject *__pyx_pf_11computation_36compute_l_plus_partial_and_gradient_partial(CYTHON_UNUSED PyObject *__pyx_self, CYTHON_UNUSED int __pyx_v_index_event, int __pyx_v_num_event_types, int __pyx_v_num_states, CYTHON_UNUSED double __pyx_v_time_start, double __pyx_v_base_rate, PyArrayObject *__pyx_v_impact_coefficients, PyArrayObject *__pyx_v_decay_coefficients, PyArrayObject *__pyx_v_labelled_times, PyArrayObject *__pyx_v_count, PyArrayObject *__pyx_v_arrival_times, int __pyx_v_num_arrival_times, int __pyx_v_len_labelled_times); /* proto */
 static PyObject *__pyx_pf_11computation_38labelled_times_within_range(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_s, double __pyx_v_t, __Pyx_memviewslice __pyx_v_labelled_times, __Pyx_memviewslice __pyx_v_count, int __pyx_v_n_event_types, int __pyx_v_n_states); /* proto */
 static PyObject *__pyx_pf_11computation_40compute_l_minus_partial(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_base_rate, PyArrayObject *__pyx_v_decay_coefficients, PyArrayObject *__pyx_v_impact_decay_ratios, PyArrayObject *__pyx_v_labelled_times, PyArrayObject *__pyx_v_count, PyObject *__pyx_v_time_start, PyObject *__pyx_v_time_end); /* proto */
@@ -3666,7 +3666,7 @@ static PyObject *__pyx_pf_11computation_distribute_times_per_event_state(CYTHON_
   PyArrayObject *__pyx_t_12 = NULL;
   __Pyx_memviewslice __pyx_t_13 = { 0, 0, { 0 }, { 0 }, { 0 } };
   Py_ssize_t __pyx_t_14;
-  Py_ssize_t __pyx_t_15;
+  int __pyx_t_15;
   Py_ssize_t __pyx_t_16;
   int __pyx_t_17;
   int __pyx_t_18;
@@ -3883,19 +3883,19 @@ static PyObject *__pyx_pf_11computation_distribute_times_per_event_state(CYTHON_
  *         dtype=DTYPEf)
  *     cdef double [:,:,:] t_memview = t             # <<<<<<<<<<<<<<
  *     cdef Py_ssize_t e,x,i
- * #     with nogil:
+ *     with nogil:
  */
   __pyx_t_13 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(((PyObject *)__pyx_v_t), PyBUF_WRITABLE); if (unlikely(!__pyx_t_13.memview)) __PYX_ERR(0, 44, __pyx_L1_error)
   __pyx_v_t_memview = __pyx_t_13;
   __pyx_t_13.memview = NULL;
   __pyx_t_13.data = NULL;
 
-  /* "computation.pyx":47
+  /* "computation.pyx":46
+ *     cdef double [:,:,:] t_memview = t
  *     cdef Py_ssize_t e,x,i
- * #     with nogil:
- *     for e in prange(n_event_types, nogil=True):             # <<<<<<<<<<<<<<
- *         for x in range(n_states):
- *             for i in range(len_times):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for e in range(n_event_types):
+ *             for x in range(n_states):
  */
   {
       #ifdef WITH_THREAD
@@ -3904,123 +3904,100 @@ static PyObject *__pyx_pf_11computation_distribute_times_per_event_state(CYTHON_
       __Pyx_FastGIL_Remember();
       #endif
       /*try:*/ {
+
+        /* "computation.pyx":47
+ *     cdef Py_ssize_t e,x,i
+ *     with nogil:
+ *         for e in range(n_event_types):             # <<<<<<<<<<<<<<
+ *             for x in range(n_states):
+ *                 for i in range(len_times):
+ */
         __pyx_t_4 = __pyx_v_n_event_types;
-        if (1 == 0) abort();
-        {
-            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-                #undef likely
-                #undef unlikely
-                #define likely(x)   (x)
-                #define unlikely(x) (x)
-            #endif
-            __pyx_t_15 = (__pyx_t_4 - 0 + 1 - 1/abs(1)) / 1;
-            if (__pyx_t_15 > 0)
-            {
-                #ifdef _OPENMP
-                #pragma omp parallel private(__pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_2, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27, __pyx_t_28, __pyx_t_29, __pyx_t_3, __pyx_t_30)
-                #endif /* _OPENMP */
-                {
-                    #ifdef _OPENMP
-                    #pragma omp for firstprivate(__pyx_v_e) lastprivate(__pyx_v_e) lastprivate(__pyx_v_i) lastprivate(__pyx_v_x)
-                    #endif /* _OPENMP */
-                    for (__pyx_t_14 = 0; __pyx_t_14 < __pyx_t_15; __pyx_t_14++){
-                        {
-                            __pyx_v_e = (Py_ssize_t)(0 + 1 * __pyx_t_14);
-                            /* Initialize private variables to invalid values */
-                            __pyx_v_i = ((Py_ssize_t)0xbad0bad0);
-                            __pyx_v_x = ((Py_ssize_t)0xbad0bad0);
+        __pyx_t_2 = __pyx_t_4;
+        for (__pyx_t_14 = 0; __pyx_t_14 < __pyx_t_2; __pyx_t_14+=1) {
+          __pyx_v_e = __pyx_t_14;
 
-                            /* "computation.pyx":48
- * #     with nogil:
- *     for e in prange(n_event_types, nogil=True):
- *         for x in range(n_states):             # <<<<<<<<<<<<<<
- *             for i in range(len_times):
- *                 if ((events[i]==e)&(states[i]==x)):
+          /* "computation.pyx":48
+ *     with nogil:
+ *         for e in range(n_event_types):
+ *             for x in range(n_states):             # <<<<<<<<<<<<<<
+ *                 for i in range(len_times):
+ *                     if ((events[i]==e)&(states[i]==x)):
  */
-                            __pyx_t_2 = __pyx_v_n_states;
-                            __pyx_t_3 = __pyx_t_2;
-                            for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_3; __pyx_t_16+=1) {
-                              __pyx_v_x = __pyx_t_16;
+          __pyx_t_3 = __pyx_v_n_states;
+          __pyx_t_15 = __pyx_t_3;
+          for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
+            __pyx_v_x = __pyx_t_16;
 
-                              /* "computation.pyx":49
- *     for e in prange(n_event_types, nogil=True):
- *         for x in range(n_states):
- *             for i in range(len_times):             # <<<<<<<<<<<<<<
- *                 if ((events[i]==e)&(states[i]==x)):
- *                     t_memview[e,x,count_memview[e,x]]=times[i]
+            /* "computation.pyx":49
+ *         for e in range(n_event_types):
+ *             for x in range(n_states):
+ *                 for i in range(len_times):             # <<<<<<<<<<<<<<
+ *                     if ((events[i]==e)&(states[i]==x)):
+ *                         t_memview[e,x,count_memview[e,x]]=times[i]
  */
-                              __pyx_t_17 = __pyx_v_len_times;
-                              __pyx_t_18 = __pyx_t_17;
-                              for (__pyx_t_19 = 0; __pyx_t_19 < __pyx_t_18; __pyx_t_19+=1) {
-                                __pyx_v_i = __pyx_t_19;
+            __pyx_t_17 = __pyx_v_len_times;
+            __pyx_t_18 = __pyx_t_17;
+            for (__pyx_t_19 = 0; __pyx_t_19 < __pyx_t_18; __pyx_t_19+=1) {
+              __pyx_v_i = __pyx_t_19;
 
-                                /* "computation.pyx":50
- *         for x in range(n_states):
- *             for i in range(len_times):
- *                 if ((events[i]==e)&(states[i]==x)):             # <<<<<<<<<<<<<<
- *                     t_memview[e,x,count_memview[e,x]]=times[i]
- *                     count_memview[e,x] +=1
+              /* "computation.pyx":50
+ *             for x in range(n_states):
+ *                 for i in range(len_times):
+ *                     if ((events[i]==e)&(states[i]==x)):             # <<<<<<<<<<<<<<
+ *                         t_memview[e,x,count_memview[e,x]]=times[i]
+ *                         count_memview[e,x] +=1
  */
-                                __pyx_t_20 = __pyx_v_i;
-                                __pyx_t_21 = __pyx_v_i;
-                                __pyx_t_22 = ((((*((long *) ( /* dim=0 */ (__pyx_v_events.data + __pyx_t_20 * __pyx_v_events.strides[0]) ))) == __pyx_v_e) & ((*((long *) ( /* dim=0 */ (__pyx_v_states.data + __pyx_t_21 * __pyx_v_states.strides[0]) ))) == __pyx_v_x)) != 0);
-                                if (__pyx_t_22) {
+              __pyx_t_20 = __pyx_v_i;
+              __pyx_t_21 = __pyx_v_i;
+              __pyx_t_22 = ((((*((long *) ( /* dim=0 */ (__pyx_v_events.data + __pyx_t_20 * __pyx_v_events.strides[0]) ))) == __pyx_v_e) & ((*((long *) ( /* dim=0 */ (__pyx_v_states.data + __pyx_t_21 * __pyx_v_states.strides[0]) ))) == __pyx_v_x)) != 0);
+              if (__pyx_t_22) {
 
-                                  /* "computation.pyx":51
- *             for i in range(len_times):
- *                 if ((events[i]==e)&(states[i]==x)):
- *                     t_memview[e,x,count_memview[e,x]]=times[i]             # <<<<<<<<<<<<<<
- *                     count_memview[e,x] +=1
+                /* "computation.pyx":51
+ *                 for i in range(len_times):
+ *                     if ((events[i]==e)&(states[i]==x)):
+ *                         t_memview[e,x,count_memview[e,x]]=times[i]             # <<<<<<<<<<<<<<
+ *                         count_memview[e,x] +=1
  *     return t, count
  */
-                                  __pyx_t_23 = __pyx_v_i;
-                                  __pyx_t_24 = __pyx_v_e;
-                                  __pyx_t_25 = __pyx_v_x;
-                                  __pyx_t_26 = __pyx_v_e;
-                                  __pyx_t_27 = __pyx_v_x;
-                                  __pyx_t_28 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count_memview.data + __pyx_t_24 * __pyx_v_count_memview.strides[0]) ) + __pyx_t_25 * __pyx_v_count_memview.strides[1]) )));
-                                  *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_t_memview.data + __pyx_t_26 * __pyx_v_t_memview.strides[0]) ) + __pyx_t_27 * __pyx_v_t_memview.strides[1]) ) + __pyx_t_28 * __pyx_v_t_memview.strides[2]) )) = (*((double *) ( /* dim=0 */ (__pyx_v_times.data + __pyx_t_23 * __pyx_v_times.strides[0]) )));
+                __pyx_t_23 = __pyx_v_i;
+                __pyx_t_24 = __pyx_v_e;
+                __pyx_t_25 = __pyx_v_x;
+                __pyx_t_26 = __pyx_v_e;
+                __pyx_t_27 = __pyx_v_x;
+                __pyx_t_28 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count_memview.data + __pyx_t_24 * __pyx_v_count_memview.strides[0]) ) + __pyx_t_25 * __pyx_v_count_memview.strides[1]) )));
+                *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_t_memview.data + __pyx_t_26 * __pyx_v_t_memview.strides[0]) ) + __pyx_t_27 * __pyx_v_t_memview.strides[1]) ) + __pyx_t_28 * __pyx_v_t_memview.strides[2]) )) = (*((double *) ( /* dim=0 */ (__pyx_v_times.data + __pyx_t_23 * __pyx_v_times.strides[0]) )));
 
-                                  /* "computation.pyx":52
- *                 if ((events[i]==e)&(states[i]==x)):
- *                     t_memview[e,x,count_memview[e,x]]=times[i]
- *                     count_memview[e,x] +=1             # <<<<<<<<<<<<<<
+                /* "computation.pyx":52
+ *                     if ((events[i]==e)&(states[i]==x)):
+ *                         t_memview[e,x,count_memview[e,x]]=times[i]
+ *                         count_memview[e,x] +=1             # <<<<<<<<<<<<<<
  *     return t, count
  * 
  */
-                                  __pyx_t_29 = __pyx_v_e;
-                                  __pyx_t_30 = __pyx_v_x;
-                                  *((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count_memview.data + __pyx_t_29 * __pyx_v_count_memview.strides[0]) ) + __pyx_t_30 * __pyx_v_count_memview.strides[1]) )) += 1;
+                __pyx_t_29 = __pyx_v_e;
+                __pyx_t_30 = __pyx_v_x;
+                *((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count_memview.data + __pyx_t_29 * __pyx_v_count_memview.strides[0]) ) + __pyx_t_30 * __pyx_v_count_memview.strides[1]) )) += 1;
 
-                                  /* "computation.pyx":50
- *         for x in range(n_states):
- *             for i in range(len_times):
- *                 if ((events[i]==e)&(states[i]==x)):             # <<<<<<<<<<<<<<
- *                     t_memview[e,x,count_memview[e,x]]=times[i]
- *                     count_memview[e,x] +=1
+                /* "computation.pyx":50
+ *             for x in range(n_states):
+ *                 for i in range(len_times):
+ *                     if ((events[i]==e)&(states[i]==x)):             # <<<<<<<<<<<<<<
+ *                         t_memview[e,x,count_memview[e,x]]=times[i]
+ *                         count_memview[e,x] +=1
  */
-                                }
-                              }
-                            }
-                        }
-                    }
-                }
+              }
             }
+          }
         }
-        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-            #undef likely
-            #undef unlikely
-            #define likely(x)   __builtin_expect(!!(x), 1)
-            #define unlikely(x) __builtin_expect(!!(x), 0)
-        #endif
       }
 
-      /* "computation.pyx":47
+      /* "computation.pyx":46
+ *     cdef double [:,:,:] t_memview = t
  *     cdef Py_ssize_t e,x,i
- * #     with nogil:
- *     for e in prange(n_event_types, nogil=True):             # <<<<<<<<<<<<<<
- *         for x in range(n_states):
- *             for i in range(len_times):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for e in range(n_event_types):
+ *             for x in range(n_states):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -4035,8 +4012,8 @@ static PyObject *__pyx_pf_11computation_distribute_times_per_event_state(CYTHON_
   }
 
   /* "computation.pyx":53
- *                     t_memview[e,x,count_memview[e,x]]=times[i]
- *                     count_memview[e,x] +=1
+ *                         t_memview[e,x,count_memview[e,x]]=times[i]
+ *                         count_memview[e,x] +=1
  *     return t, count             # <<<<<<<<<<<<<<
  * 
  * def update_labelled_times(double time, long event, long state,
@@ -4531,7 +4508,7 @@ static PyObject *__pyx_pf_11computation_4compute_ESSE_partial(CYTHON_UNUSED PyOb
   int __pyx_v_e1;
   int __pyx_v_x;
   int __pyx_v_i;
-  CYTHON_UNUSED int __pyx_v_num_event_types;
+  int __pyx_v_num_event_types;
   int __pyx_v_num_states;
   double __pyx_v_eval_time;
   double __pyx_v_power_comp;
@@ -4646,16 +4623,16 @@ static PyObject *__pyx_pf_11computation_4compute_ESSE_partial(CYTHON_UNUSED PyOb
  *     cdef int num_event_types=decay_coefficients.shape[0]
  *     cdef int num_states=decay_coefficients.shape[1]             # <<<<<<<<<<<<<<
  *     cdef double eval_time,power_comp
- * #     with nogil:
+ *     with nogil:
  */
   __pyx_v_num_states = (__pyx_v_decay_coefficients.shape[1]);
 
-  /* "computation.pyx":77
+  /* "computation.pyx":76
+ *     cdef int num_states=decay_coefficients.shape[1]
  *     cdef double eval_time,power_comp
- * #     with nogil:
- *     for e1 in prange(num_event_types,nogil=True):             # <<<<<<<<<<<<<<
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
  */
   {
       #ifdef WITH_THREAD
@@ -4664,139 +4641,114 @@ static PyObject *__pyx_pf_11computation_4compute_ESSE_partial(CYTHON_UNUSED PyOb
       __Pyx_FastGIL_Remember();
       #endif
       /*try:*/ {
+
+        /* "computation.pyx":77
+ *     cdef double eval_time,power_comp
+ *     with nogil:
+ *         for e1 in range(num_event_types):             # <<<<<<<<<<<<<<
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ */
         __pyx_t_7 = __pyx_v_num_event_types;
-        if (1 == 0) abort();
-        {
-            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-                #undef likely
-                #undef unlikely
-                #define likely(x)   (x)
-                #define unlikely(x) (x)
-            #endif
-            __pyx_t_9 = (__pyx_t_7 - 0 + 1 - 1/abs(1)) / 1;
-            if (__pyx_t_9 > 0)
-            {
-                #ifdef _OPENMP
-                #pragma omp parallel private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27, __pyx_t_28, __pyx_t_29, __pyx_t_30, __pyx_t_31)
-                #endif /* _OPENMP */
-                {
-                    #ifdef _OPENMP
-                    #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
-                    #endif /* _OPENMP */
-                    for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_9; __pyx_t_8++){
-                        {
-                            __pyx_v_e1 = (int)(0 + 1 * __pyx_t_8);
-                            /* Initialize private variables to invalid values */
-                            __pyx_v_eval_time = ((double)__PYX_NAN());
-                            __pyx_v_i = ((int)0xbad0bad0);
-                            __pyx_v_power_comp = ((double)__PYX_NAN());
-                            __pyx_v_x = ((int)0xbad0bad0);
+        __pyx_t_8 = __pyx_t_7;
+        for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+          __pyx_v_e1 = __pyx_t_9;
 
-                            /* "computation.pyx":78
- * #     with nogil:
- *     for e1 in prange(num_event_types,nogil=True):
- *         for x in range(num_states):             # <<<<<<<<<<<<<<
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+          /* "computation.pyx":78
+ *     with nogil:
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):             # <<<<<<<<<<<<<<
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
  */
-                            __pyx_t_10 = __pyx_v_num_states;
-                            __pyx_t_11 = __pyx_t_10;
-                            for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
-                              __pyx_v_x = __pyx_t_12;
+          __pyx_t_10 = __pyx_v_num_states;
+          __pyx_t_11 = __pyx_t_10;
+          for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
+            __pyx_v_x = __pyx_t_12;
 
-                              /* "computation.pyx":79
- *     for e1 in prange(num_event_types,nogil=True):
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):             # <<<<<<<<<<<<<<
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
+            /* "computation.pyx":79
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):             # <<<<<<<<<<<<<<
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
  */
-                              __pyx_t_13 = __pyx_v_e1;
-                              __pyx_t_14 = __pyx_v_x;
-                              __pyx_t_15 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_13 * __pyx_v_count.strides[0]) ) + __pyx_t_14 * __pyx_v_count.strides[1]) )));
-                              __pyx_t_16 = __pyx_t_15;
-                              for (__pyx_t_17 = 0; __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
-                                __pyx_v_i = __pyx_t_17;
+            __pyx_t_13 = __pyx_v_e1;
+            __pyx_t_14 = __pyx_v_x;
+            __pyx_t_15 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_13 * __pyx_v_count.strides[0]) ) + __pyx_t_14 * __pyx_v_count.strides[1]) )));
+            __pyx_t_16 = __pyx_t_15;
+            for (__pyx_t_17 = 0; __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
+              __pyx_v_i = __pyx_t_17;
 
-                                /* "computation.pyx":80
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
+              /* "computation.pyx":80
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
  */
-                                __pyx_t_18 = __pyx_v_e1;
-                                __pyx_t_19 = __pyx_v_x;
-                                __pyx_t_20 = __pyx_v_i;
-                                __pyx_t_21 = __pyx_v_e1;
-                                __pyx_t_22 = __pyx_v_x;
-                                __pyx_t_23 = __pyx_v_i;
-                                __pyx_t_24 = ((((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_18 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_19 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_20 * __pyx_v_labelled_times.strides[2]) ))) >= __pyx_v_s) & ((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_21 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_22 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_23 * __pyx_v_labelled_times.strides[2]) ))) < __pyx_v_t)) != 0);
-                                if (__pyx_t_24) {
+              __pyx_t_18 = __pyx_v_e1;
+              __pyx_t_19 = __pyx_v_x;
+              __pyx_t_20 = __pyx_v_i;
+              __pyx_t_21 = __pyx_v_e1;
+              __pyx_t_22 = __pyx_v_x;
+              __pyx_t_23 = __pyx_v_i;
+              __pyx_t_24 = ((((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_18 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_19 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_20 * __pyx_v_labelled_times.strides[2]) ))) >= __pyx_v_s) & ((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_21 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_22 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_23 * __pyx_v_labelled_times.strides[2]) ))) < __pyx_v_t)) != 0);
+              if (__pyx_t_24) {
 
-                                  /* "computation.pyx":81
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0             # <<<<<<<<<<<<<<
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                     ESSE_memview[e1,x] += power_comp
+                /* "computation.pyx":81
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0             # <<<<<<<<<<<<<<
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                         ESSE_memview[e1,x] += power_comp
  */
-                                  __pyx_t_25 = __pyx_v_e1;
-                                  __pyx_t_26 = __pyx_v_x;
-                                  __pyx_t_27 = __pyx_v_i;
-                                  __pyx_v_eval_time = ((__pyx_v_t - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_25 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_26 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_27 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
+                __pyx_t_25 = __pyx_v_e1;
+                __pyx_t_26 = __pyx_v_x;
+                __pyx_t_27 = __pyx_v_i;
+                __pyx_v_eval_time = ((__pyx_v_t - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_25 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_26 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_27 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
 
-                                  /* "computation.pyx":82
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])             # <<<<<<<<<<<<<<
- *                     ESSE_memview[e1,x] += power_comp
+                /* "computation.pyx":82
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])             # <<<<<<<<<<<<<<
+ *                         ESSE_memview[e1,x] += power_comp
  *     return ESSE
  */
-                                  __pyx_t_28 = __pyx_v_e1;
-                                  __pyx_t_29 = __pyx_v_x;
-                                  __pyx_v_power_comp = pow(__pyx_v_eval_time, (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_decay_coefficients.data + __pyx_t_28 * __pyx_v_decay_coefficients.strides[0]) ) + __pyx_t_29 * __pyx_v_decay_coefficients.strides[1]) )))));
+                __pyx_t_28 = __pyx_v_e1;
+                __pyx_t_29 = __pyx_v_x;
+                __pyx_v_power_comp = pow(__pyx_v_eval_time, (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_decay_coefficients.data + __pyx_t_28 * __pyx_v_decay_coefficients.strides[0]) ) + __pyx_t_29 * __pyx_v_decay_coefficients.strides[1]) )))));
 
-                                  /* "computation.pyx":83
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                     ESSE_memview[e1,x] += power_comp             # <<<<<<<<<<<<<<
+                /* "computation.pyx":83
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                         ESSE_memview[e1,x] += power_comp             # <<<<<<<<<<<<<<
  *     return ESSE
  * 
  */
-                                  __pyx_t_30 = __pyx_v_e1;
-                                  __pyx_t_31 = __pyx_v_x;
-                                  *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE_memview.data + __pyx_t_30 * __pyx_v_ESSE_memview.strides[0]) ) + __pyx_t_31 * __pyx_v_ESSE_memview.strides[1]) )) += __pyx_v_power_comp;
+                __pyx_t_30 = __pyx_v_e1;
+                __pyx_t_31 = __pyx_v_x;
+                *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE_memview.data + __pyx_t_30 * __pyx_v_ESSE_memview.strides[0]) ) + __pyx_t_31 * __pyx_v_ESSE_memview.strides[1]) )) += __pyx_v_power_comp;
 
-                                  /* "computation.pyx":80
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
+                /* "computation.pyx":80
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
  */
-                                }
-                              }
-                            }
-                        }
-                    }
-                }
+              }
             }
+          }
         }
-        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-            #undef likely
-            #undef unlikely
-            #define likely(x)   __builtin_expect(!!(x), 1)
-            #define unlikely(x) __builtin_expect(!!(x), 0)
-        #endif
       }
 
-      /* "computation.pyx":77
+      /* "computation.pyx":76
+ *     cdef int num_states=decay_coefficients.shape[1]
  *     cdef double eval_time,power_comp
- * #     with nogil:
- *     for e1 in prange(num_event_types,nogil=True):             # <<<<<<<<<<<<<<
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -4811,8 +4763,8 @@ static PyObject *__pyx_pf_11computation_4compute_ESSE_partial(CYTHON_UNUSED PyOb
   }
 
   /* "computation.pyx":84
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                     ESSE_memview[e1,x] += power_comp
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                         ESSE_memview[e1,x] += power_comp
  *     return ESSE             # <<<<<<<<<<<<<<
  * 
  * def compute_kernel_of_bm_profile_intensity(double t, int num_states,
@@ -5136,12 +5088,12 @@ __pyx_t_4 = __pyx_memoryview_fromslice(__pyx_t_6, 1, (PyObject *(*)(char *)) __p
   __pyx_v_alpha = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "computation.pyx":98
+  /* "computation.pyx":97
+ *     cdef int x1,i
  *     cdef double eval_time,power_comp
- * #     with nogil:
- *     for x1 in prange(num_states, nogil=True):             # <<<<<<<<<<<<<<
- *         for i in range(count[0,x1]):
- *             if (labelled_times[0,x1,i]<t):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for x1 in range(num_states):
+ *             for i in range(count[0,x1]):
  */
   {
       #ifdef WITH_THREAD
@@ -5150,121 +5102,97 @@ __pyx_t_4 = __pyx_memoryview_fromslice(__pyx_t_6, 1, (PyObject *(*)(char *)) __p
       __Pyx_FastGIL_Remember();
       #endif
       /*try:*/ {
+
+        /* "computation.pyx":98
+ *     cdef double eval_time,power_comp
+ *     with nogil:
+ *         for x1 in range(num_states):             # <<<<<<<<<<<<<<
+ *             for i in range(count[0,x1]):
+ *                 if (labelled_times[0,x1,i]<t):
+ */
         __pyx_t_8 = __pyx_v_num_states;
-        if (1 == 0) abort();
-        {
-            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-                #undef likely
-                #undef unlikely
-                #define likely(x)   (x)
-                #define unlikely(x) (x)
-            #endif
-            __pyx_t_10 = (__pyx_t_8 - 0 + 1 - 1/abs(1)) / 1;
-            if (__pyx_t_10 > 0)
-            {
-                #ifdef _OPENMP
-                #pragma omp parallel private(__pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25)
-                #endif /* _OPENMP */
-                {
-                    #ifdef _OPENMP
-                    #pragma omp for lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) firstprivate(__pyx_v_x1) lastprivate(__pyx_v_x1)
-                    #endif /* _OPENMP */
-                    for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_10; __pyx_t_9++){
-                        {
-                            __pyx_v_x1 = (int)(0 + 1 * __pyx_t_9);
-                            /* Initialize private variables to invalid values */
-                            __pyx_v_eval_time = ((double)__PYX_NAN());
-                            __pyx_v_i = ((int)0xbad0bad0);
-                            __pyx_v_power_comp = ((double)__PYX_NAN());
+        __pyx_t_9 = __pyx_t_8;
+        for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
+          __pyx_v_x1 = __pyx_t_10;
 
-                            /* "computation.pyx":99
- * #     with nogil:
- *     for x1 in prange(num_states, nogil=True):
- *         for i in range(count[0,x1]):             # <<<<<<<<<<<<<<
- *             if (labelled_times[0,x1,i]<t):
- *                 eval_time = t-labelled_times[0,x1,i]+1.0
+          /* "computation.pyx":99
+ *     with nogil:
+ *         for x1 in range(num_states):
+ *             for i in range(count[0,x1]):             # <<<<<<<<<<<<<<
+ *                 if (labelled_times[0,x1,i]<t):
+ *                     eval_time = t-labelled_times[0,x1,i]+1.0
  */
-                            __pyx_t_11 = 0;
-                            __pyx_t_12 = __pyx_v_x1;
-                            __pyx_t_13 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_11 * __pyx_v_count.strides[0]) ) + __pyx_t_12 * __pyx_v_count.strides[1]) )));
-                            __pyx_t_14 = __pyx_t_13;
-                            for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
-                              __pyx_v_i = __pyx_t_15;
+          __pyx_t_11 = 0;
+          __pyx_t_12 = __pyx_v_x1;
+          __pyx_t_13 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_11 * __pyx_v_count.strides[0]) ) + __pyx_t_12 * __pyx_v_count.strides[1]) )));
+          __pyx_t_14 = __pyx_t_13;
+          for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
+            __pyx_v_i = __pyx_t_15;
 
-                              /* "computation.pyx":100
- *     for x1 in prange(num_states, nogil=True):
- *         for i in range(count[0,x1]):
- *             if (labelled_times[0,x1,i]<t):             # <<<<<<<<<<<<<<
- *                 eval_time = t-labelled_times[0,x1,i]+1.0
- *                 power_comp = pow(eval_time,-dec_coef[0,x1])
+            /* "computation.pyx":100
+ *         for x1 in range(num_states):
+ *             for i in range(count[0,x1]):
+ *                 if (labelled_times[0,x1,i]<t):             # <<<<<<<<<<<<<<
+ *                     eval_time = t-labelled_times[0,x1,i]+1.0
+ *                     power_comp = pow(eval_time,-dec_coef[0,x1])
  */
-                              __pyx_t_16 = 0;
-                              __pyx_t_17 = __pyx_v_x1;
-                              __pyx_t_18 = __pyx_v_i;
-                              __pyx_t_19 = (((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_16 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_17 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_18 * __pyx_v_labelled_times.strides[2]) ))) < __pyx_v_t) != 0);
-                              if (__pyx_t_19) {
+            __pyx_t_16 = 0;
+            __pyx_t_17 = __pyx_v_x1;
+            __pyx_t_18 = __pyx_v_i;
+            __pyx_t_19 = (((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_16 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_17 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_18 * __pyx_v_labelled_times.strides[2]) ))) < __pyx_v_t) != 0);
+            if (__pyx_t_19) {
 
-                                /* "computation.pyx":101
- *         for i in range(count[0,x1]):
- *             if (labelled_times[0,x1,i]<t):
- *                 eval_time = t-labelled_times[0,x1,i]+1.0             # <<<<<<<<<<<<<<
- *                 power_comp = pow(eval_time,-dec_coef[0,x1])
- *                 S_memview[x1] += power_comp
+              /* "computation.pyx":101
+ *             for i in range(count[0,x1]):
+ *                 if (labelled_times[0,x1,i]<t):
+ *                     eval_time = t-labelled_times[0,x1,i]+1.0             # <<<<<<<<<<<<<<
+ *                     power_comp = pow(eval_time,-dec_coef[0,x1])
+ *                     S_memview[x1] += power_comp
  */
-                                __pyx_t_20 = 0;
-                                __pyx_t_21 = __pyx_v_x1;
-                                __pyx_t_22 = __pyx_v_i;
-                                __pyx_v_eval_time = ((__pyx_v_t - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_20 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_21 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_22 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
+              __pyx_t_20 = 0;
+              __pyx_t_21 = __pyx_v_x1;
+              __pyx_t_22 = __pyx_v_i;
+              __pyx_v_eval_time = ((__pyx_v_t - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_20 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_21 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_22 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
 
-                                /* "computation.pyx":102
- *             if (labelled_times[0,x1,i]<t):
- *                 eval_time = t-labelled_times[0,x1,i]+1.0
- *                 power_comp = pow(eval_time,-dec_coef[0,x1])             # <<<<<<<<<<<<<<
- *                 S_memview[x1] += power_comp
+              /* "computation.pyx":102
+ *                 if (labelled_times[0,x1,i]<t):
+ *                     eval_time = t-labelled_times[0,x1,i]+1.0
+ *                     power_comp = pow(eval_time,-dec_coef[0,x1])             # <<<<<<<<<<<<<<
+ *                     S_memview[x1] += power_comp
  * 
  */
-                                __pyx_t_23 = 0;
-                                __pyx_t_24 = __pyx_v_x1;
-                                __pyx_v_power_comp = pow(__pyx_v_eval_time, (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dec_coef.data + __pyx_t_23 * __pyx_v_dec_coef.strides[0]) ) + __pyx_t_24 * __pyx_v_dec_coef.strides[1]) )))));
+              __pyx_t_23 = 0;
+              __pyx_t_24 = __pyx_v_x1;
+              __pyx_v_power_comp = pow(__pyx_v_eval_time, (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dec_coef.data + __pyx_t_23 * __pyx_v_dec_coef.strides[0]) ) + __pyx_t_24 * __pyx_v_dec_coef.strides[1]) )))));
 
-                                /* "computation.pyx":103
- *                 eval_time = t-labelled_times[0,x1,i]+1.0
- *                 power_comp = pow(eval_time,-dec_coef[0,x1])
- *                 S_memview[x1] += power_comp             # <<<<<<<<<<<<<<
+              /* "computation.pyx":103
+ *                     eval_time = t-labelled_times[0,x1,i]+1.0
+ *                     power_comp = pow(eval_time,-dec_coef[0,x1])
+ *                     S_memview[x1] += power_comp             # <<<<<<<<<<<<<<
  * 
  *     return np.dot(alpha,S)
  */
-                                __pyx_t_25 = __pyx_v_x1;
-                                *((double *) ( /* dim=0 */ (__pyx_v_S_memview.data + __pyx_t_25 * __pyx_v_S_memview.strides[0]) )) += __pyx_v_power_comp;
+              __pyx_t_25 = __pyx_v_x1;
+              *((double *) ( /* dim=0 */ (__pyx_v_S_memview.data + __pyx_t_25 * __pyx_v_S_memview.strides[0]) )) += __pyx_v_power_comp;
 
-                                /* "computation.pyx":100
- *     for x1 in prange(num_states, nogil=True):
- *         for i in range(count[0,x1]):
- *             if (labelled_times[0,x1,i]<t):             # <<<<<<<<<<<<<<
- *                 eval_time = t-labelled_times[0,x1,i]+1.0
- *                 power_comp = pow(eval_time,-dec_coef[0,x1])
+              /* "computation.pyx":100
+ *         for x1 in range(num_states):
+ *             for i in range(count[0,x1]):
+ *                 if (labelled_times[0,x1,i]<t):             # <<<<<<<<<<<<<<
+ *                     eval_time = t-labelled_times[0,x1,i]+1.0
+ *                     power_comp = pow(eval_time,-dec_coef[0,x1])
  */
-                              }
-                            }
-                        }
-                    }
-                }
             }
+          }
         }
-        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-            #undef likely
-            #undef unlikely
-            #define likely(x)   __builtin_expect(!!(x), 1)
-            #define unlikely(x) __builtin_expect(!!(x), 0)
-        #endif
       }
 
-      /* "computation.pyx":98
+      /* "computation.pyx":97
+ *     cdef int x1,i
  *     cdef double eval_time,power_comp
- * #     with nogil:
- *     for x1 in prange(num_states, nogil=True):             # <<<<<<<<<<<<<<
- *         for i in range(count[0,x1]):
- *             if (labelled_times[0,x1,i]<t):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for x1 in range(num_states):
+ *             for i in range(count[0,x1]):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -5279,7 +5207,7 @@ __pyx_t_4 = __pyx_memoryview_fromslice(__pyx_t_6, 1, (PyObject *(*)(char *)) __p
   }
 
   /* "computation.pyx":105
- *                 S_memview[x1] += power_comp
+ *                     S_memview[x1] += power_comp
  * 
  *     return np.dot(alpha,S)             # <<<<<<<<<<<<<<
  * 
@@ -5292,7 +5220,7 @@ __pyx_t_4 = __pyx_memoryview_fromslice(__pyx_t_6, 1, (PyObject *(*)(char *)) __p
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_4 = NULL;
-  __pyx_t_10 = 0;
+  __pyx_t_8 = 0;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
     __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
     if (likely(__pyx_t_4)) {
@@ -5300,13 +5228,13 @@ __pyx_t_4 = __pyx_memoryview_fromslice(__pyx_t_6, 1, (PyObject *(*)(char *)) __p
       __Pyx_INCREF(__pyx_t_4);
       __Pyx_INCREF(function);
       __Pyx_DECREF_SET(__pyx_t_3, function);
-      __pyx_t_10 = 1;
+      __pyx_t_8 = 1;
     }
   }
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, ((PyObject *)__pyx_v_alpha), ((PyObject *)__pyx_v_S)};
-    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_2);
   } else
@@ -5314,23 +5242,23 @@ __pyx_t_4 = __pyx_memoryview_fromslice(__pyx_t_6, 1, (PyObject *(*)(char *)) __p
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, ((PyObject *)__pyx_v_alpha), ((PyObject *)__pyx_v_S)};
-    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_2);
   } else
   #endif
   {
-    __pyx_t_1 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (__pyx_t_4) {
       __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_4); __pyx_t_4 = NULL;
     }
     __Pyx_INCREF(((PyObject *)__pyx_v_alpha));
     __Pyx_GIVEREF(((PyObject *)__pyx_v_alpha));
-    PyTuple_SET_ITEM(__pyx_t_1, 0+__pyx_t_10, ((PyObject *)__pyx_v_alpha));
+    PyTuple_SET_ITEM(__pyx_t_1, 0+__pyx_t_8, ((PyObject *)__pyx_v_alpha));
     __Pyx_INCREF(((PyObject *)__pyx_v_S));
     __Pyx_GIVEREF(((PyObject *)__pyx_v_S));
-    PyTuple_SET_ITEM(__pyx_t_1, 1+__pyx_t_10, ((PyObject *)__pyx_v_S));
+    PyTuple_SET_ITEM(__pyx_t_1, 1+__pyx_t_8, ((PyObject *)__pyx_v_S));
     __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -5490,7 +5418,7 @@ static PyObject *__pyx_pf_11computation_8compute_ESSE_two_partial(CYTHON_UNUSED 
   int __pyx_v_e1;
   int __pyx_v_x;
   int __pyx_v_i;
-  CYTHON_UNUSED int __pyx_v_num_event_types;
+  int __pyx_v_num_event_types;
   int __pyx_v_num_states;
   double __pyx_v_eval_time;
   double __pyx_v_power_comp;
@@ -5624,7 +5552,7 @@ static PyObject *__pyx_pf_11computation_8compute_ESSE_two_partial(CYTHON_UNUSED 
  *     cdef double  eval_time = 1.0
  *     cdef double  power_comp = 1.0             # <<<<<<<<<<<<<<
  *     cdef double  log_comp = 0.0
- * #     with nogil:
+ *     with nogil:
  */
   __pyx_v_power_comp = 1.0;
 
@@ -5632,17 +5560,17 @@ static PyObject *__pyx_pf_11computation_8compute_ESSE_two_partial(CYTHON_UNUSED 
  *     cdef double  eval_time = 1.0
  *     cdef double  power_comp = 1.0
  *     cdef double  log_comp = 0.0             # <<<<<<<<<<<<<<
- * #     with nogil:
- *     for e1 in prange(num_event_types,nogil=True):
+ *     with nogil:
+ *         for e1 in range(num_event_types):
  */
   __pyx_v_log_comp = 0.0;
 
-  /* "computation.pyx":123
+  /* "computation.pyx":122
+ *     cdef double  power_comp = 1.0
  *     cdef double  log_comp = 0.0
- * #     with nogil:
- *     for e1 in prange(num_event_types,nogil=True):             # <<<<<<<<<<<<<<
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
  */
   {
       #ifdef WITH_THREAD
@@ -5651,149 +5579,123 @@ static PyObject *__pyx_pf_11computation_8compute_ESSE_two_partial(CYTHON_UNUSED 
       __Pyx_FastGIL_Remember();
       #endif
       /*try:*/ {
+
+        /* "computation.pyx":123
+ *     cdef double  log_comp = 0.0
+ *     with nogil:
+ *         for e1 in range(num_event_types):             # <<<<<<<<<<<<<<
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ */
         __pyx_t_7 = __pyx_v_num_event_types;
-        if (1 == 0) abort();
-        {
-            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-                #undef likely
-                #undef unlikely
-                #define likely(x)   (x)
-                #define unlikely(x) (x)
-            #endif
-            __pyx_t_9 = (__pyx_t_7 - 0 + 1 - 1/abs(1)) / 1;
-            if (__pyx_t_9 > 0)
-            {
-                #ifdef _OPENMP
-                #pragma omp parallel private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27, __pyx_t_28, __pyx_t_29, __pyx_t_30, __pyx_t_31)
-                #endif /* _OPENMP */
-                {
-                    #ifdef _OPENMP
-                    #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
-                    #endif /* _OPENMP */
-                    for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_9; __pyx_t_8++){
-                        {
-                            __pyx_v_e1 = (int)(0 + 1 * __pyx_t_8);
-                            /* Initialize private variables to invalid values */
-                            __pyx_v_eval_time = ((double)__PYX_NAN());
-                            __pyx_v_i = ((int)0xbad0bad0);
-                            __pyx_v_log_comp = ((double)__PYX_NAN());
-                            __pyx_v_power_comp = ((double)__PYX_NAN());
-                            __pyx_v_x = ((int)0xbad0bad0);
+        __pyx_t_8 = __pyx_t_7;
+        for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+          __pyx_v_e1 = __pyx_t_9;
 
-                            /* "computation.pyx":124
- * #     with nogil:
- *     for e1 in prange(num_event_types,nogil=True):
- *         for x in range(num_states):             # <<<<<<<<<<<<<<
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+          /* "computation.pyx":124
+ *     with nogil:
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):             # <<<<<<<<<<<<<<
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
  */
-                            __pyx_t_10 = __pyx_v_num_states;
-                            __pyx_t_11 = __pyx_t_10;
-                            for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
-                              __pyx_v_x = __pyx_t_12;
+          __pyx_t_10 = __pyx_v_num_states;
+          __pyx_t_11 = __pyx_t_10;
+          for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
+            __pyx_v_x = __pyx_t_12;
 
-                              /* "computation.pyx":125
- *     for e1 in prange(num_event_types,nogil=True):
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):             # <<<<<<<<<<<<<<
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
+            /* "computation.pyx":125
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):             # <<<<<<<<<<<<<<
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
  */
-                              __pyx_t_13 = __pyx_v_e1;
-                              __pyx_t_14 = __pyx_v_x;
-                              __pyx_t_15 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_13 * __pyx_v_count.strides[0]) ) + __pyx_t_14 * __pyx_v_count.strides[1]) )));
-                              __pyx_t_16 = __pyx_t_15;
-                              for (__pyx_t_17 = 0; __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
-                                __pyx_v_i = __pyx_t_17;
+            __pyx_t_13 = __pyx_v_e1;
+            __pyx_t_14 = __pyx_v_x;
+            __pyx_t_15 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_13 * __pyx_v_count.strides[0]) ) + __pyx_t_14 * __pyx_v_count.strides[1]) )));
+            __pyx_t_16 = __pyx_t_15;
+            for (__pyx_t_17 = 0; __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
+              __pyx_v_i = __pyx_t_17;
 
-                                /* "computation.pyx":126
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,1-decay_coefficients[e1,x])
+              /* "computation.pyx":126
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,1-decay_coefficients[e1,x])
  */
-                                __pyx_t_18 = __pyx_v_e1;
-                                __pyx_t_19 = __pyx_v_x;
-                                __pyx_t_20 = __pyx_v_i;
-                                __pyx_t_21 = __pyx_v_e1;
-                                __pyx_t_22 = __pyx_v_x;
-                                __pyx_t_23 = __pyx_v_i;
-                                __pyx_t_24 = ((((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_18 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_19 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_20 * __pyx_v_labelled_times.strides[2]) ))) >= __pyx_v_s) & ((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_21 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_22 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_23 * __pyx_v_labelled_times.strides[2]) ))) < __pyx_v_t)) != 0);
-                                if (__pyx_t_24) {
+              __pyx_t_18 = __pyx_v_e1;
+              __pyx_t_19 = __pyx_v_x;
+              __pyx_t_20 = __pyx_v_i;
+              __pyx_t_21 = __pyx_v_e1;
+              __pyx_t_22 = __pyx_v_x;
+              __pyx_t_23 = __pyx_v_i;
+              __pyx_t_24 = ((((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_18 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_19 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_20 * __pyx_v_labelled_times.strides[2]) ))) >= __pyx_v_s) & ((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_21 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_22 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_23 * __pyx_v_labelled_times.strides[2]) ))) < __pyx_v_t)) != 0);
+              if (__pyx_t_24) {
 
-                                  /* "computation.pyx":127
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0             # <<<<<<<<<<<<<<
- *                     power_comp = pow(eval_time,1-decay_coefficients[e1,x])
- *                     log_comp = log(eval_time)
+                /* "computation.pyx":127
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0             # <<<<<<<<<<<<<<
+ *                         power_comp = pow(eval_time,1-decay_coefficients[e1,x])
+ *                         log_comp = log(eval_time)
  */
-                                  __pyx_t_25 = __pyx_v_e1;
-                                  __pyx_t_26 = __pyx_v_x;
-                                  __pyx_t_27 = __pyx_v_i;
-                                  __pyx_v_eval_time = ((__pyx_v_t - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_25 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_26 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_27 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
+                __pyx_t_25 = __pyx_v_e1;
+                __pyx_t_26 = __pyx_v_x;
+                __pyx_t_27 = __pyx_v_i;
+                __pyx_v_eval_time = ((__pyx_v_t - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_25 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_26 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_27 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
 
-                                  /* "computation.pyx":128
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,1-decay_coefficients[e1,x])             # <<<<<<<<<<<<<<
- *                     log_comp = log(eval_time)
- *                     result_memview[e1,x] += power_comp*log_comp
+                /* "computation.pyx":128
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,1-decay_coefficients[e1,x])             # <<<<<<<<<<<<<<
+ *                         log_comp = log(eval_time)
+ *                         result_memview[e1,x] += power_comp*log_comp
  */
-                                  __pyx_t_28 = __pyx_v_e1;
-                                  __pyx_t_29 = __pyx_v_x;
-                                  __pyx_v_power_comp = pow(__pyx_v_eval_time, (1.0 - (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_decay_coefficients.data + __pyx_t_28 * __pyx_v_decay_coefficients.strides[0]) ) + __pyx_t_29 * __pyx_v_decay_coefficients.strides[1]) )))));
+                __pyx_t_28 = __pyx_v_e1;
+                __pyx_t_29 = __pyx_v_x;
+                __pyx_v_power_comp = pow(__pyx_v_eval_time, (1.0 - (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_decay_coefficients.data + __pyx_t_28 * __pyx_v_decay_coefficients.strides[0]) ) + __pyx_t_29 * __pyx_v_decay_coefficients.strides[1]) )))));
 
-                                  /* "computation.pyx":129
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,1-decay_coefficients[e1,x])
- *                     log_comp = log(eval_time)             # <<<<<<<<<<<<<<
- *                     result_memview[e1,x] += power_comp*log_comp
+                /* "computation.pyx":129
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,1-decay_coefficients[e1,x])
+ *                         log_comp = log(eval_time)             # <<<<<<<<<<<<<<
+ *                         result_memview[e1,x] += power_comp*log_comp
  *     return result
  */
-                                  __pyx_v_log_comp = log(__pyx_v_eval_time);
+                __pyx_v_log_comp = log(__pyx_v_eval_time);
 
-                                  /* "computation.pyx":130
- *                     power_comp = pow(eval_time,1-decay_coefficients[e1,x])
- *                     log_comp = log(eval_time)
- *                     result_memview[e1,x] += power_comp*log_comp             # <<<<<<<<<<<<<<
+                /* "computation.pyx":130
+ *                         power_comp = pow(eval_time,1-decay_coefficients[e1,x])
+ *                         log_comp = log(eval_time)
+ *                         result_memview[e1,x] += power_comp*log_comp             # <<<<<<<<<<<<<<
  *     return result
  * 
  */
-                                  __pyx_t_30 = __pyx_v_e1;
-                                  __pyx_t_31 = __pyx_v_x;
-                                  *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_result_memview.data + __pyx_t_30 * __pyx_v_result_memview.strides[0]) ) + __pyx_t_31 * __pyx_v_result_memview.strides[1]) )) += (__pyx_v_power_comp * __pyx_v_log_comp);
+                __pyx_t_30 = __pyx_v_e1;
+                __pyx_t_31 = __pyx_v_x;
+                *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_result_memview.data + __pyx_t_30 * __pyx_v_result_memview.strides[0]) ) + __pyx_t_31 * __pyx_v_result_memview.strides[1]) )) += (__pyx_v_power_comp * __pyx_v_log_comp);
 
-                                  /* "computation.pyx":126
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,1-decay_coefficients[e1,x])
+                /* "computation.pyx":126
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,1-decay_coefficients[e1,x])
  */
-                                }
-                              }
-                            }
-                        }
-                    }
-                }
+              }
             }
+          }
         }
-        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-            #undef likely
-            #undef unlikely
-            #define likely(x)   __builtin_expect(!!(x), 1)
-            #define unlikely(x) __builtin_expect(!!(x), 0)
-        #endif
       }
 
-      /* "computation.pyx":123
+      /* "computation.pyx":122
+ *     cdef double  power_comp = 1.0
  *     cdef double  log_comp = 0.0
- * #     with nogil:
- *     for e1 in prange(num_event_types,nogil=True):             # <<<<<<<<<<<<<<
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -5808,8 +5710,8 @@ static PyObject *__pyx_pf_11computation_8compute_ESSE_two_partial(CYTHON_UNUSED 
   }
 
   /* "computation.pyx":131
- *                     log_comp = log(eval_time)
- *                     result_memview[e1,x] += power_comp*log_comp
+ *                         log_comp = log(eval_time)
+ *                         result_memview[e1,x] += power_comp*log_comp
  *     return result             # <<<<<<<<<<<<<<
  * 
  * """
@@ -5967,7 +5869,7 @@ static PyObject *__pyx_pf_11computation_10compute_ESSE_partial_and_ESSE_one_part
   int __pyx_v_e1;
   int __pyx_v_x;
   int __pyx_v_i;
-  CYTHON_UNUSED int __pyx_v_num_event_types;
+  int __pyx_v_num_event_types;
   int __pyx_v_num_states;
   CYTHON_UNUSED int __pyx_v_len_labelled_times;
   double __pyx_v_eval_time;
@@ -6158,16 +6060,16 @@ static PyObject *__pyx_pf_11computation_10compute_ESSE_partial_and_ESSE_one_part
  *     cdef int num_states=decay_coefficients.shape[1]
  *     cdef int len_labelled_times = labelled_times.shape[2]             # <<<<<<<<<<<<<<
  *     cdef double eval_time, power_comp, log_comp
- * #     with nogil:
+ *     with nogil:
  */
   __pyx_v_len_labelled_times = (__pyx_v_labelled_times.shape[2]);
 
-  /* "computation.pyx":175
+  /* "computation.pyx":174
+ *     cdef int len_labelled_times = labelled_times.shape[2]
  *     cdef double eval_time, power_comp, log_comp
- * #     with nogil:
- *     for e1 in prange(num_event_types, nogil=True):             # <<<<<<<<<<<<<<
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
  */
   {
       #ifdef WITH_THREAD
@@ -6176,160 +6078,134 @@ static PyObject *__pyx_pf_11computation_10compute_ESSE_partial_and_ESSE_one_part
       __Pyx_FastGIL_Remember();
       #endif
       /*try:*/ {
+
+        /* "computation.pyx":175
+ *     cdef double eval_time, power_comp, log_comp
+ *     with nogil:
+ *         for e1 in range(num_event_types):             # <<<<<<<<<<<<<<
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ */
         __pyx_t_8 = __pyx_v_num_event_types;
-        if (1 == 0) abort();
-        {
-            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-                #undef likely
-                #undef unlikely
-                #define likely(x)   (x)
-                #define unlikely(x) (x)
-            #endif
-            __pyx_t_10 = (__pyx_t_8 - 0 + 1 - 1/abs(1)) / 1;
-            if (__pyx_t_10 > 0)
-            {
-                #ifdef _OPENMP
-                #pragma omp parallel private(__pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27, __pyx_t_28, __pyx_t_29, __pyx_t_30, __pyx_t_31, __pyx_t_32, __pyx_t_33, __pyx_t_34)
-                #endif /* _OPENMP */
-                {
-                    #ifdef _OPENMP
-                    #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
-                    #endif /* _OPENMP */
-                    for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_10; __pyx_t_9++){
-                        {
-                            __pyx_v_e1 = (int)(0 + 1 * __pyx_t_9);
-                            /* Initialize private variables to invalid values */
-                            __pyx_v_eval_time = ((double)__PYX_NAN());
-                            __pyx_v_i = ((int)0xbad0bad0);
-                            __pyx_v_log_comp = ((double)__PYX_NAN());
-                            __pyx_v_power_comp = ((double)__PYX_NAN());
-                            __pyx_v_x = ((int)0xbad0bad0);
+        __pyx_t_9 = __pyx_t_8;
+        for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
+          __pyx_v_e1 = __pyx_t_10;
 
-                            /* "computation.pyx":176
- * #     with nogil:
- *     for e1 in prange(num_event_types, nogil=True):
- *         for x in range(num_states):             # <<<<<<<<<<<<<<
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+          /* "computation.pyx":176
+ *     with nogil:
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):             # <<<<<<<<<<<<<<
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
  */
-                            __pyx_t_11 = __pyx_v_num_states;
-                            __pyx_t_12 = __pyx_t_11;
-                            for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
-                              __pyx_v_x = __pyx_t_13;
+          __pyx_t_11 = __pyx_v_num_states;
+          __pyx_t_12 = __pyx_t_11;
+          for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
+            __pyx_v_x = __pyx_t_13;
 
-                              /* "computation.pyx":177
- *     for e1 in prange(num_event_types, nogil=True):
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):             # <<<<<<<<<<<<<<
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
+            /* "computation.pyx":177
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):             # <<<<<<<<<<<<<<
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
  */
-                              __pyx_t_14 = __pyx_v_e1;
-                              __pyx_t_15 = __pyx_v_x;
-                              __pyx_t_16 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_14 * __pyx_v_count.strides[0]) ) + __pyx_t_15 * __pyx_v_count.strides[1]) )));
-                              __pyx_t_17 = __pyx_t_16;
-                              for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
-                                __pyx_v_i = __pyx_t_18;
+            __pyx_t_14 = __pyx_v_e1;
+            __pyx_t_15 = __pyx_v_x;
+            __pyx_t_16 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_14 * __pyx_v_count.strides[0]) ) + __pyx_t_15 * __pyx_v_count.strides[1]) )));
+            __pyx_t_17 = __pyx_t_16;
+            for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
+              __pyx_v_i = __pyx_t_18;
 
-                                /* "computation.pyx":178
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
+              /* "computation.pyx":178
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
  */
-                                __pyx_t_19 = __pyx_v_e1;
-                                __pyx_t_20 = __pyx_v_x;
-                                __pyx_t_21 = __pyx_v_i;
-                                __pyx_t_22 = __pyx_v_e1;
-                                __pyx_t_23 = __pyx_v_x;
-                                __pyx_t_24 = __pyx_v_i;
-                                __pyx_t_25 = ((((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_19 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_20 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_21 * __pyx_v_labelled_times.strides[2]) ))) >= __pyx_v_s) & ((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_22 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_23 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_24 * __pyx_v_labelled_times.strides[2]) ))) < __pyx_v_t)) != 0);
-                                if (__pyx_t_25) {
+              __pyx_t_19 = __pyx_v_e1;
+              __pyx_t_20 = __pyx_v_x;
+              __pyx_t_21 = __pyx_v_i;
+              __pyx_t_22 = __pyx_v_e1;
+              __pyx_t_23 = __pyx_v_x;
+              __pyx_t_24 = __pyx_v_i;
+              __pyx_t_25 = ((((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_19 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_20 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_21 * __pyx_v_labelled_times.strides[2]) ))) >= __pyx_v_s) & ((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_22 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_23 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_24 * __pyx_v_labelled_times.strides[2]) ))) < __pyx_v_t)) != 0);
+              if (__pyx_t_25) {
 
-                                  /* "computation.pyx":179
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0             # <<<<<<<<<<<<<<
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                     log_comp = log(eval_time)
+                /* "computation.pyx":179
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0             # <<<<<<<<<<<<<<
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                         log_comp = log(eval_time)
  */
-                                  __pyx_t_26 = __pyx_v_e1;
-                                  __pyx_t_27 = __pyx_v_x;
-                                  __pyx_t_28 = __pyx_v_i;
-                                  __pyx_v_eval_time = ((__pyx_v_t - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_26 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_27 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_28 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
+                __pyx_t_26 = __pyx_v_e1;
+                __pyx_t_27 = __pyx_v_x;
+                __pyx_t_28 = __pyx_v_i;
+                __pyx_v_eval_time = ((__pyx_v_t - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_26 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_27 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_28 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
 
-                                  /* "computation.pyx":180
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])             # <<<<<<<<<<<<<<
- *                     log_comp = log(eval_time)
- *                     ESSE_memview[e1,x] += power_comp
+                /* "computation.pyx":180
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])             # <<<<<<<<<<<<<<
+ *                         log_comp = log(eval_time)
+ *                         ESSE_memview[e1,x] += power_comp
  */
-                                  __pyx_t_29 = __pyx_v_e1;
-                                  __pyx_t_30 = __pyx_v_x;
-                                  __pyx_v_power_comp = pow(__pyx_v_eval_time, (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_decay_coefficients.data + __pyx_t_29 * __pyx_v_decay_coefficients.strides[0]) ) + __pyx_t_30 * __pyx_v_decay_coefficients.strides[1]) )))));
+                __pyx_t_29 = __pyx_v_e1;
+                __pyx_t_30 = __pyx_v_x;
+                __pyx_v_power_comp = pow(__pyx_v_eval_time, (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_decay_coefficients.data + __pyx_t_29 * __pyx_v_decay_coefficients.strides[0]) ) + __pyx_t_30 * __pyx_v_decay_coefficients.strides[1]) )))));
 
-                                  /* "computation.pyx":181
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                     log_comp = log(eval_time)             # <<<<<<<<<<<<<<
- *                     ESSE_memview[e1,x] += power_comp
- *                     ESSE_one_memview[e1,x] += power_comp*log_comp
+                /* "computation.pyx":181
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                         log_comp = log(eval_time)             # <<<<<<<<<<<<<<
+ *                         ESSE_memview[e1,x] += power_comp
+ *                         ESSE_one_memview[e1,x] += power_comp*log_comp
  */
-                                  __pyx_v_log_comp = log(__pyx_v_eval_time);
+                __pyx_v_log_comp = log(__pyx_v_eval_time);
 
-                                  /* "computation.pyx":182
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                     log_comp = log(eval_time)
- *                     ESSE_memview[e1,x] += power_comp             # <<<<<<<<<<<<<<
- *                     ESSE_one_memview[e1,x] += power_comp*log_comp
+                /* "computation.pyx":182
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                         log_comp = log(eval_time)
+ *                         ESSE_memview[e1,x] += power_comp             # <<<<<<<<<<<<<<
+ *                         ESSE_one_memview[e1,x] += power_comp*log_comp
  * 
  */
-                                  __pyx_t_31 = __pyx_v_e1;
-                                  __pyx_t_32 = __pyx_v_x;
-                                  *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE_memview.data + __pyx_t_31 * __pyx_v_ESSE_memview.strides[0]) ) + __pyx_t_32 * __pyx_v_ESSE_memview.strides[1]) )) += __pyx_v_power_comp;
+                __pyx_t_31 = __pyx_v_e1;
+                __pyx_t_32 = __pyx_v_x;
+                *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE_memview.data + __pyx_t_31 * __pyx_v_ESSE_memview.strides[0]) ) + __pyx_t_32 * __pyx_v_ESSE_memview.strides[1]) )) += __pyx_v_power_comp;
 
-                                  /* "computation.pyx":183
- *                     log_comp = log(eval_time)
- *                     ESSE_memview[e1,x] += power_comp
- *                     ESSE_one_memview[e1,x] += power_comp*log_comp             # <<<<<<<<<<<<<<
+                /* "computation.pyx":183
+ *                         log_comp = log(eval_time)
+ *                         ESSE_memview[e1,x] += power_comp
+ *                         ESSE_one_memview[e1,x] += power_comp*log_comp             # <<<<<<<<<<<<<<
  * 
  *     return ESSE, ESSE_one
  */
-                                  __pyx_t_33 = __pyx_v_e1;
-                                  __pyx_t_34 = __pyx_v_x;
-                                  *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE_one_memview.data + __pyx_t_33 * __pyx_v_ESSE_one_memview.strides[0]) ) + __pyx_t_34 * __pyx_v_ESSE_one_memview.strides[1]) )) += (__pyx_v_power_comp * __pyx_v_log_comp);
+                __pyx_t_33 = __pyx_v_e1;
+                __pyx_t_34 = __pyx_v_x;
+                *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE_one_memview.data + __pyx_t_33 * __pyx_v_ESSE_one_memview.strides[0]) ) + __pyx_t_34 * __pyx_v_ESSE_one_memview.strides[1]) )) += (__pyx_v_power_comp * __pyx_v_log_comp);
 
-                                  /* "computation.pyx":178
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
- *                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
- *                     eval_time = t-labelled_times[e1,x,i]+1.0
- *                     power_comp = pow(eval_time,-decay_coefficients[e1,x])
+                /* "computation.pyx":178
+ *             for x in range(num_states):
+ *                 for i in range(count[e1,x]):
+ *                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):             # <<<<<<<<<<<<<<
+ *                         eval_time = t-labelled_times[e1,x,i]+1.0
+ *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
  */
-                                }
-                              }
-                            }
-                        }
-                    }
-                }
+              }
             }
+          }
         }
-        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-            #undef likely
-            #undef unlikely
-            #define likely(x)   __builtin_expect(!!(x), 1)
-            #define unlikely(x) __builtin_expect(!!(x), 0)
-        #endif
       }
 
-      /* "computation.pyx":175
+      /* "computation.pyx":174
+ *     cdef int len_labelled_times = labelled_times.shape[2]
  *     cdef double eval_time, power_comp, log_comp
- * #     with nogil:
- *     for e1 in prange(num_event_types, nogil=True):             # <<<<<<<<<<<<<<
- *         for x in range(num_states):
- *             for i in range(count[e1,x]):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for e1 in range(num_event_types):
+ *             for x in range(num_states):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -6344,7 +6220,7 @@ static PyObject *__pyx_pf_11computation_10compute_ESSE_partial_and_ESSE_one_part
   }
 
   /* "computation.pyx":185
- *                     ESSE_one_memview[e1,x] += power_comp*log_comp
+ *                         ESSE_one_memview[e1,x] += power_comp*log_comp
  * 
  *     return ESSE, ESSE_one             # <<<<<<<<<<<<<<
  * 
@@ -14988,7 +14864,7 @@ static PyObject *__pyx_pw_11computation_35compute_partial_at_arrival_times(PyObj
   int __pyx_v_num_event_types;
   int __pyx_v_num_states;
   CYTHON_UNUSED int __pyx_v_len_labelled_times;
-  CYTHON_UNUSED int __pyx_v_num_arrival_times;
+  int __pyx_v_num_arrival_times;
   __Pyx_memviewslice __pyx_v_ESSE = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_ESSE_one = { 0, 0, { 0 }, { 0 }, { 0 } };
   PyObject *__pyx_r = 0;
@@ -15157,7 +15033,7 @@ static PyObject *__pyx_pw_11computation_35compute_partial_at_arrival_times(PyObj
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_intensity, __Pyx_memviewslice __pyx_v_intensity_inverse, __Pyx_memviewslice __pyx_v_arrival_times, __Pyx_memviewslice __pyx_v_impact_coefficients, __Pyx_memviewslice __pyx_v_decay_coefficients, __Pyx_memviewslice __pyx_v_labelled_times, __Pyx_memviewslice __pyx_v_count, int __pyx_v_num_event_types, int __pyx_v_num_states, CYTHON_UNUSED int __pyx_v_len_labelled_times, CYTHON_UNUSED int __pyx_v_num_arrival_times, __Pyx_memviewslice __pyx_v_ESSE, __Pyx_memviewslice __pyx_v_ESSE_one) {
+static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_intensity, __Pyx_memviewslice __pyx_v_intensity_inverse, __Pyx_memviewslice __pyx_v_arrival_times, __Pyx_memviewslice __pyx_v_impact_coefficients, __Pyx_memviewslice __pyx_v_decay_coefficients, __Pyx_memviewslice __pyx_v_labelled_times, __Pyx_memviewslice __pyx_v_count, int __pyx_v_num_event_types, int __pyx_v_num_states, CYTHON_UNUSED int __pyx_v_len_labelled_times, int __pyx_v_num_arrival_times, __Pyx_memviewslice __pyx_v_ESSE, __Pyx_memviewslice __pyx_v_ESSE_one) {
   double __pyx_v_l_plus;
   double __pyx_v_grad_base_rate;
   Py_ssize_t __pyx_v_e1;
@@ -15171,7 +15047,7 @@ static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHO
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
-  Py_ssize_t __pyx_t_2;
+  int __pyx_t_2;
   Py_ssize_t __pyx_t_3;
   int __pyx_t_4;
   int __pyx_t_5;
@@ -15260,7 +15136,7 @@ static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHO
  *     cdef double power_comp = 0
  *     cdef double  log_comp = 0             # <<<<<<<<<<<<<<
  *     cdef int count_zero_intensity = 0
- * #     with nogil:
+ *     #for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
  */
   __pyx_v_log_comp = 0.0;
 
@@ -15268,17 +15144,17 @@ static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHO
  *     cdef double power_comp = 0
  *     cdef double  log_comp = 0
  *     cdef int count_zero_intensity = 0             # <<<<<<<<<<<<<<
- * #     with nogil:
- * #         for t in range(num_arrival_times):
+ *     #for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
+ *     with nogil:
  */
   __pyx_v_count_zero_intensity = 0;
 
-  /* "computation.pyx":499
- * #     with nogil:
- * #         for t in range(num_arrival_times):
- *     for t in prange(num_arrival_times,nogil=True): #schedule='guided'):             # <<<<<<<<<<<<<<
- *         for e1 in range(num_event_types):
- *             for x in range(num_states):
+  /* "computation.pyx":498
+ *     cdef int count_zero_intensity = 0
+ *     #for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for t in range(num_arrival_times):
+ *             for e1 in range(num_event_types):
  */
   {
       #ifdef WITH_THREAD
@@ -15287,386 +15163,252 @@ static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHO
       __Pyx_FastGIL_Remember();
       #endif
       /*try:*/ {
+
+        /* "computation.pyx":499
+ *     #for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
+ *     with nogil:
+ *         for t in range(num_arrival_times):             # <<<<<<<<<<<<<<
+ *             for e1 in range(num_event_types):
+ *                 for x in range(num_states):
+ */
         __pyx_t_1 = __pyx_v_num_arrival_times;
-        if (1 == 0) abort();
-        {
-            int __pyx_parallel_temp0 = ((int)0xbad0bad0);
-            Py_ssize_t __pyx_parallel_temp1 = ((Py_ssize_t)0xbad0bad0);
-            double __pyx_parallel_temp2 = ((double)__PYX_NAN());
-            double __pyx_parallel_temp3 = ((double)__PYX_NAN());
-            Py_ssize_t __pyx_parallel_temp4 = ((Py_ssize_t)0xbad0bad0);
-            double __pyx_parallel_temp5 = ((double)__PYX_NAN());
-            double __pyx_parallel_temp6 = ((double)__PYX_NAN());
-            double __pyx_parallel_temp7 = ((double)__PYX_NAN());
-            Py_ssize_t __pyx_parallel_temp8 = ((Py_ssize_t)0xbad0bad0);
-            Py_ssize_t __pyx_parallel_temp9 = ((Py_ssize_t)0xbad0bad0);
-            const char *__pyx_parallel_filename = NULL; int __pyx_parallel_lineno = 0, __pyx_parallel_clineno = 0;
-            PyObject *__pyx_parallel_exc_type = NULL, *__pyx_parallel_exc_value = NULL, *__pyx_parallel_exc_tb = NULL;
-            int __pyx_parallel_why;
-            __pyx_parallel_why = 0;
-            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-                #undef likely
-                #undef unlikely
-                #define likely(x)   (x)
-                #define unlikely(x) (x)
-            #endif
-            __pyx_t_3 = (__pyx_t_1 - 0 + 1 - 1/abs(1)) / 1;
-            if (__pyx_t_3 > 0)
-            {
-                #ifdef _OPENMP
-                #pragma omp parallel reduction(+:__pyx_v_count_zero_intensity) reduction(+:__pyx_v_grad_base_rate) reduction(+:__pyx_v_l_plus) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27, __pyx_t_28, __pyx_t_29, __pyx_t_30, __pyx_t_31, __pyx_t_32, __pyx_t_33, __pyx_t_34, __pyx_t_35, __pyx_t_36, __pyx_t_37, __pyx_t_38, __pyx_t_39, __pyx_t_4, __pyx_t_40, __pyx_t_41, __pyx_t_42, __pyx_t_43, __pyx_t_5, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9) private(__pyx_filename, __pyx_lineno, __pyx_clineno) shared(__pyx_parallel_why, __pyx_parallel_exc_type, __pyx_parallel_exc_value, __pyx_parallel_exc_tb)
-                #endif /* _OPENMP */
-                {
-                    #ifdef _OPENMP
-                    #ifdef WITH_THREAD
-                    PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
-                    #endif
-                    Py_BEGIN_ALLOW_THREADS
-                    #endif /* _OPENMP */
-                    #ifdef _OPENMP
-                    #pragma omp for lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) firstprivate(__pyx_v_t) lastprivate(__pyx_v_t) lastprivate(__pyx_v_x)
-                    #endif /* _OPENMP */
-                    for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_3; __pyx_t_2++){
-                        if (__pyx_parallel_why < 2)
-                        {
-                            __pyx_v_t = (Py_ssize_t)(0 + 1 * __pyx_t_2);
-                            /* Initialize private variables to invalid values */
-                            __pyx_v_e1 = ((Py_ssize_t)0xbad0bad0);
-                            __pyx_v_eval_time = ((double)__PYX_NAN());
-                            __pyx_v_i = ((Py_ssize_t)0xbad0bad0);
-                            __pyx_v_log_comp = ((double)__PYX_NAN());
-                            __pyx_v_power_comp = ((double)__PYX_NAN());
-                            __pyx_v_x = ((Py_ssize_t)0xbad0bad0);
+        __pyx_t_2 = __pyx_t_1;
+        for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
+          __pyx_v_t = __pyx_t_3;
 
-                            /* "computation.pyx":500
- * #         for t in range(num_arrival_times):
- *     for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
- *         for e1 in range(num_event_types):             # <<<<<<<<<<<<<<
- *             for x in range(num_states):
- *                 for i in range(count[e1,x]):
+          /* "computation.pyx":500
+ *     with nogil:
+ *         for t in range(num_arrival_times):
+ *             for e1 in range(num_event_types):             # <<<<<<<<<<<<<<
+ *                 for x in range(num_states):
+ *                     for i in range(count[e1,x]):
  */
-                            __pyx_t_4 = __pyx_v_num_event_types;
-                            __pyx_t_5 = __pyx_t_4;
-                            for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-                              __pyx_v_e1 = __pyx_t_6;
+          __pyx_t_4 = __pyx_v_num_event_types;
+          __pyx_t_5 = __pyx_t_4;
+          for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
+            __pyx_v_e1 = __pyx_t_6;
 
-                              /* "computation.pyx":501
- *     for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
- *         for e1 in range(num_event_types):
- *             for x in range(num_states):             # <<<<<<<<<<<<<<
- *                 for i in range(count[e1,x]):
- *                     if ((labelled_times[e1,x,i]<arrival_times[t])):
+            /* "computation.pyx":501
+ *         for t in range(num_arrival_times):
+ *             for e1 in range(num_event_types):
+ *                 for x in range(num_states):             # <<<<<<<<<<<<<<
+ *                     for i in range(count[e1,x]):
+ *                         if ((labelled_times[e1,x,i]<arrival_times[t])):
  */
-                              __pyx_t_7 = __pyx_v_num_states;
-                              __pyx_t_8 = __pyx_t_7;
-                              for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
-                                __pyx_v_x = __pyx_t_9;
+            __pyx_t_7 = __pyx_v_num_states;
+            __pyx_t_8 = __pyx_t_7;
+            for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+              __pyx_v_x = __pyx_t_9;
 
-                                /* "computation.pyx":502
- *         for e1 in range(num_event_types):
- *             for x in range(num_states):
- *                 for i in range(count[e1,x]):             # <<<<<<<<<<<<<<
- *                     if ((labelled_times[e1,x,i]<arrival_times[t])):
- *                         eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
+              /* "computation.pyx":502
+ *             for e1 in range(num_event_types):
+ *                 for x in range(num_states):
+ *                     for i in range(count[e1,x]):             # <<<<<<<<<<<<<<
+ *                         if ((labelled_times[e1,x,i]<arrival_times[t])):
+ *                             eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
  */
-                                __pyx_t_10 = __pyx_v_e1;
-                                __pyx_t_11 = __pyx_v_x;
-                                __pyx_t_12 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_10 * __pyx_v_count.strides[0]) ) + __pyx_t_11 * __pyx_v_count.strides[1]) )));
-                                __pyx_t_13 = __pyx_t_12;
-                                for (__pyx_t_14 = 0; __pyx_t_14 < __pyx_t_13; __pyx_t_14+=1) {
-                                  __pyx_v_i = __pyx_t_14;
+              __pyx_t_10 = __pyx_v_e1;
+              __pyx_t_11 = __pyx_v_x;
+              __pyx_t_12 = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_count.data + __pyx_t_10 * __pyx_v_count.strides[0]) ) + __pyx_t_11 * __pyx_v_count.strides[1]) )));
+              __pyx_t_13 = __pyx_t_12;
+              for (__pyx_t_14 = 0; __pyx_t_14 < __pyx_t_13; __pyx_t_14+=1) {
+                __pyx_v_i = __pyx_t_14;
 
-                                  /* "computation.pyx":503
- *             for x in range(num_states):
- *                 for i in range(count[e1,x]):
- *                     if ((labelled_times[e1,x,i]<arrival_times[t])):             # <<<<<<<<<<<<<<
- *                         eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
- *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
+                /* "computation.pyx":503
+ *                 for x in range(num_states):
+ *                     for i in range(count[e1,x]):
+ *                         if ((labelled_times[e1,x,i]<arrival_times[t])):             # <<<<<<<<<<<<<<
+ *                             eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
+ *                             power_comp = pow(eval_time,-decay_coefficients[e1,x])
  */
-                                  __pyx_t_15 = __pyx_v_e1;
-                                  __pyx_t_16 = __pyx_v_x;
-                                  __pyx_t_17 = __pyx_v_i;
-                                  __pyx_t_18 = __pyx_v_t;
-                                  __pyx_t_19 = (((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_15 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_16 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_17 * __pyx_v_labelled_times.strides[2]) ))) < (*((double *) ( /* dim=0 */ (__pyx_v_arrival_times.data + __pyx_t_18 * __pyx_v_arrival_times.strides[0]) )))) != 0);
-                                  if (__pyx_t_19) {
+                __pyx_t_15 = __pyx_v_e1;
+                __pyx_t_16 = __pyx_v_x;
+                __pyx_t_17 = __pyx_v_i;
+                __pyx_t_18 = __pyx_v_t;
+                __pyx_t_19 = (((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_15 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_16 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_17 * __pyx_v_labelled_times.strides[2]) ))) < (*((double *) ( /* dim=0 */ (__pyx_v_arrival_times.data + __pyx_t_18 * __pyx_v_arrival_times.strides[0]) )))) != 0);
+                if (__pyx_t_19) {
 
-                                    /* "computation.pyx":504
- *                 for i in range(count[e1,x]):
- *                     if ((labelled_times[e1,x,i]<arrival_times[t])):
- *                         eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0             # <<<<<<<<<<<<<<
- *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                         log_comp = log(eval_time)
+                  /* "computation.pyx":504
+ *                     for i in range(count[e1,x]):
+ *                         if ((labelled_times[e1,x,i]<arrival_times[t])):
+ *                             eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0             # <<<<<<<<<<<<<<
+ *                             power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                             log_comp = log(eval_time)
  */
-                                    __pyx_t_20 = __pyx_v_t;
-                                    __pyx_t_21 = __pyx_v_e1;
-                                    __pyx_t_22 = __pyx_v_x;
-                                    __pyx_t_23 = __pyx_v_i;
-                                    __pyx_v_eval_time = (((*((double *) ( /* dim=0 */ (__pyx_v_arrival_times.data + __pyx_t_20 * __pyx_v_arrival_times.strides[0]) ))) - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_21 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_22 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_23 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
+                  __pyx_t_20 = __pyx_v_t;
+                  __pyx_t_21 = __pyx_v_e1;
+                  __pyx_t_22 = __pyx_v_x;
+                  __pyx_t_23 = __pyx_v_i;
+                  __pyx_v_eval_time = (((*((double *) ( /* dim=0 */ (__pyx_v_arrival_times.data + __pyx_t_20 * __pyx_v_arrival_times.strides[0]) ))) - (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_labelled_times.data + __pyx_t_21 * __pyx_v_labelled_times.strides[0]) ) + __pyx_t_22 * __pyx_v_labelled_times.strides[1]) ) + __pyx_t_23 * __pyx_v_labelled_times.strides[2]) )))) + 1.0);
 
-                                    /* "computation.pyx":505
- *                     if ((labelled_times[e1,x,i]<arrival_times[t])):
- *                         eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
- *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])             # <<<<<<<<<<<<<<
- *                         log_comp = log(eval_time)
- *                         ESSE[e1,x,t] += power_comp
+                  /* "computation.pyx":505
+ *                         if ((labelled_times[e1,x,i]<arrival_times[t])):
+ *                             eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
+ *                             power_comp = pow(eval_time,-decay_coefficients[e1,x])             # <<<<<<<<<<<<<<
+ *                             log_comp = log(eval_time)
+ *                             ESSE[e1,x,t] += power_comp
  */
-                                    __pyx_t_24 = __pyx_v_e1;
-                                    __pyx_t_25 = __pyx_v_x;
-                                    __pyx_v_power_comp = pow(__pyx_v_eval_time, (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_decay_coefficients.data + __pyx_t_24 * __pyx_v_decay_coefficients.strides[0]) ) + __pyx_t_25 * __pyx_v_decay_coefficients.strides[1]) )))));
+                  __pyx_t_24 = __pyx_v_e1;
+                  __pyx_t_25 = __pyx_v_x;
+                  __pyx_v_power_comp = pow(__pyx_v_eval_time, (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_decay_coefficients.data + __pyx_t_24 * __pyx_v_decay_coefficients.strides[0]) ) + __pyx_t_25 * __pyx_v_decay_coefficients.strides[1]) )))));
 
-                                    /* "computation.pyx":506
- *                         eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
- *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                         log_comp = log(eval_time)             # <<<<<<<<<<<<<<
- *                         ESSE[e1,x,t] += power_comp
- *                         ESSE_one[e1,x,t] += power_comp*log_comp
+                  /* "computation.pyx":506
+ *                             eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
+ *                             power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                             log_comp = log(eval_time)             # <<<<<<<<<<<<<<
+ *                             ESSE[e1,x,t] += power_comp
+ *                             ESSE_one[e1,x,t] += power_comp*log_comp
  */
-                                    __pyx_v_log_comp = log(__pyx_v_eval_time);
+                  __pyx_v_log_comp = log(__pyx_v_eval_time);
 
-                                    /* "computation.pyx":507
- *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
- *                         log_comp = log(eval_time)
- *                         ESSE[e1,x,t] += power_comp             # <<<<<<<<<<<<<<
- *                         ESSE_one[e1,x,t] += power_comp*log_comp
- *                     else:
+                  /* "computation.pyx":507
+ *                             power_comp = pow(eval_time,-decay_coefficients[e1,x])
+ *                             log_comp = log(eval_time)
+ *                             ESSE[e1,x,t] += power_comp             # <<<<<<<<<<<<<<
+ *                             ESSE_one[e1,x,t] += power_comp*log_comp
+ *                         else:
  */
-                                    __pyx_t_26 = __pyx_v_e1;
-                                    __pyx_t_27 = __pyx_v_x;
-                                    __pyx_t_28 = __pyx_v_t;
-                                    *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE.data + __pyx_t_26 * __pyx_v_ESSE.strides[0]) ) + __pyx_t_27 * __pyx_v_ESSE.strides[1]) ) + __pyx_t_28 * __pyx_v_ESSE.strides[2]) )) += __pyx_v_power_comp;
+                  __pyx_t_26 = __pyx_v_e1;
+                  __pyx_t_27 = __pyx_v_x;
+                  __pyx_t_28 = __pyx_v_t;
+                  *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE.data + __pyx_t_26 * __pyx_v_ESSE.strides[0]) ) + __pyx_t_27 * __pyx_v_ESSE.strides[1]) ) + __pyx_t_28 * __pyx_v_ESSE.strides[2]) )) += __pyx_v_power_comp;
 
-                                    /* "computation.pyx":508
- *                         log_comp = log(eval_time)
- *                         ESSE[e1,x,t] += power_comp
- *                         ESSE_one[e1,x,t] += power_comp*log_comp             # <<<<<<<<<<<<<<
- *                     else:
- *                         break
+                  /* "computation.pyx":508
+ *                             log_comp = log(eval_time)
+ *                             ESSE[e1,x,t] += power_comp
+ *                             ESSE_one[e1,x,t] += power_comp*log_comp             # <<<<<<<<<<<<<<
+ *                         else:
+ *                             break
  */
-                                    __pyx_t_29 = __pyx_v_e1;
-                                    __pyx_t_30 = __pyx_v_x;
-                                    __pyx_t_31 = __pyx_v_t;
-                                    *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE_one.data + __pyx_t_29 * __pyx_v_ESSE_one.strides[0]) ) + __pyx_t_30 * __pyx_v_ESSE_one.strides[1]) ) + __pyx_t_31 * __pyx_v_ESSE_one.strides[2]) )) += (__pyx_v_power_comp * __pyx_v_log_comp);
+                  __pyx_t_29 = __pyx_v_e1;
+                  __pyx_t_30 = __pyx_v_x;
+                  __pyx_t_31 = __pyx_v_t;
+                  *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE_one.data + __pyx_t_29 * __pyx_v_ESSE_one.strides[0]) ) + __pyx_t_30 * __pyx_v_ESSE_one.strides[1]) ) + __pyx_t_31 * __pyx_v_ESSE_one.strides[2]) )) += (__pyx_v_power_comp * __pyx_v_log_comp);
 
-                                    /* "computation.pyx":503
- *             for x in range(num_states):
- *                 for i in range(count[e1,x]):
- *                     if ((labelled_times[e1,x,i]<arrival_times[t])):             # <<<<<<<<<<<<<<
- *                         eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
- *                         power_comp = pow(eval_time,-decay_coefficients[e1,x])
+                  /* "computation.pyx":503
+ *                 for x in range(num_states):
+ *                     for i in range(count[e1,x]):
+ *                         if ((labelled_times[e1,x,i]<arrival_times[t])):             # <<<<<<<<<<<<<<
+ *                             eval_time = arrival_times[t]-labelled_times[e1,x,i]+1.0
+ *                             power_comp = pow(eval_time,-decay_coefficients[e1,x])
  */
-                                    goto __pyx_L16;
-                                  }
+                  goto __pyx_L14;
+                }
 
-                                  /* "computation.pyx":510
- *                         ESSE_one[e1,x,t] += power_comp*log_comp
- *                     else:
- *                         break             # <<<<<<<<<<<<<<
- *                 intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]
- *         if (intensity[t]>0):
+                /* "computation.pyx":510
+ *                             ESSE_one[e1,x,t] += power_comp*log_comp
+ *                         else:
+ *                             break             # <<<<<<<<<<<<<<
+ *                     intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]
+ *             if (intensity[t]>0):
  */
-                                  /*else*/ {
-                                    goto __pyx_L15_break;
-                                  }
-                                  __pyx_L16:;
-                                }
-                                __pyx_L15_break:;
+                /*else*/ {
+                  goto __pyx_L13_break;
+                }
+                __pyx_L14:;
+              }
+              __pyx_L13_break:;
 
-                                /* "computation.pyx":511
- *                     else:
- *                         break
- *                 intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]             # <<<<<<<<<<<<<<
- *         if (intensity[t]>0):
- *             intensity_inverse[t]=1/intensity[t]
+              /* "computation.pyx":511
+ *                         else:
+ *                             break
+ *                     intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]             # <<<<<<<<<<<<<<
+ *             if (intensity[t]>0):
+ *                 intensity_inverse[t]=1/intensity[t]
  */
-                                __pyx_t_32 = __pyx_v_e1;
-                                __pyx_t_33 = __pyx_v_x;
-                                __pyx_t_34 = __pyx_v_t;
-                                __pyx_t_35 = __pyx_v_e1;
-                                __pyx_t_36 = __pyx_v_x;
-                                __pyx_t_37 = __pyx_v_t;
-                                *((double *) ( /* dim=0 */ (__pyx_v_intensity.data + __pyx_t_37 * __pyx_v_intensity.strides[0]) )) += ((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE.data + __pyx_t_32 * __pyx_v_ESSE.strides[0]) ) + __pyx_t_33 * __pyx_v_ESSE.strides[1]) ) + __pyx_t_34 * __pyx_v_ESSE.strides[2]) ))) * (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_impact_coefficients.data + __pyx_t_35 * __pyx_v_impact_coefficients.strides[0]) ) + __pyx_t_36 * __pyx_v_impact_coefficients.strides[1]) ))));
-                              }
-                            }
+              __pyx_t_32 = __pyx_v_e1;
+              __pyx_t_33 = __pyx_v_x;
+              __pyx_t_34 = __pyx_v_t;
+              __pyx_t_35 = __pyx_v_e1;
+              __pyx_t_36 = __pyx_v_x;
+              __pyx_t_37 = __pyx_v_t;
+              *((double *) ( /* dim=0 */ (__pyx_v_intensity.data + __pyx_t_37 * __pyx_v_intensity.strides[0]) )) += ((*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_ESSE.data + __pyx_t_32 * __pyx_v_ESSE.strides[0]) ) + __pyx_t_33 * __pyx_v_ESSE.strides[1]) ) + __pyx_t_34 * __pyx_v_ESSE.strides[2]) ))) * (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_impact_coefficients.data + __pyx_t_35 * __pyx_v_impact_coefficients.strides[0]) ) + __pyx_t_36 * __pyx_v_impact_coefficients.strides[1]) ))));
+            }
+          }
 
-                            /* "computation.pyx":512
- *                         break
- *                 intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]
- *         if (intensity[t]>0):             # <<<<<<<<<<<<<<
- *             intensity_inverse[t]=1/intensity[t]
- *             l_plus +=log(intensity[t])
+          /* "computation.pyx":512
+ *                             break
+ *                     intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]
+ *             if (intensity[t]>0):             # <<<<<<<<<<<<<<
+ *                 intensity_inverse[t]=1/intensity[t]
+ *                 l_plus +=log(intensity[t])
  */
-                            __pyx_t_38 = __pyx_v_t;
-                            __pyx_t_19 = (((*((double *) ( /* dim=0 */ (__pyx_v_intensity.data + __pyx_t_38 * __pyx_v_intensity.strides[0]) ))) > 0.0) != 0);
-                            if (__pyx_t_19) {
+          __pyx_t_38 = __pyx_v_t;
+          __pyx_t_19 = (((*((double *) ( /* dim=0 */ (__pyx_v_intensity.data + __pyx_t_38 * __pyx_v_intensity.strides[0]) ))) > 0.0) != 0);
+          if (__pyx_t_19) {
 
-                              /* "computation.pyx":513
- *                 intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]
- *         if (intensity[t]>0):
- *             intensity_inverse[t]=1/intensity[t]             # <<<<<<<<<<<<<<
- *             l_plus +=log(intensity[t])
- *             grad_base_rate +=intensity_inverse[t]
+            /* "computation.pyx":513
+ *                     intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]
+ *             if (intensity[t]>0):
+ *                 intensity_inverse[t]=1/intensity[t]             # <<<<<<<<<<<<<<
+ *                 l_plus +=log(intensity[t])
+ *                 grad_base_rate +=intensity_inverse[t]
  */
-                              __pyx_t_39 = __pyx_v_t;
-                              __pyx_t_40 = (*((double *) ( /* dim=0 */ (__pyx_v_intensity.data + __pyx_t_39 * __pyx_v_intensity.strides[0]) )));
-                              if (unlikely(__pyx_t_40 == 0)) {
-                                #ifdef WITH_THREAD
-                                PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
-                                #endif
-                                PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-                                #ifdef WITH_THREAD
-                                __Pyx_PyGILState_Release(__pyx_gilstate_save);
-                                #endif
-                                __PYX_ERR(0, 513, __pyx_L8_error)
-                              }
-                              __pyx_t_41 = __pyx_v_t;
-                              *((double *) ( /* dim=0 */ (__pyx_v_intensity_inverse.data + __pyx_t_41 * __pyx_v_intensity_inverse.strides[0]) )) = (1.0 / __pyx_t_40);
+            __pyx_t_39 = __pyx_v_t;
+            __pyx_t_40 = (*((double *) ( /* dim=0 */ (__pyx_v_intensity.data + __pyx_t_39 * __pyx_v_intensity.strides[0]) )));
+            if (unlikely(__pyx_t_40 == 0)) {
+              #ifdef WITH_THREAD
+              PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
+              #endif
+              PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+              #ifdef WITH_THREAD
+              __Pyx_PyGILState_Release(__pyx_gilstate_save);
+              #endif
+              __PYX_ERR(0, 513, __pyx_L4_error)
+            }
+            __pyx_t_41 = __pyx_v_t;
+            *((double *) ( /* dim=0 */ (__pyx_v_intensity_inverse.data + __pyx_t_41 * __pyx_v_intensity_inverse.strides[0]) )) = (1.0 / __pyx_t_40);
 
-                              /* "computation.pyx":514
- *         if (intensity[t]>0):
- *             intensity_inverse[t]=1/intensity[t]
- *             l_plus +=log(intensity[t])             # <<<<<<<<<<<<<<
- *             grad_base_rate +=intensity_inverse[t]
- *         else:
+            /* "computation.pyx":514
+ *             if (intensity[t]>0):
+ *                 intensity_inverse[t]=1/intensity[t]
+ *                 l_plus +=log(intensity[t])             # <<<<<<<<<<<<<<
+ *                 grad_base_rate +=intensity_inverse[t]
+ *             else:
  */
-                              __pyx_t_42 = __pyx_v_t;
-                              __pyx_v_l_plus = (__pyx_v_l_plus + log((*((double *) ( /* dim=0 */ (__pyx_v_intensity.data + __pyx_t_42 * __pyx_v_intensity.strides[0]) )))));
+            __pyx_t_42 = __pyx_v_t;
+            __pyx_v_l_plus = (__pyx_v_l_plus + log((*((double *) ( /* dim=0 */ (__pyx_v_intensity.data + __pyx_t_42 * __pyx_v_intensity.strides[0]) )))));
 
-                              /* "computation.pyx":515
- *             intensity_inverse[t]=1/intensity[t]
- *             l_plus +=log(intensity[t])
- *             grad_base_rate +=intensity_inverse[t]             # <<<<<<<<<<<<<<
- *         else:
- *             count_zero_intensity+=1
+            /* "computation.pyx":515
+ *                 intensity_inverse[t]=1/intensity[t]
+ *                 l_plus +=log(intensity[t])
+ *                 grad_base_rate +=intensity_inverse[t]             # <<<<<<<<<<<<<<
+ *             else:
+ *                 count_zero_intensity+=1
  */
-                              __pyx_t_43 = __pyx_v_t;
-                              __pyx_v_grad_base_rate = (__pyx_v_grad_base_rate + (*((double *) ( /* dim=0 */ (__pyx_v_intensity_inverse.data + __pyx_t_43 * __pyx_v_intensity_inverse.strides[0]) ))));
+            __pyx_t_43 = __pyx_v_t;
+            __pyx_v_grad_base_rate = (__pyx_v_grad_base_rate + (*((double *) ( /* dim=0 */ (__pyx_v_intensity_inverse.data + __pyx_t_43 * __pyx_v_intensity_inverse.strides[0]) ))));
 
-                              /* "computation.pyx":512
- *                         break
- *                 intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]
- *         if (intensity[t]>0):             # <<<<<<<<<<<<<<
- *             intensity_inverse[t]=1/intensity[t]
- *             l_plus +=log(intensity[t])
+            /* "computation.pyx":512
+ *                             break
+ *                     intensity[t]+=ESSE[e1,x,t]*impact_coefficients[e1,x]
+ *             if (intensity[t]>0):             # <<<<<<<<<<<<<<
+ *                 intensity_inverse[t]=1/intensity[t]
+ *                 l_plus +=log(intensity[t])
  */
-                              goto __pyx_L17;
-                            }
+            goto __pyx_L15;
+          }
 
-                            /* "computation.pyx":517
- *             grad_base_rate +=intensity_inverse[t]
- *         else:
- *             count_zero_intensity+=1             # <<<<<<<<<<<<<<
+          /* "computation.pyx":517
+ *                 grad_base_rate +=intensity_inverse[t]
+ *             else:
+ *                 count_zero_intensity+=1             # <<<<<<<<<<<<<<
  *     if (count_zero_intensity >0):
  *         print('compute_partial_at_arrival_times: count_zero_intensity={}'.format(count_zero_intensity))
  */
-                            /*else*/ {
-                              __pyx_v_count_zero_intensity = (__pyx_v_count_zero_intensity + 1);
-                            }
-                            __pyx_L17:;
-                            goto __pyx_L19;
-                            __pyx_L8_error:;
-                            {
-                                #ifdef WITH_THREAD
-                                PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
-                                #endif
-                                #ifdef _OPENMP
-                                #pragma omp flush(__pyx_parallel_exc_type)
-                                #endif /* _OPENMP */
-                                if (!__pyx_parallel_exc_type) {
-                                  __Pyx_ErrFetchWithState(&__pyx_parallel_exc_type, &__pyx_parallel_exc_value, &__pyx_parallel_exc_tb);
-                                  __pyx_parallel_filename = __pyx_filename; __pyx_parallel_lineno = __pyx_lineno; __pyx_parallel_clineno = __pyx_clineno;
-                                  __Pyx_GOTREF(__pyx_parallel_exc_type);
-                                }
-                                #ifdef WITH_THREAD
-                                __Pyx_PyGILState_Release(__pyx_gilstate_save);
-                                #endif
-                            }
-                            __pyx_parallel_why = 4;
-                            goto __pyx_L18;
-                            __pyx_L18:;
-                            #ifdef _OPENMP
-                            #pragma omp critical(__pyx_parallel_lastprivates0)
-                            #endif /* _OPENMP */
-                            {
-                                __pyx_parallel_temp0 = __pyx_v_count_zero_intensity;
-                                __pyx_parallel_temp1 = __pyx_v_e1;
-                                __pyx_parallel_temp2 = __pyx_v_eval_time;
-                                __pyx_parallel_temp3 = __pyx_v_grad_base_rate;
-                                __pyx_parallel_temp4 = __pyx_v_i;
-                                __pyx_parallel_temp5 = __pyx_v_l_plus;
-                                __pyx_parallel_temp6 = __pyx_v_log_comp;
-                                __pyx_parallel_temp7 = __pyx_v_power_comp;
-                                __pyx_parallel_temp8 = __pyx_v_t;
-                                __pyx_parallel_temp9 = __pyx_v_x;
-                            }
-                            __pyx_L19:;
-                            #ifdef _OPENMP
-                            #pragma omp flush(__pyx_parallel_why)
-                            #endif /* _OPENMP */
-                        }
-                    }
-                    #ifdef _OPENMP
-                    Py_END_ALLOW_THREADS
-                    #else
-{
-#ifdef WITH_THREAD
-                    PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
-                    #endif
-                    #endif /* _OPENMP */
-                    /* Clean up any temporaries */
-                    #ifdef WITH_THREAD
-                    __Pyx_PyGILState_Release(__pyx_gilstate_save);
-                    #endif
-                    #ifndef _OPENMP
-}
-#endif /* _OPENMP */
-                }
-            }
-            if (__pyx_parallel_exc_type) {
-              /* This may have been overridden by a continue, break or return in another thread. Prefer the error. */
-              __pyx_parallel_why = 4;
-            }
-            if (__pyx_parallel_why) {
-              __pyx_v_count_zero_intensity = __pyx_parallel_temp0;
-              __pyx_v_e1 = __pyx_parallel_temp1;
-              __pyx_v_eval_time = __pyx_parallel_temp2;
-              __pyx_v_grad_base_rate = __pyx_parallel_temp3;
-              __pyx_v_i = __pyx_parallel_temp4;
-              __pyx_v_l_plus = __pyx_parallel_temp5;
-              __pyx_v_log_comp = __pyx_parallel_temp6;
-              __pyx_v_power_comp = __pyx_parallel_temp7;
-              __pyx_v_t = __pyx_parallel_temp8;
-              __pyx_v_x = __pyx_parallel_temp9;
-              switch (__pyx_parallel_why) {
-                    case 4:
-                {
-                    #ifdef WITH_THREAD
-                    PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
-                    #endif
-                    __Pyx_GIVEREF(__pyx_parallel_exc_type);
-                    __Pyx_ErrRestoreWithState(__pyx_parallel_exc_type, __pyx_parallel_exc_value, __pyx_parallel_exc_tb);
-                    __pyx_filename = __pyx_parallel_filename; __pyx_lineno = __pyx_parallel_lineno; __pyx_clineno = __pyx_parallel_clineno;
-                    #ifdef WITH_THREAD
-                    __Pyx_PyGILState_Release(__pyx_gilstate_save);
-                    #endif
-                }
-                goto __pyx_L4_error;
-              }
-            }
+          /*else*/ {
+            __pyx_v_count_zero_intensity = (__pyx_v_count_zero_intensity + 1);
+          }
+          __pyx_L15:;
         }
-        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-            #undef likely
-            #undef unlikely
-            #define likely(x)   __builtin_expect(!!(x), 1)
-            #define unlikely(x) __builtin_expect(!!(x), 0)
-        #endif
       }
 
-      /* "computation.pyx":499
- * #     with nogil:
- * #         for t in range(num_arrival_times):
- *     for t in prange(num_arrival_times,nogil=True): #schedule='guided'):             # <<<<<<<<<<<<<<
- *         for e1 in range(num_event_types):
- *             for x in range(num_states):
+      /* "computation.pyx":498
+ *     cdef int count_zero_intensity = 0
+ *     #for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
+ *     with nogil:             # <<<<<<<<<<<<<<
+ *         for t in range(num_arrival_times):
+ *             for e1 in range(num_event_types):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -15688,8 +15430,8 @@ static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHO
   }
 
   /* "computation.pyx":518
- *         else:
- *             count_zero_intensity+=1
+ *             else:
+ *                 count_zero_intensity+=1
  *     if (count_zero_intensity >0):             # <<<<<<<<<<<<<<
  *         print('compute_partial_at_arrival_times: count_zero_intensity={}'.format(count_zero_intensity))
  *     return l_plus,grad_base_rate
@@ -15698,7 +15440,7 @@ static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHO
   if (__pyx_t_19) {
 
     /* "computation.pyx":519
- *             count_zero_intensity+=1
+ *                 count_zero_intensity+=1
  *     if (count_zero_intensity >0):
  *         print('compute_partial_at_arrival_times: count_zero_intensity={}'.format(count_zero_intensity))             # <<<<<<<<<<<<<<
  *     return l_plus,grad_base_rate
@@ -15728,8 +15470,8 @@ static PyObject *__pyx_pf_11computation_34compute_partial_at_arrival_times(CYTHO
     __Pyx_DECREF(__pyx_t_44); __pyx_t_44 = 0;
 
     /* "computation.pyx":518
- *         else:
- *             count_zero_intensity+=1
+ *             else:
+ *                 count_zero_intensity+=1
  *     if (count_zero_intensity >0):             # <<<<<<<<<<<<<<
  *         print('compute_partial_at_arrival_times: count_zero_intensity={}'.format(count_zero_intensity))
  *     return l_plus,grad_base_rate
@@ -59033,7 +58775,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 48, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 47, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 272, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 856, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 1038, __pyx_L1_error)

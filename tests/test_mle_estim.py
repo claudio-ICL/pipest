@@ -48,13 +48,8 @@ import computation
 # import goodness_of_fit
 
 
-
-
 # import mle_estimation as mle_estim
 
-
-
-# In[ ]:
 
 def main():
     list_of_n_states=[3,5]
@@ -70,11 +65,11 @@ def main():
     tot_n_states=sd_model.state_enc.tot_n_states
 
     # The base rates $\nu$
-    nus = 0.0018025*np.random.randint(low=2,high=6,size=n_events)
+    nus = 0.05*np.random.randint(low=2,high=6,size=n_events)
     # The impact coefficients $\alpha$
-    alphas = np.random.uniform(0.0002,0.2435,size=(n_events, tot_n_states, n_events)).astype(np.float)
+    alphas = np.random.uniform(0.0002,0.4,size=(n_events, tot_n_states, n_events)).astype(np.float)
     # The decay coefficients $\beta$
-    betas = np.random.uniform(1.265,1.805,size=(n_events, tot_n_states, n_events)).astype(np.float)
+    betas = np.random.uniform(1.265,2.805,size=(n_events, tot_n_states, n_events)).astype(np.float)
     sd_model.set_hawkes_parameters(nus,alphas,betas)
     # The transition probabilities $\phi$
     phis = sd_model.state_enc.generate_random_transition_prob(n_events=n_events).astype(np.float)
@@ -86,7 +81,7 @@ def main():
 
 
     time_start = 0.0
-    time_end = time_start + 2*60*60
+    time_end = time_start + 1.0*60*60
     max_number_of_events = 4000
 
 
@@ -97,7 +92,7 @@ def main():
         time_start, time_end,max_number_of_events=max_number_of_events,
         add_initial_cond=True,
         store_results=True, report_full_volumes=False)
-    time_end=np.array(times[-1],copy=True)
+    time_end=float(times[-1])
 
     sd_model.create_goodness_of_fit(type_of_input='simulated')
     sd_model.goodness_of_fit.ks_test_on_residuals()
@@ -111,11 +106,13 @@ def main():
     d_E = sd_model.number_of_event_types
     d_S = sd_model.number_of_states 
     "Fictious initial guess"
-    nus = np.random.uniform(low=0.0, high = 1.0, size=(d_E,))
-    alphas = np.random.uniform(low=0.0, high = 2.0, size=(d_E,d_S,d_E))
-    betas = np.random.uniform(low=1.1, high = 5.0, size=(d_E,d_S,d_E))
-    guess = computation.parameters_to_array(nus, alphas, betas)
-    list_init_guesses = [guess]
+    list_init_guesses = []
+    for k in range(3):
+        nus = np.random.uniform(low=0.0, high = 1.0, size=(d_E,))
+        alphas = np.random.uniform(low=0.0, high = 1.0, size=(d_E,d_S,d_E))
+        betas = np.random.uniform(low=1.1, high = 3.0, size=(d_E,d_S,d_E))
+        guess = computation.parameters_to_array(nus, alphas, betas)
+        list_init_guesses.append(np.array(guess,copy=True))
     "Set the estimation"    
     sd_model.mle_estim.set_estimation_of_hawkes_param(
         time_start, time_end,
@@ -124,9 +121,10 @@ def main():
         maxiter=10,
         number_of_additional_guesses=3,
         parallel=True,
-        pre_estim_ord_hawkes=False,
-        pre_estim_parallel=False,
-        number_of_attempts = 2
+        pre_estim_ord_hawkes=True,
+        pre_estim_parallel=True,
+        number_of_attempts = 2,
+        num_processes = 8
     )
     
 #     exit()
