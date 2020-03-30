@@ -902,10 +902,10 @@ class SDHawkes:
                 times, events,states)
             self.labelled_times = np.array(lt, copy=True)
             self.count = np.array(count,copy=True)
-            self.sampled_times=np.array(times, copy=True)
-            self.sampled_events=np.array(events, copy=True)
-            self.sampled_states=np.array(states, copy=True)
-            self.sampled_volume=np.array(volumes, copy=True)
+            self.simulated_times=np.array(times, copy=True)
+            self.simulated_events=np.array(events, copy=True)
+            self.simulated_states=np.array(states, copy=True)
+            self.simulated_volume=np.array(volumes, copy=True)
         return times, events, states, volumes    
      
    
@@ -1035,9 +1035,9 @@ class SDHawkes:
                 times, events,states)
             self.labelled_times = np.array(lt, copy=True)
             self.count = np.array(count,copy=True)
-            self.sampled_times=np.array(times, copy=True)
-            self.sampled_events=np.array(events, copy=True)
-            self.sampled_states=np.array(states, copy=True)
+            self.simulated_times=np.array(times, copy=True)
+            self.simulated_events=np.array(events, copy=True)
+            self.simulated_states=np.array(states, copy=True)
             if report_intensities:
                 self.history_of_intensities = np.array(history_of_intensities, copy=True)
         return times, events, states, volumes,inventory, history_of_intensities
@@ -1048,17 +1048,17 @@ class SDHawkes:
     def make_start_liquid_origin_of_times(self,delete_negative_times=False):
         time_start=copy.copy(self.liquidator.time_start)
         self.liquidator.termination_time -= time_start
-        cdef np.ndarray[DTYPEf_t, ndim=1] times = self.sampled_times - time_start*np.ones_like(self.sampled_times)
+        cdef np.ndarray[DTYPEf_t, ndim=1] times = self.simulated_times - time_start*np.ones_like(self.simulated_times)
         if delete_negative_times:
             idx = times>=0
-            self.sampled_times=np.array(times[idx],copy=True)
-            self.sampled_events=np.array(self.sampled_events[idx],copy=True)
-            self.sampled_states=np.array(self.sampled_states[idx],copy=True)
+            self.simulated_times=np.array(times[idx],copy=True)
+            self.simulated_events=np.array(self.simulated_events[idx],copy=True)
+            self.simulated_states=np.array(self.simulated_states[idx],copy=True)
             print('sd_hawkes: start_liquidation has been set as origin of times, and negative times have been deleted')
             message='  self.liquidator.termination_time={}'.format(self.liquidator.termination_time)
-            message+='\n  self.sampled_times.shape={}'.format(self.sampled_times.shape)
-            message+='\n  self.sampled_events.shape={}'.format(self.sampled_events.shape)
-            message+='\n  self.sampled_states.shape={}'.format(self.sampled_states.shape)
+            message+='\n  self.simulated_times.shape={}'.format(self.simulated_times.shape)
+            message+='\n  self.simulated_events.shape={}'.format(self.simulated_events.shape)
+            message+='\n  self.simulated_states.shape={}'.format(self.simulated_states.shape)
             print(message)
         else:
             print('sd_hawkes: start_liquidation has been set as origin of times')
@@ -1069,7 +1069,7 @@ class SDHawkes:
         try:
             lt, count = computation.distribute_times_per_event_state(
                 self.number_of_event_types, self.number_of_states,
-                self.sampled_times,self.sampled_events,self.sampled_states)
+                self.simulated_times,self.simulated_events,self.simulated_states)
             self.labelled_times = lt
             self.count = count
             print('  self.labelled_times.shape={}'.format(self.labelled_times.shape))
@@ -1087,9 +1087,9 @@ class SDHawkes:
     def create_goodness_of_fit(self, str type_of_input='simulated'):
         "type_of_input can either be 'simulated' or 'empirical'"
         if type_of_input == 'simulated':
-            times=self.sampled_times
-            events=self.sampled_events
-            states=self.sampled_states
+            times=self.simulated_times
+            events=self.simulated_events
+            states=self.simulated_states
         elif type_of_input =='empirical':
             times=self.data.observed_times
             events=self.data.observed_events
@@ -1108,9 +1108,9 @@ class SDHawkes:
                               DTYPEf_t tol=1.0e-15, two_scales=False
                              ):
         if type_of_input == 'simulated':
-            times=self.sampled_times
-            events=self.sampled_events
-            states=self.sampled_states
+            times=self.simulated_times
+            events=self.simulated_events
+            states=self.simulated_states
         elif type_of_input =='empirical':
             times=self.data.observed_times
             events=self.data.observed_events
@@ -1128,9 +1128,9 @@ class SDHawkes:
         )
     def create_mle_estim(self, str type_of_input = 'simulated',):
         if type_of_input == 'simulated':
-            times=self.sampled_times
-            events=self.sampled_events
-            states=self.sampled_states
+            times=self.simulated_times
+            events=self.simulated_events
+            states=self.simulated_states
         elif type_of_input =='empirical':
             times=self.data.observed_times
             events=self.data.observed_events
@@ -1254,9 +1254,9 @@ class SDHawkes:
         impact=impact_profile.impact(
             self.liquidator,
             self.state_enc.weakly_deflationary_states,
-            self.sampled_times,
-            self.sampled_events,
-            self.sampled_states,)
+            self.simulated_times,
+            self.simulated_events,
+            self.simulated_states,)
         impact.produce_weakly_defl_pp(
             self.base_rates, self.impact_coefficients, self.decay_coefficients,
             self.transition_probabilities)
