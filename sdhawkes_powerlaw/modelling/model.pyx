@@ -18,6 +18,7 @@ sys.path.append(path_sdhawkes+'/resources/')
 sys.path.append(path_sdhawkes+'/modelling/')
 sys.path.append(path_lobster_pyscripts+'/')
 import time
+import datetime
 import pickle
 
 from cython.parallel import prange
@@ -123,22 +124,32 @@ class HawkesKernel:
         print("L1_norms have been stored. spectral_radius={}".format(self.spectral_radius))
 
 class Calibration:
-    def __init__(self,data,str name_of_model='sdhawkes_model',partial=False, int event_type=0, str type_of_init='ord_graddesc'):
+    def __init__(self, data, str name_of_model='sdhawkes_model', 
+                 partial=False, int event_type=0,
+                 str type_of_preestim = 'ordinary_hawkes' #or 'nonparam'
+                ):
         self.data=data
         self.name_of_model=name_of_model
         os_info = os.uname()
-        self.type_of_init=type_of_init
+        self.type_of_preestim=type_of_preestim
         print('Calibration is being performed on the following machine:\n {}'.format(os_info))
         self.os_info=os_info    
         self.partial=partial
+        cdef list mle_info = []
+        self.mle_info = mle_info
         if partial:
             print("Partial calibration for event_type={}".format(event_type))
             self.event_type=event_type
-    def get_minim_proc_of_hawkes_parameters(self,minim_proc):
-        self.minim_proc_of_hawkes_param = minim_proc
-    def store_calibration_runtime(self,DTYPEf_t runtime):
-        self.calibration_runtime=runtime
-
+    def store_runtime_for_state_processes(self,DTYPEf_t run_time):
+        self.runtime_for_state_processes = run_time
+    def store_mle_info(self, list results_of_estimation):
+        info_e={}
+        for res in results_of_estimation:
+            info_e=copy.copy(res)
+            del info_e["base_rate"]
+            del info_e["imp_coef"]
+            del info_e["dec_coef"]
+            self.mle_info.append(info_e)
 
 class Liquidator:
     def __init__(self,
@@ -234,7 +245,9 @@ class SDHawkes:
         self.path_pipest=path_pipest
         self.path_models=path_models
             
-        
+        cdef str name_of_model = 'SDHawkel_model'
+        self.name_of_model = name_of_model
+        self.datetime_of_initialisation=datetime.datetime()
         if not events_labels:
             self.events_labels = list(range(number_of_event_types))
         else:
@@ -252,7 +265,7 @@ class SDHawkes:
         else:
             self.number_of_states = number_of_states
             if number_of_states != self.state_enc.tot_n_states:
-                message='sd_hawkes.__init__: WARNING:'
+                message='SDHawkes.__init__: WARNING:'
                 message+= 'Given number_of_states inconststent with list_of_n_states'
                 message+= ' \n number_of_states={},'.format(number_of_states)
                 message+= '  list_of_n_states={}'.format(list_of_n_states)
@@ -278,7 +291,15 @@ class SDHawkes:
         cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.zeros((number_of_states,2*number_of_lob_levels),dtype=DTYPEf)
         self.dirichlet_param = dirichlet_param
 
-    
+    def dump(self, str name='', str path=''):
+        if name=='':
+            name=self.name_of_model
+        if path=='':
+            path=self.path_models
+        print('\nI am dumping the model with name "{}" in the directory: {}/ \n'
+              .format(name,path))
+        with open(path+'/'+name,'wb') as outfile:
+            pickle.dump(self,outfile)       
     def introduce_liquidator(self,
                              DTYPEf_t initial_inventory = 0.0,
                              time_start=None,
@@ -351,7 +372,7 @@ class SDHawkes:
             with_without_self_excitation='with'
         else:
             with_without_self_excitation='without'
-        print(('sd_hawkes.introduce_liquidator:\n  type_of_liquid:{},' 
+        print(('SDHawkes.introduce_liquidator:\n  type_of_liquid:{},' 
                +' {} self excitation.'
                +'\n new number of event types= {}')
               .format(type_of_liquid,with_without_self_excitation,self.number_of_event_types))
@@ -444,7 +465,7 @@ class SDHawkes:
             self.transition_probabilities,
             self.state_enc.deflationary_states,
             self.state_enc.inflationary_states)
-        print('sd_hawkes: asymmetry in transition_probabilities = {}'.format(asymmetry))
+        print('SDHawkes: asymmetry in transition_probabilities = {}'.format(asymmetry))
         print('Transition probabilities have been set')
     
     def enforce_symmetry_in_transition_probabilities(self, int is_liquidator_present = 0):
@@ -465,7 +486,7 @@ class SDHawkes:
             self.transition_probabilities[:,i:,:],
             self.state_enc.deflationary_states,
             self.state_enc.inflationary_states)
-        print('sd_hawkes: new asymmetry in transition_probabilities = {}'.format(asymmetry))
+        print('SDHawkes: new asymmetry in transition_probabilities = {}'.format(asymmetry))
         
 
     def set_hawkes_parameters(self, np.ndarray[DTYPEf_t, ndim=1] base_rates,
@@ -505,16 +526,6 @@ class SDHawkes:
         self.impact_decay_ratios = ratios
         print('Hawkes parameters have been set')
         
-    def set_hawkes_parameters_partial(self, int event_type,
-                                      DTYPEf_t base_rate,
-                                      np.ndarray[DTYPEf_t, ndim=2]impact_coefficients,
-                                      np.ndarray[DTYPEf_t, ndim=2] decay_coefficients):
-
-        self.base_rates[event_type] = copy.copy(base_rate)
-        self.impact_coefficients[:,:,event_type] = np.array(impact_coefficients,copy=True,dtype=DTYPEf)
-        self.decay_coefficients[:,:,event_type] =  np.array(decay_coefficients,copy=True,dtype=DTYPEf)
-        self.impact_decay_ratios[:,:,event_type] = np.divide(impact_coefficients, decay_coefficients-1.0)
-        print('Hawkes parameters for event_type {} have been set'.format(event_type))    
         
     def set_dirichlet_parameters(self, dir_param, N_samples_for_prob_constraints = 9999):
         r"""
@@ -534,7 +545,7 @@ class SDHawkes:
         cdef int s=0, l=0
         cdef str side=''
         if np.any(idx_neg):
-            print('sd_hawkes.set_dirichlet_parameters. ERROR: The following components are non-positive:')
+            print('SDHawkes.set_dirichlet_parameters. ERROR: The following components are non-positive:')
             for s in range(self.number_of_states):
                 for l in range(2*self.n_levels):
                     if idx_neg[s,l]:
@@ -543,18 +554,19 @@ class SDHawkes:
                         else:
                             side='bid'
                         print(' state={}, side={}, level={}: dir_param={}'.format(s,side,1+l//2,dir_param[s,l]))
-            raise ValueError('sd_hawkes.set_dirichlet_parameters. Given parameters has non-positive components')
+            raise ValueError('SDHawkes.set_dirichlet_parameters. Given parameters has non-positive components')
         cdef np.ndarray[DTYPEf_t, ndim = 2] dirichlet_param = np.array(dir_param,copy=True,dtype=DTYPEf)   
         self.dirichlet_param = dirichlet_param
         self.volume_enc.store_dirichlet_param(dirichlet_param, num_of_st2 = self.state_enc.array_of_n_states[1])
         self.volume_enc.store_param_for_rejection_sampling()
         print('Dirichlet parameters have been set')
         
-    def initialise_from_partial(self,list partial_models,store_after_merging=True,str name_of_model=''):
+    def initialise_from_partial(self,list partial_models, dump_after_merging=True, str name_of_model=''):
         """
         It is assumed that all part models have been calibrated on the same dataset.
         """
-        cdef int e=0,event_type=0
+        cdef int e=0, event_type=0
+        cdef list list_of_mle_results = []
         for e in range(len(partial_models)):
             model=partial_models[e]
             assert model.data.n_levels == self.n_levels
@@ -562,134 +574,133 @@ class SDHawkes:
             assert model.data.number_of_event_types == self.number_of_event_types
             assert model.data.number_of_states == self.number_of_states
             event_type=copy.copy(model.calibration.event_type)
+            assert event_type == model.mle_estim.results_of_estimation[0].get('component_e')
             print('I am reading from model number {}, referring to event_type={}'.format(e,event_type))
             print("model name is: {}".format(model.name_of_model))
-            self.set_hawkes_parameters_partial(event_type,
-                                               model.base_rates[event_type],
-                                               model.impact_coefficients[:,:,event_type],
-                                               model.decay_coefficients[:,:,event_type])
-            if e==len(partial_models)-1:
-                self.get_input_data(model.data)
-                self.set_transition_probabilities(model.transition_probabilities)
-                self.set_dirichlet_parameters(model.dirichlet_param, N_samples_for_prob_constraints = 15000)
-        if name_of_model=='':
-            name_of_model =\
-            '{}_sdhawkes_{}_{}-{}'.format(
-                self.data.symbol,self.data.date,self.data.initial_time,self.data.final_time)
-        self.name_of_model=name_of_model
-        self.calibration=Calibration(self.data,name_of_model=name_of_model)
-        minim_proc=[partial_models[e].calibration.minim_proc_of_hawkes_param
-                    for e in range(len(partial_models))]
-        self.calibration.get_minim_proc_of_hawkes_parameters(minim_proc)
-        print('Merge completed')
-        if store_after_merging:
-            print('\nI am storing the initialised model with name "{}" in the directory: {}/{}/ \n'
-                  .format(name_of_model,self.path_models,self.data.symbol))
-            with open(self.path_models+'/{}/'.format(self.data.symbol)+name_of_model,'wb') as outfile:
-                pickle.dump(self,outfile)            
-        
-    
-    def get_input_data(self,data):
+            print("len(mle_estim.results_of_estimation) = {}".format(len(model.mle_estim.results_of_estimation)))
+            list_of_mle_results+=model.mle_estim.results_of_estimation
+        print("{} mle results have been loaded".format(len(list_of_mle_results)))
+        if len(list_of_mle_results)!= self.number_of_event_types:
+            warning_message="WARNING: It was expected that len(list_of_mle_results) == self.number_of_event_types"
+            warning_message+="\nBut:\n"
+            warning_message+="len(list_of_mle_results)={};  ".format(len(list_of_mle_results))
+            warning_message+="self.number_of_event_types={}.\n".format(self.number_of_event_types)
+            print(warning_message)
+            print("list_of_mle_results=\n{}".format(list_of_mle_results))
+        self.create_mle_estim(type_of_input='empirical',store_trans_prob=True)
+        self.mle_estim.store_results_of_estimation(list_of_mle_results)
+        self.mle_estim.store_hawkes_parameters()
+        self.set_hawkes_parameters(self.mle_estim.base_rates,
+                                   self.mle_estim.hawkes_kernel.alphas,
+                                   self.mle_estim.hawkes_kernel.betas)
+        self.mle_estim.create_goodness_of_fit()
+        self.get_input_data(model.data, copy=True) #copy from last model in the list partial models
+        type_of_preestim = model.calibration.type_of_preestim #copy from last model in the list partial models
+        self.calibrate_on_input_data(partial=False,
+                                     type_of_preestim = model.calibration.type_of_preestim,
+                                     skip_mle_estim=True,
+                                     skip_estim_of_state_processes=False,
+                                     dump_after_calibration=True,
+                                     verbose=True,
+                                     )        
+    def get_input_data(self, data, copy=False):
         assert data.n_levels == self.n_levels
         assert np.all(data.state_enc.list_of_n_states == self.state_enc.list_of_n_states)
         assert data.number_of_event_types == self.number_of_event_types
         assert data.number_of_states == self.number_of_states
-        self.data = data
-    
-    def calibrate_on_input_data(self,
-                                int maximum_number_of_iterations=100, int number_of_random_guesses=0,
-                                tolerance=1e-8,
-                                store_after_calibration=False,str name_of_model='',
-                                verbose=True ):
+        if copy:
+            self.data = copy.copy(data)
+        else:
+            self.data = data    
+                
+    def calibrate_on_input_data(self, partial=True, int e=0,
+                                str name_of_model='',
+                                str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+                                DTYPEf_t max_imp_coef = 100.0,
+                                DTYPEf_t learning_rate = 0.0001,
+                                int maxiter = 50,
+                                int num_of_random_guesses=0,
+                                parallel=True,
+                                int number_of_attempts = 2,
+                                int num_processes = 0,
+                                skip_mle_estim=False,
+                                skip_estim_of_state_processes=False,
+                                dump_after_calibration=False,
+                                verbose=False,
+                                DTYPEf_t tol = 1.0e-7,
+                               ):
         times=self.data.observed_times
         events=self.data.observed_events
         states=self.data.observed_states
         volumes=self.data.observed_volumes
         "By default, time_start and time_end for the calibration are set equal to the boundaries of self.data.observed_times"
-        time_start=times[0]
-        time_end=times[len(times)-1]
+        time_start=float(times[0])
+        time_end=float(times[len(times)-1])
         if name_of_model=='':
-            name_of_model =\
-            '{}_sdhawkes_{}_{}-{}'.format(
-                self.data.symbol,self.data.date,self.data.initial_time,self.data.final_time)
+            if not partial:
+                name_of_model =\
+                '{}_sdhawkes_{}_{}-{}'.format(
+                    self.data.symbol, self.data.date, self.data.initial_time, self.data.final_time)
+            else:
+                name_of_model =\
+                '{}_sdhawkes_{}_{}-{}_partial{}'.format(
+                    self.data.symbol, self.data.date, self.data.initial_time, self.data.final_time, e)
         self.name_of_model=name_of_model
-        self.calibration=Calibration(self.data,name_of_model=name_of_model)
-        cdef DTYPEf_t runtime=-time.time()
-        cdef int n_cpus = os.cpu_count()
-        if number_of_random_guesses ==0:
-            number_of_random_guesses = 2*n_cpus
-        cdef np.ndarray[DTYPEf_t, ndim=3] phi =\
-        self.estimate_transition_probabilities(events,states,verbose=verbose)
-        cdef np.ndarray[DTYPEf_t, ndim=2] gamma =\
-        self.estimate_dirichlet_parameters(volumes,states,tolerance=tolerance,verbose=verbose)
-        minim_proc,nu,alpha,beta=\
-        self.estimate_hawkes_parameters(times, events, states,
-                                   time_start, time_end,
-                                   maximum_number_of_iterations, 
-                                   number_of_random_guesses,return_minim_proc=1)
-        self.calibration.get_minim_proc_of_hawkes_parameters(minim_proc)
-        self.set_hawkes_parameters(nu,alpha,beta)
-        self.set_transition_probabilities(phi)
-        self.set_dirichlet_parameters(gamma, N_samples_for_prob_constraints = 15000)
-        runtime+=time.time()
-        self.calibration.store_calibration_runtime(runtime)
-        if store_after_calibration:
-            print('\nI am storing the calibrated model with name "{}" in the directory: {}/{}/ \n'
-                  .format(name_of_model,self.path_models,self.data.symbol))
-            with open(self.path_models+'/{}/'.format(self.data.symbol)+name_of_model,'wb') as outfile:
-                pickle.dump(self,outfile)
-                
-                
-    def calibrate_on_input_data_partial(self, int event_type,
-                                int maximum_number_of_iterations=100, int number_of_random_guesses=0,
-                                tolerance=1e-8,
-                                store_after_calibration=False, str name_of_model='',
-                                verbose=False):
-        times=self.data.observed_times
-        events=self.data.observed_events
-        states=self.data.observed_states
-        volumes=self.data.observed_volumes
-        "By default, time_start and time_end for the calibration are set equal to the boundaries of self.data.observed_times"
-        time_start=times[0]
-        time_end=times[len(times)-1]
-        if name_of_model=='':
-            name_of_model =\
-            '{}_sdhawkes_{}_{}-{}_partial{}'.format(
-                self.data.symbol, self.data.date, self.data.initial_time, self.data.final_time, event_type)
-        self.name_of_model=name_of_model
-        self.calibration=Calibration(self.data,name_of_model=name_of_model,partial=True,event_type=event_type)
-        cdef DTYPEf_t runtime=-time.time()
-        cdef int n_cpus = os.cpu_count()
-        if number_of_random_guesses ==0:
-            number_of_random_guesses = 2*n_cpus
-        cdef np.ndarray[DTYPEf_t, ndim=3] phi =\
-        self.estimate_transition_probabilities(events,states,verbose=verbose)
-        cdef np.ndarray[DTYPEf_t, ndim=2] gamma =\
-        self.estimate_dirichlet_parameters(volumes,states,tolerance=tolerance,verbose=verbose)
-        minim_proc,nu_partial,alpha_partial,beta_partial=\
-        self.estimate_hawkes_parameters_partial(event_type,times, events, states,
-                                   time_start, time_end,
-                                   maximum_number_of_iterations, 
-                                   number_of_random_guesses,return_minim_proc=1)
-        self.calibration.get_minim_proc_of_hawkes_parameters(minim_proc)
-        self.set_hawkes_parameters_partial(event_type, nu_partial, alpha_partial, beta_partial)
-        self.set_transition_probabilities(phi)
-        self.set_dirichlet_parameters(gamma, N_samples_for_prob_constraints = 15000)
-        runtime+=time.time()
-        self.calibration.store_calibration_runtime(runtime)
-        if store_after_calibration:
-            print('\nI am storing the calibrated model with name "{}" in the directory: {}/{}/ \n'
-                  .format(name_of_model,self.path_models,self.data.symbol))
-            with open(self.path_models+'/{}/'.format(self.data.symbol)+name_of_model,'wb') as outfile:
-                pickle.dump(self,outfile)            
-  
+        self.calibration=Calibration(self.data,
+                                     name_of_model=name_of_model,
+                                     partial=partial, event_type=e,
+                                     type_of_preestim = type_of_preestim,
+                                    )
+        cdef list list_init_guesses = []
+        if not skip_mle_estim:
+            n_cpus = os.cpu_count()
+            if num_of_random_guesses<=0:
+                num_of_random_guesses = 2*n_cpus
+            if type_of_preestim == 'ordinary_hawkes':
+                pre_estim_ord_hawkes=True
+            else:
+                pre_estim_ord_hawkes=False
+            if type_of_preestim == 'nonparam':
+                list_init_guesses = self.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
+                    num_additional_random_guesses = max(1,num_of_random_guesses//2),
+                    max_imp_coef = max_imp_coef
+                )    
+            self.create_mle_estim(type_of_input = 'empirical')
+            self.mle_estim.set_estimation_of_hawkes_param(
+                time_start, time_end,
+                list_of_init_guesses = list_init_guesses,
+                max_imp_coef = max_imp_coef,
+                learning_rate = learning_rate,
+                maxiter=maxiter,
+                number_of_additional_guesses = max(1,num_of_random_guesses//2),
+                parallel=parallel,
+                pre_estim_ord_hawkes=pre_estim_ord_hawkes,
+                pre_estim_parallel=parallel,
+                number_of_attempts = number_of_attempts,
+                num_processes = num_processes,
+            )
+            self.mle_estim.launch_estimation_of_hawkes_param(partial=partial, e=e)
+            self.calibration.store_mle_info(self.mle_estim.results_of_estimation)
+        if not skip_estim_of_state_processes:
+            run_time=-time.time()
+            phi = self.estimate_transition_probabilities(events,states,verbose=verbose)
+            gamma = self.estimate_dirichlet_parameters(volumes,states,tolerance=tol,verbose=verbose)
+            self.set_transition_probabilities(phi)
+            self.set_dirichlet_parameters(gamma, N_samples_for_prob_constraints = 15000)
+            run_time+=time.time()
+            self.calibration.store_runtime_for_state_processes(run_time)
+        if dump_after_calibration:
+            name=name_of_model
+            path=self.path_models+'/'+self.data.symbol
+            self.dump(name=name,path=path)      
+            
     
     "Functions to estimate model's parameters"
        
     def estimate_dirichlet_parameters(self,np.ndarray[DTYPEf_t, ndim=2] volumes,
                                       np.ndarray[DTYPEi_t, ndim=1] states,
                                       tolerance=1e-7,verbose=False):
-        print('\nsd_hawkes: I am estimating dirichlet parameters')
+        print('SDHawkes: I am estimating dirichlet parameters')
         return mle_estim.estimate_dirichlet_parameters(self.number_of_states,
                     self.n_levels,states,volumes,tolerance,verbose)
 
@@ -706,105 +717,14 @@ class SDHawkes:
         :rtype: 3D array
         :return: the estimated transition probabilities :math:`\phi`.
         """
-        print('\nsd_hawkes: I am estimating transition probabilities')
+        print('SDHawkes: I am estimating transition probabilities')
         n_states = self.number_of_states
         n_event_types = self.number_of_event_types
         cdef int v = int(verbose)
         return mle_estim.estimate_transition_probabilities(
             self.number_of_event_types,self.number_of_states,events,states,verbose=v)
     
-    def estimate_hawkes_parameters_partial(self,int event_type, times, events, states,
-                                   time_start, time_end,
-                                   int maximum_number_of_iterations=100, 
-                                   int number_of_random_guesses=3, int return_minim_proc=0):
-        print('\nsd_hawkes: I am launching the estimation of hawkes parameters for event_type {}, with time_start={}, time_end={}.'.format(event_type,time_start,time_end))
-        print('The boundaries of given arrival times are {}-{}'.format(times[0],times[len(times)-1]))
-        labelled_times,count=computation.distribute_times_per_event_state(
-                    self.number_of_event_types, self.number_of_states,
-                    times, events, states)  
-        mle_results=mle_estim.estimate_hawkes_power_partial(
-                    event_type,
-                    self.number_of_event_types,
-                    self.number_of_states,
-                    times,
-                    events,
-                    states,
-                    time_start,
-                    time_end,
-                    labelled_times,
-                    count,
-                    num_initial_guesses = number_of_random_guesses,
-                    maxiter = maximum_number_of_iterations,
-                    return_minim_proc = return_minim_proc)
-        cdef int idx_0 = return_minim_proc
-        cdef np.ndarray[DTYPEf_t, ndim=1] br = mle_results[0+idx_0]
-        cdef np.ndarray[DTYPEf_t, ndim=2] ic = mle_results[1+idx_0]
-        cdef np.ndarray[DTYPEf_t, ndim=2] dc = mle_results[2+idx_0]
-        if return_minim_proc:
-            minim_proc=mle_results[0]
-            return minim_proc,br,ic,dc
-        return br,ic,dc
-
-    def estimate_hawkes_parameters(self, times, events, states,
-                                   time_start, time_end,
-                                   int maximum_number_of_iterations=100, 
-                                   int number_of_random_guesses=3, int return_minim_proc=0):
-        r"""
-        Estimates the parameters of the intensities (arrival rates) of events, i.e., :math:`(\nu, \alpha, \beta)`.
-        Estimation if performed via maximum likelihood. 
-
-        :type times: 1D numpy array of float
-        :param times: the times at which events occur.
-        :type events: 1D numpy array of int
-        :param events: the sequence of event types, `events[n]` is the event type of the `n` th event.
-        :type states: 1D numpy array of int
-        :param states: the sequence of states, `states[n]` is the new state of the system following the `n` th event.
-        :type time_start: float
-        :param time_start: the time at which we consider that the process started, prior times are treated as an
-                           initial condition.
-        :type time_end: float
-        :param time_end: the time at which we stopped to record the process.
-        :type maximum_number_of_iterations: int
-        :param maximum_number_of_iterations:  will be passed to the `maxiter` argument in `minimisation_algo`. It is the maximum number of iterations or function evaluations.
-        :type number_of_random_guesses: int
-        :param number_of_random_guesses: number of random initial guesses for the minimisation search.
-        :return: The triple bas_rate, impact_coefficients, decay_coefficients
-        """
-        print('\nsd_hawkes: I am launching the estimation of hawkes parameters, with time_start={}, time_end={}.'
-              .format(time_start,time_end))
-        print('The boundaries of given arrival times are {}-{}'.format(times[0],times[len(times)-1]))
-        labelled_times,count=computation.distribute_times_per_event_state(
-                    self.number_of_event_types, self.number_of_states,
-                    times, events, states)  
-        mle_results=list(
-            map((lambda e: mle_estim.estimate_hawkes_power_partial(
-                    e,
-                    self.number_of_event_types,
-                    self.number_of_states,
-                    times,
-                    events,
-                    states,
-                    time_start,
-                    time_end,
-                    labelled_times,
-                    count,
-                    num_initial_guesses = number_of_random_guesses,
-                    maxiter = maximum_number_of_iterations,
-                    return_minim_proc = return_minim_proc)),
-                list(range(self.number_of_event_types))
-               )
-        )
-        cdef int idx_0 = return_minim_proc
-        br=np.squeeze(np.stack([mle_results[e][0+idx_0] for e in range(self.number_of_event_types)]))
-        ic=np.concatenate([np.expand_dims((mle_results[e][1+idx_0]),axis=2)
-                           for e in range(self.number_of_event_types)],axis=2)
-        dc=np.concatenate([np.expand_dims((mle_results[e][2+idx_0]),axis=2) 
-                           for e in range(self.number_of_event_types)],axis=2)
-        if return_minim_proc:
-            minim_proc=[mle_results[e][0] for e in range(self.number_of_event_types)]
-            return minim_proc,br,ic,dc
-        return br,ic,dc
-       
+           
     "Specification testing and simulation"
 
     def simulate(self, time_start, time_end, initial_condition_times=[], initial_condition_events=[],
@@ -873,7 +793,7 @@ class SDHawkes:
                 0,
                 np.random.dirichlet(np.ones(2*self.n_levels)),
                 axis=0)            
-        print('sd_hawkes: simulate: initial conditions have been acknowledged')   
+        print('SDHawkes.simulate: initial conditions have been acknowledged')   
         times, events, states,volumes =  simulation.launch_simulation(self.number_of_event_types,
                                               self.number_of_states,
                                               self.n_levels,
@@ -990,7 +910,7 @@ class SDHawkes:
                 0,
                 np.random.dirichlet(np.ones(2*self.n_levels)),
                 axis=0)            
-        print('sd_hawkes: simulate_liquidation. initial conditions have been acknowledged')
+        print('SDHawkes: simulate_liquidation. initial conditions have been acknowledged')
         cdef int report_intensities = np.array(report_history_of_intensities, dtype=np.intc)
         times, events, states, volumes,\
         inventory, liquid_termination_time, history_of_intensities = \
@@ -1054,14 +974,14 @@ class SDHawkes:
             self.simulated_times=np.array(times[idx],copy=True)
             self.simulated_events=np.array(self.simulated_events[idx],copy=True)
             self.simulated_states=np.array(self.simulated_states[idx],copy=True)
-            print('sd_hawkes: start_liquidation has been set as origin of times, and negative times have been deleted')
+            print('SDHawkes: start_liquidation has been set as origin of times, and negative times have been deleted')
             message='  self.liquidator.termination_time={}'.format(self.liquidator.termination_time)
             message+='\n  self.simulated_times.shape={}'.format(self.simulated_times.shape)
             message+='\n  self.simulated_events.shape={}'.format(self.simulated_events.shape)
             message+='\n  self.simulated_states.shape={}'.format(self.simulated_states.shape)
             print(message)
         else:
-            print('sd_hawkes: start_liquidation has been set as origin of times')
+            print('SDHawkes: start_liquidation has been set as origin of times')
         try:
             self.liquidator.inventory_trajectory[:,0]-=time_start
         except:
@@ -1126,6 +1046,8 @@ class SDHawkes:
             num_gridpnts, grid_tmax, grid_tmin,
             tol, two_scales
         )
+    def store_nonparam_estim_class(self,nonparam_estim):
+        self.nonparam_estim = copy.copy(nonparam_estim)
     def create_mle_estim(self, str type_of_input = 'simulated',):
         if type_of_input == 'simulated':
             times=self.simulated_times
@@ -1264,7 +1186,7 @@ class SDHawkes:
             num_init_guesses = num_init_guesses,
             maxiter = maxiter, time_start=time_start, time_end=time_end)
         self.impact=impact
-        print('\nsd_hawkes: the object "impact" has been initialised\n\n')
+        print('\nSDHawkes: the object "impact" has been initialised\n\n')
         
 
     def generate_base_rates_labels(self):

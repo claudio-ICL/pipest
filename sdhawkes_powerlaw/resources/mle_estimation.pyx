@@ -50,7 +50,8 @@ class EstimProcedure:
                  np.ndarray[DTYPEf_t , ndim=1] times, 
                  np.ndarray[DTYPEi_t , ndim=1] events,
                  np.ndarray[DTYPEi_t , ndim=1] states,
-                 str type_of_input = 'simulated'
+                 str type_of_input = 'simulated',
+                 store_trans_prob = False,
                 ):
         print("mle_estimation.EstimProcedure is being initialised")
         self.type_of_input = type_of_input
@@ -70,11 +71,9 @@ class EstimProcedure:
         self.events=np.array(events,copy=True,dtype=DTYPEi)
         self.states=np.array(states,copy=True,dtype=DTYPEi)
         self.hawkes_kernel=model.HawkesKernel(num_event_types, num_states)
-        self.store_transition_probabilities()
-        print("EstimProcedure has been successfully initialised")
-        
-    def store_runtime(self,DTYPEf_t run_time):
-        self.estimation_runtime=run_time    
+        if store_trans_prob:
+            self.store_transition_probabilities()
+        print("EstimProcedure has been successfully initialised")   
         
     def store_transition_probabilities(self,verbose=False):
         print('I am storing transition probabilities')
@@ -84,6 +83,7 @@ class EstimProcedure:
     def set_estimation_of_hawkes_param(self,
                                        DTYPEf_t time_start, DTYPEf_t time_end,
                                        list list_of_init_guesses=[],
+                                       DTYPEf_t max_imp_coef = 100.0,
                                        DTYPEf_t learning_rate = 0.001,
                                        int maxiter=100,
                                        int number_of_additional_guesses=3,
@@ -96,9 +96,10 @@ class EstimProcedure:
               .format(time_start,time_end))
         print('The boundaries of arrival times are {}-{}'.format(self.times[0],self.times[len(self.times)-1]))
         self.time_start=time_start
-        self.time_end = time_end
+        self.time_end=time_end
         self.given_list_of_guesses =\
         store_given_list_of_guesses(self.num_event_types,self.num_states,list_of_init_guesses)
+        self.max_imp_coef = max_imp_coef
         self.learning_rate = learning_rate
         self.maxiter=maxiter
         self.number_of_additional_guesses=number_of_additional_guesses
@@ -151,6 +152,7 @@ class EstimProcedure:
             self.time_start, self.time_end,
             self.labelled_times, self.count,
             list_init_guesses = list_init_guesses,
+            max_imp_coef = self.max_imp_coef,
             maxiter = self.maxiter,
             parallel = self.parallel,
             number_of_attempts = self.number_of_attempts,
@@ -159,8 +161,8 @@ class EstimProcedure:
         )
         self.results_of_estimation.append(res)
         
-    def launch_estimation_of_hawkes_param(self, all_components=False, int e=0):
-        if all_components:
+    def launch_estimation_of_hawkes_param(self, partial=True, int e=0):
+        if not partial:
             for e in range(self.num_event_types):
                 self.estimate_hawkes_param_partial(e)
         else:
@@ -315,6 +317,12 @@ def store_given_list_of_guesses(int d_E, int d_S, list given_list):
     cdef np.ndarray[DTYPEf_t, ndim=1] x = np.zeros(d_E+2*d_E*d_S*d_E,dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=1] y = np.zeros(1+2*d_E*d_S,dtype=DTYPEf)
     res={}
+    if given_list == []:
+        print("WARNING! In mle_estimation.store_given_list_of_guesses, empty list was passed. I am adding a random initial guess")
+        x[0:d_E]=np.random.uniform(low=0.0, high=2.0, size=(d_E,))
+        x[d_E:d_E+d_E*d_S*d_E]=np.random.uniform(low=0.0,high=1.0, size=(d_E*d_S*d_E,))
+        x[d_E*d_S*d_E:len(x)]=np.random.uniform(low=1.1,high=5.0, size=(d_E*d_S*d_E,))
+        given_list.append(np.array(x,copy=True))
     for e in range(d_E):
         list_init_guesses_partial = []
         for x in given_list:
@@ -525,8 +533,8 @@ def estimate_hawkes_param_partial(
     np.ndarray[DTYPEi_t, ndim=2] count,
     list list_init_guesses = [],
     DTYPEf_t max_imp_coef = 100.0,
-    int maxiter = 50,
     DTYPEf_t learning_rate = 0.0005,
+    int maxiter = 50,
     parallel=False,
     print_list=False,
     int number_of_attempts = 3,
@@ -561,7 +569,8 @@ def estimate_hawkes_param_partial(
          'base_rate': base_rate,
          'imp_coeff': imp_coef,
          'dec_coef': dec_coef,
-         'MinimisationProcedure': minim
+         'MinimisationProcedure': minim,
+         'run_time': run_time,
         }
     return res    
     

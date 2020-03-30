@@ -321,6 +321,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
             f[n:] = np.repeat(f[n],maxiter-n)
         if f_min>=f[0]:
             attempt_num+=1
+            learning_rate = max(2*tol,learning_rate*rand()/float(RAND_MAX))
             if attempt_num<=number_of_attempts:
                 print('grad_descent_partial pid{}: attempt_num {}/{} has failed'.format(process_id,attempt_num,number_of_attempts))
         else:
