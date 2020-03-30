@@ -39,30 +39,52 @@ first_read_fromLOBSTER=True
 dump_after_reading=False
 add_level_to_messagefile=True
 #Optional parameters for "calibrate"
-n_guesses=2
-maxiter=2
-store_after_calibration=True
+type_of_preestim='ordinary_hawkes' # or 'nonparam'
+max_imp_coef = 15.0,
+learning_rate = 0.0001,
+maxiter = 15
+num_guesses = 4
+#Optional parameters for "nonparam_estim"
+num_quadpnts = 80
+quad_tmax = 1.0,
+quad_tmin = 1.0e-1,
+num_gridpnts = 100,
+grid_tmax = 1.1,
+grid_tmin = 1.5e-1
 
 
-
+def redirect_stdout(direction= 'from', # or 'to'
+                    message= '',
+                    path='',
+                    fout=None,saveout=None):
+    if direction=='from':
+        print(message)
+        print("stdout is being redirected to {}".format(path))
+        saveout=sys.stdout
+        fout=open(path,'w')
+        sys.stdout = fout
+        print(message)
+        return fout, saveout
+    elif direction=='to':
+        print(message)
+        fout.close()
+        sys.stdout=saveout
+        print(message)
+    else:
+        print("WARNINNG: redirect_stdout failed! direction={} not recognised".format(direction))
+        print(message)
+        
 
 
 
 
 def read_lobster():
     now=datetime.datetime.now()
-    print('\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute))
-    print('I am reading from lobster')
-    print('symbol={}, date={}, time_window={}'.format(symbol,date,time_window))
+    message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
+    message+='I am reading from lobster\n'
+    message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
     path_readout=path_mdata+'_readout'
-    print('stdout is being redirected to '+path_readout)
-    saveout=sys.stdout
-    fout=open(path_readout,'w')
-    sys.stdout=fout
-    print('\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute))
-    print('I am reading from lobster')
-    print('symbol={}, date={}, time_window={}'.format(symbol,date,time_window))
-    
+    fout,saveout=redirect_stoud(direction='from',path=path_readout,message=message)  
 
     if (first_read_fromLOBSTER):
         LOB,messagefile=from_lobster.read_from_LOBSTER(symbol,date,
@@ -148,98 +170,142 @@ def read_lobster():
         print(message)
         raise ValueError(message)
 
-    print('\nData is being stored in {}'.format(path_mdata))
+    message='\nData is being stored in {}'.format(path_mdata)
     with open(path_mdata, 'wb') as outfile:
         pickle.dump(data,outfile)
-    fout.close()
-    sys.stdout=saveout
-    print('\nData is being stored in {}'.format(path_mdata))
+    redirect_stdout(direction='to',message=message,fout=fout,saveout=saveout)
     
 
-def calibrate(n_guesses=4,maxiter=50):
+def nonparam_preestim():
     now=datetime.datetime.now()
-    print('\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute))
-    print('I am calibrating on lobster')
-    print('symbol={}, date={}, time_window={}'.format(symbol,date,time_window))
-    
-#     array_index=int(os.environ['PBS_ARRAY_INDEX'])
-    
+    message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
+    message+='I am pre-estimating the model using non-parametric procedure\n'
+    message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
+    name_of_model_nonp=name_of_model+'_nonp'
+    path_mnonp=path_mmodel+'_nonp'
+    path_readout=path_mnonp+'_readout'
+    fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)    
     with open(path_mdata,'rb') as source:
         data=pickle.load(source)
     assert symbol==data.symbol    
     assert date==data.date
-  
-    model=sd_hawkes_model.sd_hawkes(
+   
+    model=sd_hawkes_model.SDHawkes(
         number_of_event_types=data.number_of_event_types,  number_of_states = data.number_of_states,
-        number_of_lob_levels=data.n_levels,volume_imbalance_upto_level = data.volume_enc.volume_imbalance_upto_level,
+        number_of_lob_levels=data.n_levels, volume_imbalance_upto_level = data.volume_enc.volume_imbalance_upto_level,
         list_of_n_states=data.state_enc.list_of_n_states, st1_deflationary=data.state_enc.st1_deflationary,
         st1_inflationary=data.state_enc.st1_inflationary, st1_stationary=data.state_enc.st1_stationary
     )
-
     model.get_input_data(data)
+    model.create_nonparam_estim(type_of_input='empirical',
+                                num_quadpnts = num_quadpnts,
+                                quad_tmax = quad_tmax,
+                                quad_tmin = quad_tmin,
+                                num_gridpnts = num_gridpnts,
+                                grid_tmax = grid_tmax,
+                                grid_tmin = grid_tmin,
+                                two_scales=True,
+                                tol=1.0e-7
+                               ) 
+    run_time = -time.time()
+    model.nonparam_estim.estimate_hawkes_kernel(store_L1_norm=False,
+                               use_filter=True, enforce_positive_g_hat=True,
+                               filter_cutoff=50.0, filter_scale=30.0, num_addpnts_filter=3000)
+    model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-02, tol=1.0e-7)
+    model.nonparam_estim.store_base_rates()
+    run_time+=time.time()
+    model.nonparam_estim.store_runtime(run_time)
+    model.nonparam_estim.create_goodness_of_fit()
+    model.dump(name=name_of_model_nonp,path=path_models+'/'+symbol)
+    n=datetime.datetime.now()
+    message='\nNon-parametric pre-estimation terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
+    .format(n.year, n.month, n.day, n.hour, n.minute)
+    redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
+
+
     
+def calibrate(num_guesses=4, maxiter=50):
+#     array_index=int(os.environ['PBS_ARRAY_INDEX'])
+    if type_of_preestim == 'nonparam':
+        with open(path_mmodel+'_nonp', 'rb') as source:
+            model=pickle.load(source)
+    elif type_of_preestim == 'ordinary_hawkes':        
+        with open(path_mdata,'rb') as source:
+            data=pickle.load(source)
+        assert symbol==data.symbol    
+        assert date==data.date
+        model=sd_hawkes_model.SDHawkes(
+            number_of_event_types=data.number_of_event_types,  number_of_states = data.number_of_states,
+            number_of_lob_levels=data.n_levels, volume_imbalance_upto_level = data.volume_enc.volume_imbalance_upto_level,
+            list_of_n_states=data.state_enc.list_of_n_states, st1_deflationary=data.state_enc.st1_deflationary,
+            st1_inflationary=data.state_enc.st1_inflationary, st1_stationary=data.state_enc.st1_stationary
+        )
+        model.get_input_data(data)
+    else:
+        print("type_of_preestim={}".format(type_of_preestim))
+        raise ValueError("type_of_preestim not recognised")
 
     for event_type in range(model.number_of_event_types):
 #         if (event_type == array_index):
+            now=datetime.datetime.now()
+            message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
+            message+='I am calibrating on lobster\n'
+            message+='symbol={}, date={}, time_window={}\n'.format(symbol,date,time_window)
+            message+='event type: {}'.format(event_type)
             name_of_model_partial=name_of_model+'_partial{}'.format(event_type)
             path_mpartial=path_mmodel+'_partial{}'.format(event_type)
             path_readout=path_mpartial+'_readout'
-            print('stdout is being redirected to '+path_readout)
-            saveout=sys.stdout
-            fout=open(path_readout,'w')
-            sys.stdout=fout
-            print('\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'
-                  .format(now.year,now.month,now.day, now.hour, now.minute))
-            print('symbol={}, date={}'.format(symbol,date))
+            fout,saveout=redirect_stdout(direction='from',message=message,path=path_readout)
             print('\n\nINSTANTIATE SD_HAWKES MODEL AND CALIBRATE\n')
-            model.calibrate_on_input_data_partial(
-                event_type, maximum_number_of_iterations=maxiter, number_of_random_guesses=n_guesses,
-                store_after_calibration=store_after_calibration, name_of_model=name_of_model_partial,verbose=True)
+            model.calibrate_on_input_data(
+                partial=True, e=event_type, name_of_model=name_of_model_partial,
+                type_of_preestim=type_of_preestim,
+                max_imp_coef = max_imp_coef,
+                learning_rate = learning_rate,maxiter = maxiter, num_of_random_guesses=num_guesses,
+                parallel=True,
+                number_of_attempts = 2, num_processes = num_processes,
+                skip_estim_of_state_processes=True,
+                dump_after_calibration=True
+            )
             n=datetime.datetime.now()
-            print('\nCalibration of event_type {} terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'
-                  .format(event_type, n.year, n.month, n.day, n.hour, n.minute))
-            fout.close()
-            sys.stdout=saveout
-            print('\nCalibration of event_type {} terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'
-                  .format(event_type, n.year, n.month, n.day, n.hour, n.minute))
+            message='\nCalibration of event_type {} terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
+            .format(event_type, n.year, n.month, n.day, n.hour, n.minute)
+            redirect_stdout(direction='to',message=message, fout=fout, saveout=saveout)
             
 def merge_from_partial():
     now=datetime.datetime.now()
-    print('\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute))
-    print('I am merging from partial models')
-    print('symbol={}, date={}, time_window={}'.format(symbol,date,time_window))
-    saveout=sys.stdout
+    message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
+    message+='I am merging from partial models\n'
+    message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
     path_readout=path_mmodel+'_readout'
-    print('stdout is being redirected to '+path_readout)
-    fout=open(path_readout,'w')
-    sys.sdtout=fout
-    print('\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute))
-    print('I am merging from partial models')
-    print('symbol={}, date={}, time_window={}'.format(symbol,date,time_window))
-    
+    fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)    
     list_of_partial_names=[name_of_model+'_partial{}'.format(e) for e in range(number_of_event_types)]
     partial_models=[]
-    for mn in list_of_partial_names:
-        with open(path_models+'/{}/'.format(symbol)+mn,'rb') as source:
-            partial_models.append(pickle.load(source))
     with open(path_mdata,'rb') as source:
         data=pickle.load(source)
-    assert data.number_of_event_types==number_of_event_types
-    
-    MODEL=sd_hawkes_model.sd_hawkes(
+        assert data.symbol == symbol
+        assert data.date == date
+        assert data.number_of_event_types==number_of_event_types
+    MODEL=sd_hawkes_model.SDHawkes(
         number_of_event_types=data.number_of_event_types, number_of_states=data.number_of_states,
         number_of_lob_levels=data.n_levels,volume_imbalance_upto_level = data.volume_enc.volume_imbalance_upto_level,
         list_of_n_states=data.state_enc.list_of_n_states, st1_deflationary=data.state_enc.st1_deflationary,
         st1_inflationary=data.state_enc.st1_inflationary, st1_stationary=data.state_enc.st1_stationary
     )
-
-    MODEL.initialise_from_partial(partial_models,store_after_merging=True,name_of_model=name_of_model)  
-
+    MODEL.get_input_data(data)    
+    for mn in list_of_partial_names:
+        with open(path_models+'/{}/'.format(symbol)+mn,'rb') as source:
+            model=pickle.load(source)
+            assert model.data.symbol == symbol
+            assert model.data.date == date
+            assert model.calibration.type_of_preestim == type_of_preestim
+            partial_models.append(model)
+    if type_of_preestim == 'nonparam':
+        MODEL.store_nonparam_estim_class(model.nonparam_estim)
+    MODEL.initialise_from_partial(partial_models, dump_after_merging=True, name_of_model=name_of_model)  
     n=datetime.datetime.now()
-    print('\n Merging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute))
-    sys.stdout=saveout
-    fout.close()
-    print('\n Merging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute)) 
+    message='\nMerging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute)
+    redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout)
         
 
     
@@ -261,16 +327,22 @@ def main():
     print("$python {} {} {} {} {} {}\n".format(sys.argv[0],symbol,date,initial_time,final_time,action))
     global path_mdata
     path_mdata=path_lobster_data+'/{}/{}_{}_{}'.format(symbol,symbol,date,time_window)
-    global path_mmodel
-    path_mmodel=path_models+'/{}/{}_{}_{}'.format(symbol,symbol,date,time_window)
     global name_of_model
-    name_of_model=symbol+'_sdhawkes_'+date+'_'+time_window
+    name_of_model=symbol+'_'+date+'_'+time_window
+    global path_mmodel
+    path_mmodel=path_models+'/'+symbol+'/'+name_of_model        
     if action=='r' or action=='read':
         read_lobster()
+    elif action=='p' or (action=='preestim' or action=='nonparam_preestim'):
+        if type_of_preestim=='nonparam':
+            nonparam_preestim()
     elif action=='c' or action=='calibrate':
-        calibrate(n_guesses,maxiter)
+        calibrate(num_guesses, maxiter)
     elif action=='m' or action=='merge':
         merge_from_partial()
+    else:
+        print("action: {}".format(action))
+        raise ValueError("action not recognised")
     print("\nmain.py end of file")    
         
         

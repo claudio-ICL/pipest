@@ -247,7 +247,7 @@ class SDHawkes:
             
         cdef str name_of_model = 'SDHawkel_model'
         self.name_of_model = name_of_model
-        self.datetime_of_initialisation=datetime.datetime()
+        self.datetime_of_initialisation=datetime.datetime.now()
         if not events_labels:
             self.events_labels = list(range(number_of_event_types))
         else:
@@ -578,7 +578,8 @@ class SDHawkes:
             print('I am reading from model number {}, referring to event_type={}'.format(e,event_type))
             print("model name is: {}".format(model.name_of_model))
             print("len(mle_estim.results_of_estimation) = {}".format(len(model.mle_estim.results_of_estimation)))
-            list_of_mle_results+=model.mle_estim.results_of_estimation
+            for res in model.mle_estim.results_of_estimation:
+                list_of_mle_results.append(res)
         print("{} mle results have been loaded".format(len(list_of_mle_results)))
         if len(list_of_mle_results)!= self.number_of_event_types:
             warning_message="WARNING: It was expected that len(list_of_mle_results) == self.number_of_event_types"
