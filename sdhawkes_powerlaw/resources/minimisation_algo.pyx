@@ -274,7 +274,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         x_min = np.array(initial_guess, copy=True,dtype=DTYPEf)
         grad_min = np.array(grad,copy=True,dtype=DTYPEf)
         while (norm_grad>=tol) & (n<=idx_alt):
-#             print("grad_descent_partial pid{}: , attempt_num={}, count={}".format(process_id,1+attempt_num,n))
+            print("grad_descent_partial pid{}: attempt_num={}, count={}".format(process_id,1+attempt_num,n))
             with nogil:
                 n+=1
                 m = 0

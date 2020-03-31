@@ -616,7 +616,7 @@ class SDHawkes:
                 
     def calibrate_on_input_data(self, partial=True, int e=0,
                                 str name_of_model='',
-                                str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+                                str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
                                 DTYPEf_t max_imp_coef = 100.0,
                                 DTYPEf_t learning_rate = 0.0001,
                                 int maxiter = 50,

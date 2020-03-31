@@ -77,9 +77,10 @@ class EstimProcedure:
                  str type_of_input = 'simulated',
                  int num_quadpnts = 100, DTYPEf_t quad_tmax=1.0, DTYPEf_t quad_tmin=1.0e-04,
                  int num_gridpnts = 100, DTYPEf_t grid_tmax=1.0, DTYPEf_t grid_tmin=1.0e-04,
-                 DTYPEf_t tol=1.0e-15, two_scales=False):
+                 DTYPEf_t tol=1.0e-10, two_scales=False):
         print("nonparam_estimation.EstimProcedure is being initialised")
         self.type_of_input = type_of_input
+        self.tol = tol
         if not (len(times)==len(states) & len(times)==len(events)):
             raise ValueError("All shapes must agree, but input was:\n len(times)={} \n len(events)={} \n len(states)={}".format(len(times),len(events),len(states)))
         self.num_event_types = num_event_types
@@ -198,7 +199,7 @@ class EstimProcedure:
         return list_init_guesses    
                                  
     def store_base_rates(self):
-        cdef np.ndarray[DTYPEf_t, ndim=1] base_rates = np.zeros(self.num_event_types,dtype=DTYPEf)
+        cdef np.ndarray[DTYPEf_t, ndim=1] base_rates = self.tol*np.ones(self.num_event_types,dtype=DTYPEf)
         if self.hawkes_kernel.spectral_radius>=1:
             print("Spectral radius of L1 norm of hawkes kernel is greater or equal 1.0: I am setting base rates to the default value of 0.0.")
         else:

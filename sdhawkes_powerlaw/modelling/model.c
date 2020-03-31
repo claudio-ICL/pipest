@@ -16772,7 +16772,7 @@ static PyObject *__pyx_pf_5model_8SDHawkes_18get_input_data(CYTHON_UNUSED PyObje
  * 
  *     def calibrate_on_input_data(self, partial=True, int e=0,             # <<<<<<<<<<<<<<
  *                                 str name_of_model='',
- *                                 str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+ *                                 str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
  */
 
 /* Python wrapper */
@@ -17102,7 +17102,7 @@ static PyObject *__pyx_pw_5model_8SDHawkes_21calibrate_on_input_data(PyObject *_
  * 
  *     def calibrate_on_input_data(self, partial=True, int e=0,             # <<<<<<<<<<<<<<
  *                                 str name_of_model='',
- *                                 str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+ *                                 str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
  */
 
   /* function exit code */
@@ -18353,7 +18353,7 @@ static PyObject *__pyx_pf_5model_8SDHawkes_20calibrate_on_input_data(CYTHON_UNUS
  * 
  *     def calibrate_on_input_data(self, partial=True, int e=0,             # <<<<<<<<<<<<<<
  *                                 str name_of_model='',
- *                                 str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+ *                                 str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
  */
 
   /* function exit code */
@@ -46672,7 +46672,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * 
  *     def calibrate_on_input_data(self, partial=True, int e=0,             # <<<<<<<<<<<<<<
  *                                 str name_of_model='',
- *                                 str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+ *                                 str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
  */
   __pyx_tuple__105 = PyTuple_Pack(31, __pyx_n_s_self, __pyx_n_s_partial, __pyx_n_s_e, __pyx_n_s_name_of_model, __pyx_n_s_type_of_preestim, __pyx_n_s_max_imp_coef, __pyx_n_s_learning_rate, __pyx_n_s_maxiter, __pyx_n_s_num_of_random_guesses, __pyx_n_s_parallel, __pyx_n_s_number_of_attempts, __pyx_n_s_num_processes, __pyx_n_s_skip_mle_estim, __pyx_n_s_skip_estim_of_state_processes, __pyx_n_s_dump_after_calibration, __pyx_n_s_verbose, __pyx_n_s_tol, __pyx_n_s_times, __pyx_n_s_events, __pyx_n_s_states, __pyx_n_s_volumes, __pyx_n_s_time_start, __pyx_n_s_time_end, __pyx_n_s_list_init_guesses, __pyx_n_s_n_cpus, __pyx_n_s_pre_estim_ord_hawkes, __pyx_n_s_run_time, __pyx_n_s_phi, __pyx_n_s_gamma, __pyx_n_s_name, __pyx_n_s_path); if (unlikely(!__pyx_tuple__105)) __PYX_ERR(0, 617, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__105);
@@ -48494,14 +48494,14 @@ if (!__Pyx_RefNanny) {
  * 
  *     def calibrate_on_input_data(self, partial=True, int e=0,             # <<<<<<<<<<<<<<
  *                                 str name_of_model='',
- *                                 str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+ *                                 str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
  */
   __pyx_t_10 = __Pyx_PyInt_From_int(((int)0)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 617, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_10);
 
   /* "model.pyx":620
  *                                 str name_of_model='',
- *                                 str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+ *                                 str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
  *                                 DTYPEf_t max_imp_coef = 100.0,             # <<<<<<<<<<<<<<
  *                                 DTYPEf_t learning_rate = 0.0001,
  *                                 int maxiter = 50,
@@ -48510,7 +48510,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_GOTREF(__pyx_t_11);
 
   /* "model.pyx":621
- *                                 str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+ *                                 str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
  *                                 DTYPEf_t max_imp_coef = 100.0,
  *                                 DTYPEf_t learning_rate = 0.0001,             # <<<<<<<<<<<<<<
  *                                 int maxiter = 50,
@@ -48574,7 +48574,7 @@ if (!__Pyx_RefNanny) {
  * 
  *     def calibrate_on_input_data(self, partial=True, int e=0,             # <<<<<<<<<<<<<<
  *                                 str name_of_model='',
- *                                 str type_of_preestim='ordinary_hawkes', # or 'nonparam'
+ *                                 str type_of_preestim='ordinary_hawkes', #'ordinary_hawkes' or 'nonparam'
  */
   __pyx_t_14 = PyTuple_New(16); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 617, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_14);

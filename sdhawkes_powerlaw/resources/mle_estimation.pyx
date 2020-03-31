@@ -30,6 +30,7 @@ import copy
 from libc.math cimport exp
 from libc.math cimport log
 from libc.math cimport pow
+from libc.stdlib cimport rand, RAND_MAX
 
 import model
 import computation
@@ -153,6 +154,7 @@ class EstimProcedure:
             self.labelled_times, self.count,
             list_init_guesses = list_init_guesses,
             max_imp_coef = self.max_imp_coef,
+            learning_rate=self.learning_rate,
             maxiter = self.maxiter,
             parallel = self.parallel,
             number_of_attempts = self.number_of_attempts,
@@ -321,7 +323,7 @@ def store_given_list_of_guesses(int d_E, int d_S, list given_list):
         print("WARNING! In mle_estimation.store_given_list_of_guesses, empty list was passed. I am adding a random initial guess")
         x[0:d_E]=np.random.uniform(low=0.0, high=2.0, size=(d_E,))
         x[d_E:d_E+d_E*d_S*d_E]=np.random.uniform(low=0.0,high=1.0, size=(d_E*d_S*d_E,))
-        x[d_E*d_S*d_E:len(x)]=np.random.uniform(low=1.1,high=5.0, size=(d_E*d_S*d_E,))
+        x[d_E+d_E*d_S*d_E:len(x)]=np.random.uniform(low=1.1,high=5.0, size=(d_E*d_S*d_E,))
         given_list.append(np.array(x,copy=True))
     for e in range(d_E):
         list_init_guesses_partial = []
@@ -341,66 +343,10 @@ cdef DTYPEi_t count_events_of_type(DTYPEi_t event_type, DTYPEi_t [:] events):
             count+=1
     return count 
 
-#Write a new preguess function to guess base rate and imp_coeff of an ordinary hawkes process based on approximation of the formula in Theorem 2!!!
-
-# def pre_guess_base_rate(
-#         DTYPEi_t event_type,
-#         np.ndarray[DTYPEf_t, ndim=1] times,
-#         np.ndarray[DTYPEi_t, ndim=1] events,
-#         np.float time_start,
-#         np.float time_end
-# ):
-#     cdef int idx_start = bisect.bisect_left(times,time_start)
-#     cdef int idx_end = bisect.bisect_right(times,time_end)
-#     events_in_range = np.array(events[idx_start:idx_end],dtype=DTYPEi) 
-#     cdef DTYPEi_t [:] events_memview = events_in_range
-#     cdef long n_events = count_events_of_type(event_type,events_in_range)
-#     cdef DTYPEf_t result = n_events/(time_end-time_start)
-#     return result
-
-
-# cdef double preguess_imp_coef_onedim(
-#     double [:] times,
-#     DTYPEf_t nu,
-#     DTYPEf_t beta
-# ) nogil:
-#     cdef DTYPEf_t result = 0.0
-#     cdef int n = 0
-#     if ((beta>=1.9)&(beta<=2.1)):
-#         for n in range(1,len(times)):
-#             result += max(0.0,n/nu - times[n])/(times[n] - log(times[n]+1.0) )
-#     else:
-#         for n in range(1,len(times)):
-#             result +=\
-#             max(0.0,n/nu - times[n])\
-#              /(times[n]/(beta -1.0) - 1.0 /((beta - 1.0)*(beta - 2.0))\
-#                +pow(times[n]+ 1.0 , 2.0 - beta)/((beta - 1.0)*(beta - 2.0))
-#               )
-
-#     result/= (len(times)-1.0)
-#     return result
- 
-    
-
-# def pre_guess_impact_coefficients(int num_event_types, int num_states,
-#                                   np.ndarray[DTYPEi_t, ndim = 1] events):
-#     cdef np.ndarray[DTYPEf_t, ndim=3] imp_coef = np.zeros((num_event_types,num_states,num_event_types),dtype=DTYPEf)
-#     cdef np.ndarray[DTYPEi_t, ndim=2] event_count = np.zeros((num_event_types,num_event_types),dtype=DTYPEi)
-#     cdef int e, e1
-#     idx= np.zeros((num_event_types,len(events)),dtype=np.bool)
-#     for e1 in range(num_event_types):
-#         idx[e1,:] = (events==e1)
-#         for e in range(num_event_types):
-#             event_count[e1,e] = count_events_of_type(e, events[np.roll(idx[e1,:],1)] )
-#             imp_coef[e1,0,e] = event_count[e1,e]/count_events_of_type(e,events)
-#     imp_coef = np.repeat(np.expand_dims(imp_coef[:,0,:],axis=1),repeats = num_states,axis=1)
-#     return imp_coef
-
-
 def preguess_ordinary_hawkes_param(int event_index,
                                    np.ndarray[DTYPEf_t, ndim=3] lt,
                                    np.ndarray[DTYPEi_t, ndim=2] count,
-                                   DTYPEf_t max_imp_coef = 10.0,
+                                   DTYPEf_t max_imp_coef = 100.0,
                                    DTYPEf_t tol = 1.0e-6,
                                    print_res = False,
                                   ):
@@ -424,7 +370,7 @@ def preguess_ordinary_hawkes_param(int event_index,
         print("  c_0={}, \n c_1={}".format(c_0,c_1))
 #         raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_1 < 0.0 after linear regression")
     cdef DTYPEf_t base_rate = max(tol, c_0 )
-    cdef np.ndarray[DTYPEf_t, ndim=2] alphas = np.zeros((d_E,1), dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=2] alphas = tol*np.ones((d_E,1), dtype=DTYPEf)
     alphas[e,0] = min(max_imp_coef, max(tol, c_1) / base_rate)
     cdef np.ndarray[DTYPEf_t, ndim=2] betas = 2.0*np.ones((d_E,1), dtype=DTYPEf)
     if print_res:
@@ -443,7 +389,7 @@ def pre_estimate_ordinary_hawkes(
     DTYPEf_t time_end,
     int num_init_guesses = 3,
     parallel = False,
-    DTYPEf_t max_imp_coef = 10.0,
+    DTYPEf_t max_imp_coef = 100.0,
     DTYPEf_t learning_rate = 0.0005,
     int maxiter = 50,
     DTYPEf_t tol = 1.0e-07,
@@ -464,27 +410,29 @@ def pre_estimate_ordinary_hawkes(
     labelled_times,count=computation.distribute_times_per_event_state(
         n_event_types, 1,
         times, events, states)
-#     cdef np.ndarray [DTYPEf_t, ndim=3] lt_copy = np.array(labelled_times, copy=True)
-#     cdef np.ndarray [DTYPEi_t, ndim=2] count_copy = np.array(count, copy=True)
-#     preguess_base_rate, preguess_imp_coef, preguess_dec_coef =\
-#     preguess_ordinary_hawkes_param(event_index,
-#                                    lt_copy, count_copy,
-#                                    max_imp_coef = max_imp_coef,
-#                                    tol = tol,
-#                                    print_res = True,
-#                                   )
-    cdef DTYPEf_t preguess_base_rate = 1.0
-    cdef np.ndarray[DTYPEf_t, ndim=2] preguess_imp_coef = np.random.uniform(low=0.0, high=2.0, size=(n_event_types, 1))
+    cdef np.ndarray [DTYPEf_t, ndim=3] lt_copy = np.array(labelled_times, copy=True)
+    cdef np.ndarray [DTYPEi_t, ndim=2] count_copy = np.array(count, copy=True)
+    preguess_base_rate, preguess_imp_coef, preguess_dec_coef =\
+    preguess_ordinary_hawkes_param(event_index,
+                                   lt_copy, count_copy,
+                                   max_imp_coef = max_imp_coef,
+                                   tol = tol,
+                                   print_res = True,
+                                  )
+#     cdef DTYPEf_t preguess_base_rate = 1.0
+#     cdef np.ndarray[DTYPEf_t, ndim=2] preguess_imp_coef = np.random.uniform(low=0.0, high=2.0, size=(n_event_types, 1))
     cdef np.ndarray[DTYPEf_t, ndim=1] mean = preguess_imp_coef.flatten()
     cdef np.ndarray[DTYPEf_t, ndim=2] cov = np.maximum(0.01*np.amin(mean),tol)*np.eye(len(mean))
+    cdef DTYPEf_t guess_base_rate = 1.0
     cdef np.ndarray[DTYPEf_t, ndim=2] guess_imp_coef = np.zeros((n_event_types,1),dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=2] guess_dec_coef = np.ones((n_event_types,1),dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=1] init_guess = np.ones(1+2*n_event_types*1,dtype=DTYPEf)
     cdef list list_init_guesses = []
     for n in range(num_init_guesses):
+        guess_base_rate = preguess_base_rate+(rand()/float(RAND_MAX))*(1.0-preguess_base_rate)
         guess_imp_coef = np.maximum(tol,np.random.multivariate_normal(mean,cov).reshape(n_event_types, 1))
         guess_dec_coef = np.random.uniform(low=1.5,high=2.5,size=(n_event_types,1))
-        init_guess = computation.parameters_to_array_partial(preguess_base_rate/(n+1),guess_imp_coef,guess_dec_coef)
+        init_guess = computation.parameters_to_array_partial(guess_base_rate, guess_imp_coef, guess_dec_coef)
         list_init_guesses.append(np.array(init_guess,copy=True,dtype=DTYPEf))   
     minim = minim_algo.MinimisationProcedure(
         labelled_times,count,
@@ -567,100 +515,10 @@ def estimate_hawkes_param_partial(
     base_rate,imp_coef,dec_coef=computation.array_to_parameters_partial(n_event_types, n_states, x_min)
     res={'component_e':event_index,
          'base_rate': base_rate,
-         'imp_coeff': imp_coef,
+         'imp_coef': imp_coef,
          'dec_coef': dec_coef,
          'MinimisationProcedure': minim,
          'run_time': run_time,
         }
     return res    
-    
-# def produce_list_init_guesses(
-#     int num_event_types, int num_states,
-#     int num_additional_guesses = 4,
-#     list given_list_of_guesses = [],
-#     print_list=False
-    
-# ):
-#     print("I am producing the list of initial guesses")
-#     cdef list list_init_guesses = copy.copy(given_list_of_guesses)
-#     cdef np.ndarray[DTYPEf_t, ndim=1] guess = np.ones(1+2*num_event_types*num_states, dtype=DTYPEf)
-#     cdef j=0
-#     cdef break_point = 1+num_event_types*num_states
-#     for j in range(num_additional_guesses):
-#         guess[0] = np.random.uniform(low=0.0, high=2.0)
-#         guess[1:break_point] = np.random.uniform(low=0.0, high= 1.0, size=(break_point-1,))
-#         guess[break_point:len(guess)] = np.random.uniform(low=1.1, high= 3.0, size=(break_point-1,))
-#         list_init_guesses.append(np.array(guess,copy=True,dtype=DTYPEf))
-#     if print_list:
-#         print("list_init_guesses: \n")
-#         print(list_init_guesses)    
-#     return list_init_guesses
-
-
-# def produce_list_init_guesses(
-#     int event_index,
-#     int n_event_types, int n_states,
-#     np.ndarray[DTYPEf_t, ndim=1] times,
-#     np.ndarray[DTYPEi_t, ndim=1] events,
-#     np.ndarray[DTYPEi_t, ndim=1] states,
-#     DTYPEf_t time_start,
-#     DTYPEf_t time_end,
-#     np.ndarray[DTYPEf_t, ndim=3] labelled_times,
-#     np.ndarray[DTYPEi_t, ndim=2] count,
-#     list list_init_guesses = [],
-#     int num_additional_guesses = 3,
-#     pre_estim_ord_hawkes = False,
-#     pre_estim_parallel = False,
-#     learning_rate = 0.0005,
-#     maxiter = 100,
-#     tol=1.0e-7,
-#     print_list = False
-# ):
-#     print("I am producing list of initial guesses. pre_estim_ord_hawkes={}, pre_estim_parallel={}.".format(pre_estim_ord_hawkes,pre_estim_parallel))
-#     cdef list list_of_guesses = copy.copy(list_init_guesses)
-#     cdef list additional_guesses = []
-#     cdef DTYPEf_t base_rate = 0.0
-#     cdef np.ndarray[DTYPEf_t, ndim=2] imp_coef = np.zeros((n_event_types,n_states),dtype=DTYPEf)
-#     cdef np.ndarray[DTYPEf_t, ndim=2] dec_coef = np.ones((n_event_types,n_states),dtype=DTYPEf)
-#     cdef DTYPEf_t guess_base_rate = pre_guess_base_rate(event_index,times, events, time_start, time_end)
-#     cdef np.ndarray[DTYPEf_t, ndim=2] guess_imp_coef = np.ones((n_event_types,n_states),dtype=DTYPEf)
-#     cdef np.ndarray[DTYPEf_t, ndim=2] guess_dec_coef = 2*np.ones((n_event_types,n_states),dtype=DTYPEf)
-#     cdef np.ndarray[DTYPEf_t, ndim=1] guess = 2*np.ones(1+2*n_event_types*n_states,dtype=DTYPEf)
-#     for n in range(num_additional_guesses):
-#         guess_imp_coef =\
-#         np.random.uniform(low=0.001, high=n+1,size=(n_event_types,n_states))
-#         guess_dec_coef =\
-#         np.random.uniform(low=1.001, high=n+2,size=(n_event_types,n_states))
-#         guess =\
-#         computation.parameters_to_array_partial(guess_base_rate/(n+1),guess_imp_coef,guess_dec_coef)
-#         additional_guesses.append(np.array(guess,dtype=DTYPEf,copy=True))
-#     if pre_estim_ord_hawkes:    
-#         ord_base_rate, ord_imp_coef, ord_dec_coef = pre_estimate_ordinary_hawkes(
-#             event_index,
-#             n_event_types,
-#             times, events,
-#             time_start,time_end,
-#             num_init_guesses = num_additional_guesses,
-#             maxiter=maxiter,
-#             learning_rate=learning_rate,
-#             parallel = pre_estim_parallel,
-#         )
-#         imp_coef = np.tile(ord_imp_coef,n_states)
-#         dec_coef = np.tile(ord_dec_coef,n_states)
-#         pre_estim_guess = computation.parameters_to_array_partial(ord_base_rate,imp_coef,dec_coef)
-#         additional_guesses.append(np.array(pre_estim_guess,dtype=DTYPEf,copy=True))
-#         cov =\
-#         np.maximum(0.2*np.amin(np.abs(guess)),1.0e-6)*np.eye(len(guess))
-#         break_point = 1+n_event_types*n_states
-#         for n in range(num_additional_guesses):
-#             guess=np.random.multivariate_normal(pre_estim_guess,cov)
-#             guess[:break_point] = np.maximum(guess[:break_point],1.0e-7)
-#             guess[break_point:] = np.maximum(guess[break_point:],1.01)
-#             additional_guesses.append(np.array(guess,dtype=DTYPEf,copy=True))
-#     cdef list new_list_of_guesses = list_of_guesses + additional_guesses        
-#     if print_list:
-#         print("mle_estimation.produce_list_init_guesses: new_list_of_guesses: \n")
-#         print(new_list_of_guesses)
-#     return new_list_of_guesses    
-    
     

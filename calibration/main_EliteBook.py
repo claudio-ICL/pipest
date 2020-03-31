@@ -8,7 +8,8 @@ while (not os.path.basename(path_pipest)=='pipest') and (n<4):
     path_pipest=os.path.dirname(path_pipest)
     n+=1 
 if not os.path.basename(path_pipest)=='pipest':
-    raise ValueError("path_pipest not found. Instead: {}".format(path_pipest))
+    print("path_pipest not found. Instead: {}".format(path_pipest))
+    raise ValueError("path_pipest not found.")
 path_models=path_pipest+'/models'    
 path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'
 path_lobster=path_pipest+'/lobster_for_sdhawkes'
@@ -39,17 +40,18 @@ first_read_fromLOBSTER=True
 dump_after_reading=False
 add_level_to_messagefile=True
 #Optional parameters for "calibrate"
-type_of_preestim='ordinary_hawkes' # or 'nonparam'
-max_imp_coef = 15.0,
-learning_rate = 0.0001,
-maxiter = 15
-num_guesses = 4
+type_of_preestim='nonparam' #'ordinary_hawkes' or 'nonparam'
+max_imp_coef = 15.0
+learning_rate = 0.0001
+maxiter = 8
+num_guesses = 3
+num_processes = 8
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 80
-quad_tmax = 1.0,
-quad_tmin = 1.0e-1,
-num_gridpnts = 100,
-grid_tmax = 1.1,
+quad_tmax = 1.0
+quad_tmin = 1.0e-1
+num_gridpnts = 100
+grid_tmax = 1.1
 grid_tmin = 1.5e-1
 
 
@@ -84,7 +86,7 @@ def read_lobster():
     message+='I am reading from lobster\n'
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
     path_readout=path_mdata+'_readout'
-    fout,saveout=redirect_stoud(direction='from',path=path_readout,message=message)  
+    fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)  
 
     if (first_read_fromLOBSTER):
         LOB,messagefile=from_lobster.read_from_LOBSTER(symbol,date,
@@ -97,7 +99,7 @@ def read_lobster():
                                   initial_time=initial_time,
                                   final_time=final_time)
 
-    print('\n\nDATA CLEANING\n')
+    print('\nDATA CLEANING\n')
     aggregate_time_stamp=True
     eventTypes_to_aggregate=[1,2,3,4,5]
     eventTypes_to_drop_with_nonunique_time=[]
@@ -170,7 +172,7 @@ def read_lobster():
         print(message)
         raise ValueError(message)
 
-    message='\nData is being stored in {}'.format(path_mdata)
+    message='Data is being stored in {}'.format(path_mdata)
     with open(path_mdata, 'wb') as outfile:
         pickle.dump(data,outfile)
     redirect_stdout(direction='to',message=message,fout=fout,saveout=saveout)
@@ -261,9 +263,9 @@ def calibrate(num_guesses=4, maxiter=50):
                 partial=True, e=event_type, name_of_model=name_of_model_partial,
                 type_of_preestim=type_of_preestim,
                 max_imp_coef = max_imp_coef,
-                learning_rate = learning_rate,maxiter = maxiter, num_of_random_guesses=num_guesses,
-                parallel=True,
-                number_of_attempts = 2, num_processes = num_processes,
+                learning_rate = learning_rate, maxiter = maxiter, num_of_random_guesses=num_guesses,
+                parallel=False,
+                number_of_attempts = 1, num_processes = num_processes,
                 skip_estim_of_state_processes=True,
                 dump_after_calibration=True
             )
@@ -324,7 +326,7 @@ def main():
     action=str(sys.argv[5])
     global time_window
     time_window=str('{}-{}'.format(int(initial_time),int(final_time)))
-    print("$python {} {} {} {} {} {}\n".format(sys.argv[0],symbol,date,initial_time,final_time,action))
+    print("\n\n$python {} {} {} {} {} {}".format(sys.argv[0],symbol,date,initial_time,final_time,action))
     global path_mdata
     path_mdata=path_lobster_data+'/{}/{}_{}_{}'.format(symbol,symbol,date,time_window)
     global name_of_model
@@ -343,7 +345,7 @@ def main():
     else:
         print("action: {}".format(action))
         raise ValueError("action not recognised")
-    print("\nmain.py end of file")    
+    print("main.py end of file")    
         
         
         
