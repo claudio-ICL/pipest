@@ -1,8 +1,8 @@
 #!/bin/bash
 
-ls -1 ./data/ > data/symbols.txt
+ls -1 ./data/ > ./symbols.txt
 
-for sym in "INTC"
+for sym in "INTC" "AAPL" "GOOG" "SNAP"
 do
 	echo "symbol: $sym"
 	ls ./data/$sym/*message*10*.csv > ./data/$sym/list_of_csv_messagefiles.txt

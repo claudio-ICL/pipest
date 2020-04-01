@@ -1,0 +1,12 @@
+18:12:42
+   Job ID           Class            Job Name        Status     Comment   
+-------------- --------------- -------------------- -------- -------------
+1262942        Throughput      calibr_main-r        Queued   no start time estimate yet
+1262943        Throughput      calibr_main-p        Held     waiting on 1262942 
+1262944[]      Throughput      calibr_main-c        Held     waiting on 1262943 
+1262945        Throughput      calibr_main-m        Held     waiting on 1262944[] 
+Job id            Name             User              Time Use S Queue
+----------------  ---------------- ----------------  -------- - -----
+1262943.pbs       calibr_main-p    cb115                    0 H v1_throughput24 
+
+18:17:42

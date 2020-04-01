@@ -32,9 +32,9 @@ import prepare_from_lobster as from_lobster
 
 
 symbol='INTC'
-date='2019-01-02'
+date='2019-01-31'
 initial_time=float(11*60*60)
-final_time=float(11.1*60*60)
+final_time=float(14*60*60)
 time_window=str('{}-{}'.format(int(initial_time),int(final_time)))
 first_read_fromLOBSTER=True
 dump_after_reading=False
