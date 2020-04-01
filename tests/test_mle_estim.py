@@ -130,10 +130,7 @@ def main():
 #     exit()
     
     "Launch estimation"
-    run_time = -time.time()
     sd_model.mle_estim.launch_estimation_of_hawkes_param(e=0)
-    run_time+=time.time()
-    sd_model.mle_estim.store_runtime(run_time)
 #     model.mle_estim.create_goodness_of_fit()
 
                            

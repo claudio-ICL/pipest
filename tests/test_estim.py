@@ -68,9 +68,6 @@ import nonparam_estimation as nonparam_estim
 
     
 def main():    
-    print("I am executing test_estim.py")
-    global now
-    print('\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute))
     n_states=[3,5]
     n_events = 4  # number of event types, $d_e$
     n_levels = 2
@@ -99,7 +96,7 @@ def main():
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-    max_number_of_events = 4000
+    max_number_of_events = 8000
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -140,7 +137,7 @@ def main():
     model.create_mle_estim(type_of_input = 'simulated')
     "Set the estimation"    
     list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-        num_additional_random_guesses = 3, max_imp_coef = 10.0)    
+        num_additional_random_guesses = 3, max_imp_coef = 50.0)    
     model.mle_estim.set_estimation_of_hawkes_param(
         time_start, time_end,
         list_of_init_guesses = list_init_guesses,
@@ -151,14 +148,11 @@ def main():
         pre_estim_ord_hawkes=True,
         pre_estim_parallel=True,
         number_of_attempts = 2,
-        num_processes = 8
+        num_processes = 10
     )
 #     exit()
     "Launch estimation"
-    run_time = -time.time()
     model.mle_estim.launch_estimation_of_hawkes_param(e=0)
-    run_time+=time.time()
-    model.mle_estim.store_runtime(run_time)
 #     model.mle_estim.create_goodness_of_fit()
     
     return model
@@ -175,7 +169,7 @@ def main():
 
 
 if __name__=='__main__':
-    print("I am executing test_nonparam.py")
+    print("I am executing test_estim.py")
     now=datetime.datetime.now()
     print('\ndate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute))
     this_test_readout=path_saved_tests+'/nonparam_test_{}-{:02d}-{:02d}_{:02d}{:02d}_readout'.format(now.year,now.month,now.day, now.hour, now.minute)
@@ -192,6 +186,7 @@ if __name__=='__main__':
 #     print("I am dumping "+this_test_model)
 #     with open(this_test_model, 'wb') as outfile:
 #         pickle.dump(model,outfile)
+    now=datetime.datetime.now()
     print("Test terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
         now.year,now.month,now.day,now.hour,now.minute
     ))
