@@ -43,7 +43,7 @@ add_level_to_messagefile=True
 type_of_preestim='nonparam' #'ordinary_hawkes' or 'nonparam'
 max_imp_coef = 15.0
 learning_rate = 0.0001
-maxiter = 5
+maxiter = 15
 num_guesses = 4
 num_processes = 8
 #Optional parameters for "nonparam_estim"
