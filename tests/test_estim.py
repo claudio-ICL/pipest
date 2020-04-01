@@ -96,7 +96,7 @@ def main():
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-    max_number_of_events = 8000
+    max_number_of_events = 6000
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
