@@ -1,8 +1,14 @@
 #cython: boundscheck=False, wraparound=False, nonecheck=False
 from cython.parallel import prange
 """
-This version of the resource "computation.pyx" utilises the module cython.parallel and in particular its function prange
+The following implementation utilises the module cython.parallel and its function prange through which Cython supports native parallelism. See https://cython.readthedocs.io/en/latest/src/userguide/parallelism.html
+
+Functionality in this module may only be used from the main thread or parallel regions due to OpenMP restrictions. Therefore, one has to choose whether to rely on the higher level multiprocessing.Pool or the lower level prange. 
+This version of the resource "computation.pyx" is committed to the git history with the name "prange in computation.pyx".
+
 """
+
+
 
 import numpy as np
 cimport numpy as np
