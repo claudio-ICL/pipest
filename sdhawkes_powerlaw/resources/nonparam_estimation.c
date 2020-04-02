@@ -3243,7 +3243,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_2store_runtime(
 static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_4prepare_estimation_of_hawkes_kernel(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_use_filter, PyObject *__pyx_v_parallel); /* proto */
 static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_6estimate_hawkes_kernel(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_store_L1_norm, PyObject *__pyx_v_use_filter, PyObject *__pyx_v_enforce_positive_g_hat, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_filter_cutoff, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_filter_scale, PyObject *__pyx_v_num_addpnts_filter, PyObject *__pyx_v_parallel, PyObject *__pyx_v_parallel_prep); /* proto */
 static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_8fit_powerlaw(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_compute_L1_norm, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_ridge_param, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_tol); /* proto */
-static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodness_of_fit(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_type_of_input); /* proto */
+static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodness_of_fit(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_type_of_input, PyObject *__pyx_v_parallel); /* proto */
 static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_12produce_list_init_guesses_for_mle_estimation(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, int __pyx_v_num_additional_random_guesses, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_max_imp_coef, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_tol); /* proto */
 static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_14store_base_rates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_16store_distribution_of_marks(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self); /* proto */
@@ -6931,7 +6931,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_8fit_powerlaw(C
  *         if compute_L1_norm:
  *             #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
  *             self.hawkes_kernel.store_L1_norm(from_param=True)             # <<<<<<<<<<<<<<
- *     def create_goodness_of_fit(self, str type_of_input='simulated'):
+ *     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
  *         "type_of_input can either be 'simulated' or 'empirical'"
  */
     __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_hawkes_kernel); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 173, __pyx_L1_error)
@@ -6987,7 +6987,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_8fit_powerlaw(C
 /* "nonparam_estimation.pyx":174
  *             #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
  *             self.hawkes_kernel.store_L1_norm(from_param=True)
- *     def create_goodness_of_fit(self, str type_of_input='simulated'):             # <<<<<<<<<<<<<<
+ *     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):             # <<<<<<<<<<<<<<
  *         "type_of_input can either be 'simulated' or 'empirical'"
  *         self.goodness_of_fit=goodness_of_fit.good_fit(
  */
@@ -6999,17 +6999,21 @@ static PyMethodDef __pyx_mdef_19nonparam_estimation_14EstimProcedure_11create_go
 static PyObject *__pyx_pw_19nonparam_estimation_14EstimProcedure_11create_goodness_of_fit(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_self = 0;
   PyObject *__pyx_v_type_of_input = 0;
+  PyObject *__pyx_v_parallel = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("create_goodness_of_fit (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_self,&__pyx_n_s_type_of_input,0};
-    PyObject* values[2] = {0,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_self,&__pyx_n_s_type_of_input,&__pyx_n_s_parallel,0};
+    PyObject* values[3] = {0,0,0};
     values[1] = ((PyObject*)((PyObject*)__pyx_n_s_simulated));
+    values[2] = ((PyObject *)((PyObject *)Py_True));
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
         case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
         CYTHON_FALLTHROUGH;
         case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
@@ -7028,12 +7032,20 @@ static PyObject *__pyx_pw_19nonparam_estimation_14EstimProcedure_11create_goodne
           PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_type_of_input);
           if (value) { values[1] = value; kw_args--; }
         }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (kw_args > 0) {
+          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_parallel);
+          if (value) { values[2] = value; kw_args--; }
+        }
       }
       if (unlikely(kw_args > 0)) {
         if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "create_goodness_of_fit") < 0)) __PYX_ERR(0, 174, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
         case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
         CYTHON_FALLTHROUGH;
         case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
@@ -7043,17 +7055,18 @@ static PyObject *__pyx_pw_19nonparam_estimation_14EstimProcedure_11create_goodne
     }
     __pyx_v_self = values[0];
     __pyx_v_type_of_input = ((PyObject*)values[1]);
+    __pyx_v_parallel = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("create_goodness_of_fit", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 174, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("create_goodness_of_fit", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 174, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("nonparam_estimation.EstimProcedure.create_goodness_of_fit", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_type_of_input), (&PyString_Type), 1, "type_of_input", 1))) __PYX_ERR(0, 174, __pyx_L1_error)
-  __pyx_r = __pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodness_of_fit(__pyx_self, __pyx_v_self, __pyx_v_type_of_input);
+  __pyx_r = __pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodness_of_fit(__pyx_self, __pyx_v_self, __pyx_v_type_of_input, __pyx_v_parallel);
 
   /* function exit code */
   goto __pyx_L0;
@@ -7064,7 +7077,7 @@ static PyObject *__pyx_pw_19nonparam_estimation_14EstimProcedure_11create_goodne
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodness_of_fit(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_type_of_input) {
+static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodness_of_fit(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_type_of_input, PyObject *__pyx_v_parallel) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -7081,7 +7094,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodne
   __Pyx_RefNannySetupContext("create_goodness_of_fit", 0);
 
   /* "nonparam_estimation.pyx":176
- *     def create_goodness_of_fit(self, str type_of_input='simulated'):
+ *     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
  *         "type_of_input can either be 'simulated' or 'empirical'"
  *         self.goodness_of_fit=goodness_of_fit.good_fit(             # <<<<<<<<<<<<<<
  *             self.num_event_types,self.num_states,
@@ -7098,7 +7111,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodne
  *         self.goodness_of_fit=goodness_of_fit.good_fit(
  *             self.num_event_types,self.num_states,             # <<<<<<<<<<<<<<
  *             self.base_rates,self.hawkes_kernel.alphas,self.hawkes_kernel.betas,self.transition_probabilities,
- *             self.times,self.events,self.states,type_of_input=type_of_input
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel
  */
   __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_num_event_types); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 177, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -7109,7 +7122,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodne
  *         self.goodness_of_fit=goodness_of_fit.good_fit(
  *             self.num_event_types,self.num_states,
  *             self.base_rates,self.hawkes_kernel.alphas,self.hawkes_kernel.betas,self.transition_probabilities,             # <<<<<<<<<<<<<<
- *             self.times,self.events,self.states,type_of_input=type_of_input
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel
  *         )
  */
   __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_base_rates); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 178, __pyx_L1_error)
@@ -7130,7 +7143,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodne
   /* "nonparam_estimation.pyx":179
  *             self.num_event_types,self.num_states,
  *             self.base_rates,self.hawkes_kernel.alphas,self.hawkes_kernel.betas,self.transition_probabilities,
- *             self.times,self.events,self.states,type_of_input=type_of_input             # <<<<<<<<<<<<<<
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel             # <<<<<<<<<<<<<<
  *         )
  *     def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,
  */
@@ -7142,7 +7155,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodne
   __Pyx_GOTREF(__pyx_t_10);
 
   /* "nonparam_estimation.pyx":176
- *     def create_goodness_of_fit(self, str type_of_input='simulated'):
+ *     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
  *         "type_of_input can either be 'simulated' or 'empirical'"
  *         self.goodness_of_fit=goodness_of_fit.good_fit(             # <<<<<<<<<<<<<<
  *             self.num_event_types,self.num_states,
@@ -7181,16 +7194,17 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodne
   /* "nonparam_estimation.pyx":179
  *             self.num_event_types,self.num_states,
  *             self.base_rates,self.hawkes_kernel.alphas,self.hawkes_kernel.betas,self.transition_probabilities,
- *             self.times,self.events,self.states,type_of_input=type_of_input             # <<<<<<<<<<<<<<
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel             # <<<<<<<<<<<<<<
  *         )
  *     def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,
  */
-  __pyx_t_10 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_10 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 179, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_10);
   if (PyDict_SetItem(__pyx_t_10, __pyx_n_s_type_of_input, __pyx_v_type_of_input) < 0) __PYX_ERR(0, 179, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_10, __pyx_n_s_parallel, __pyx_v_parallel) < 0) __PYX_ERR(0, 179, __pyx_L1_error)
 
   /* "nonparam_estimation.pyx":176
- *     def create_goodness_of_fit(self, str type_of_input='simulated'):
+ *     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
  *         "type_of_input can either be 'simulated' or 'empirical'"
  *         self.goodness_of_fit=goodness_of_fit.good_fit(             # <<<<<<<<<<<<<<
  *             self.num_event_types,self.num_states,
@@ -7207,7 +7221,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodne
   /* "nonparam_estimation.pyx":174
  *             #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
  *             self.hawkes_kernel.store_L1_norm(from_param=True)
- *     def create_goodness_of_fit(self, str type_of_input='simulated'):             # <<<<<<<<<<<<<<
+ *     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):             # <<<<<<<<<<<<<<
  *         "type_of_input can either be 'simulated' or 'empirical'"
  *         self.goodness_of_fit=goodness_of_fit.good_fit(
  */
@@ -7236,7 +7250,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_10create_goodne
 }
 
 /* "nonparam_estimation.pyx":181
- *             self.times,self.events,self.states,type_of_input=type_of_input
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel
  *         )
  *     def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,             # <<<<<<<<<<<<<<
  *                                                      DTYPEf_t max_imp_coef = 100.0, DTYPEf_t tol=1.0e-07,
@@ -8183,7 +8197,7 @@ static PyObject *__pyx_pf_19nonparam_estimation_14EstimProcedure_12produce_list_
   goto __pyx_L0;
 
   /* "nonparam_estimation.pyx":181
- *             self.times,self.events,self.states,type_of_input=type_of_input
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel
  *         )
  *     def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,             # <<<<<<<<<<<<<<
  *                                                      DTYPEf_t max_imp_coef = 100.0, DTYPEf_t tol=1.0e-07,
@@ -40551,20 +40565,20 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "nonparam_estimation.pyx":174
  *             #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
  *             self.hawkes_kernel.store_L1_norm(from_param=True)
- *     def create_goodness_of_fit(self, str type_of_input='simulated'):             # <<<<<<<<<<<<<<
+ *     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):             # <<<<<<<<<<<<<<
  *         "type_of_input can either be 'simulated' or 'empirical'"
  *         self.goodness_of_fit=goodness_of_fit.good_fit(
  */
-  __pyx_tuple__45 = PyTuple_Pack(2, __pyx_n_s_self, __pyx_n_s_type_of_input); if (unlikely(!__pyx_tuple__45)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __pyx_tuple__45 = PyTuple_Pack(3, __pyx_n_s_self, __pyx_n_s_type_of_input, __pyx_n_s_parallel); if (unlikely(!__pyx_tuple__45)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__45);
   __Pyx_GIVEREF(__pyx_tuple__45);
-  __pyx_codeobj__46 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__45, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_nonparam_estimation_pyx, __pyx_n_s_create_goodness_of_fit, 174, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__46)) __PYX_ERR(0, 174, __pyx_L1_error)
-  __pyx_tuple__47 = PyTuple_Pack(1, ((PyObject*)__pyx_n_s_simulated)); if (unlikely(!__pyx_tuple__47)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __pyx_codeobj__46 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__45, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_nonparam_estimation_pyx, __pyx_n_s_create_goodness_of_fit, 174, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__46)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __pyx_tuple__47 = PyTuple_Pack(2, ((PyObject*)__pyx_n_s_simulated), ((PyObject *)Py_True)); if (unlikely(!__pyx_tuple__47)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__47);
   __Pyx_GIVEREF(__pyx_tuple__47);
 
   /* "nonparam_estimation.pyx":181
- *             self.times,self.events,self.states,type_of_input=type_of_input
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel
  *         )
  *     def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,             # <<<<<<<<<<<<<<
  *                                                      DTYPEf_t max_imp_coef = 100.0, DTYPEf_t tol=1.0e-07,
@@ -42138,7 +42152,7 @@ if (!__Pyx_RefNanny) {
   /* "nonparam_estimation.pyx":174
  *             #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
  *             self.hawkes_kernel.store_L1_norm(from_param=True)
- *     def create_goodness_of_fit(self, str type_of_input='simulated'):             # <<<<<<<<<<<<<<
+ *     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):             # <<<<<<<<<<<<<<
  *         "type_of_input can either be 'simulated' or 'empirical'"
  *         self.goodness_of_fit=goodness_of_fit.good_fit(
  */
@@ -42149,7 +42163,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
   /* "nonparam_estimation.pyx":181
- *             self.times,self.events,self.states,type_of_input=type_of_input
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel
  *         )
  *     def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,             # <<<<<<<<<<<<<<
  *                                                      DTYPEf_t max_imp_coef = 100.0, DTYPEf_t tol=1.0e-07,
@@ -42171,7 +42185,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_GOTREF(__pyx_t_13);
 
   /* "nonparam_estimation.pyx":181
- *             self.times,self.events,self.states,type_of_input=type_of_input
+ *             self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel
  *         )
  *     def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,             # <<<<<<<<<<<<<<
  *                                                      DTYPEf_t max_imp_coef = 100.0, DTYPEf_t tol=1.0e-07,

@@ -217,7 +217,8 @@ class SDHawkes:
                  events_labels=False, states_labels=False,
                  int number_of_lob_levels=1,
                  int volume_imbalance_upto_level =1,
-                 list list_of_n_states=[3,5], int st1_deflationary=0, int st1_inflationary=2, int st1_stationary=1
+                 list list_of_n_states=[3,5], int st1_deflationary=0, int st1_inflationary=2, int st1_stationary=1,
+                 str name_of_model = 'SDHawkel_model',
                 ):
         """
         Initialises an instance.
@@ -244,8 +245,6 @@ class SDHawkes:
         self.path_sdhawkes=path_sdhawkes
         self.path_pipest=path_pipest
         self.path_models=path_models
-            
-        cdef str name_of_model = 'SDHawkel_model'
         self.name_of_model = name_of_model
         self.datetime_of_initialisation=datetime.datetime.now()
         if not events_labels:
@@ -290,7 +289,8 @@ class SDHawkes:
         self.impact_decay_ratios = impact_decay_ratios
         cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.zeros((number_of_states,2*number_of_lob_levels),dtype=DTYPEf)
         self.dirichlet_param = dirichlet_param
-
+    def set_name_of_model(self,str name):
+        self.name_of_model=name
     def dump(self, str name='', str path=''):
         if name=='':
             name=self.name_of_model
@@ -1005,7 +1005,7 @@ class SDHawkes:
             pass
         self.liquidator.time_start = 0.0 
         
-    def create_goodness_of_fit(self, str type_of_input='simulated'):
+    def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
         "type_of_input can either be 'simulated' or 'empirical'"
         if type_of_input == 'simulated':
             times=self.simulated_times
@@ -1021,7 +1021,7 @@ class SDHawkes:
         self.goodness_of_fit=goodness_of_fit.good_fit(
             self.number_of_event_types,self.number_of_states,
             self.base_rates,self.impact_coefficients,self.decay_coefficients,self.transition_probabilities,
-            times,events,states,type_of_input=type_of_input
+            times,events,states,type_of_input=type_of_input, parallel = parallel
         )
     def create_nonparam_estim(self, str type_of_input = 'simulated',
                               int num_quadpnts = 100, DTYPEf_t quad_tmax=1.0, DTYPEf_t quad_tmin=1.0e-04,
@@ -1049,7 +1049,7 @@ class SDHawkes:
         )
     def store_nonparam_estim_class(self,nonparam_estim):
         self.nonparam_estim = copy.copy(nonparam_estim)
-    def create_mle_estim(self, str type_of_input = 'simulated',):
+    def create_mle_estim(self, str type_of_input = 'simulated', store_trans_prob=True):
         if type_of_input == 'simulated':
             times=self.simulated_times
             events=self.simulated_events
@@ -1062,7 +1062,8 @@ class SDHawkes:
             raise ValueError("{}: type of input not recognised. It must be either 'simulated' or 'empirical'".format(type_of_input))
         self.mle_estim=mle_estim.EstimProcedure(self.number_of_event_types,self.number_of_states,
                                  times,events,states,
-                                 type_of_input
+                                 type_of_input = type_of_input,
+                                 store_trans_prob = store_trans_prob               
                                 )    
         
 

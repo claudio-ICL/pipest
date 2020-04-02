@@ -40,11 +40,12 @@ first_read_fromLOBSTER=True
 dump_after_reading=False
 add_level_to_messagefile=True
 #Optional parameters for "calibrate"
-type_of_preestim='nonparam' #'ordinary_hawkes' or 'nonparam'
+type_of_preestim='ordinary_hawkes' #'ordinary_hawkes' or 'nonparam'
 max_imp_coef = 15.0
 learning_rate = 0.0001
 maxiter = 8
-num_guesses = 3
+num_guesses = 6
+parallel=False
 num_processes = 8
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 80
@@ -76,9 +77,6 @@ def redirect_stdout(direction= 'from', # or 'to'
         print("WARNINNG: redirect_stdout failed! direction={} not recognised".format(direction))
         print(message)
         
-
-
-
 
 def read_lobster():
     now=datetime.datetime.now()
@@ -264,7 +262,7 @@ def calibrate(num_guesses=4, maxiter=50):
                 type_of_preestim=type_of_preestim,
                 max_imp_coef = max_imp_coef,
                 learning_rate = learning_rate, maxiter = maxiter, num_of_random_guesses=num_guesses,
-                parallel=False,
+                parallel=parallel,
                 number_of_attempts = 1, num_processes = num_processes,
                 skip_estim_of_state_processes=True,
                 dump_after_calibration=True
@@ -307,10 +305,7 @@ def merge_from_partial():
     MODEL.initialise_from_partial(partial_models, dump_after_merging=True, name_of_model=name_of_model)  
     n=datetime.datetime.now()
     message='\nMerging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute)
-    redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout)
-        
-
-    
+    redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout) 
 
 
 def main():  
@@ -345,12 +340,7 @@ def main():
     else:
         print("action: {}".format(action))
         raise ValueError("action not recognised")
-    print("main.py end of file")    
-        
-        
-        
-
-        
-        
+    print("main.py end of file")
+    
 if __name__=='__main__':
     main()              

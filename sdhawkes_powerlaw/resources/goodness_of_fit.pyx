@@ -50,6 +50,7 @@ class good_fit:
               np.ndarray[DTYPEf_t, ndim=1] times,
               np.ndarray[DTYPEi_t, ndim=1] events,
               np.ndarray[DTYPEi_t, ndim=1] states,
+              parallel=True,   
               compute_total_residuals = False,
               str type_of_input = 'simulated'
               ):
@@ -73,7 +74,7 @@ class good_fit:
                                                         states)
         cdef int len_labelled_times = self.labelled_times.shape[2]
         self.len_labelled_times = len_labelled_times
-        self.residuals = self.compute_residuals_pc()
+        self.residuals = self.compute_residuals(parallel=parallel)
         self.timechanged_pp = self.produce_timechanged_point_process(self.residuals,self.n_event_types)
         if compute_total_residuals:
             self.total_residuals = self.compute_total_residuals_pc()
@@ -146,7 +147,7 @@ class good_fit:
        
     
         
-    def obj_pc_compute_res(self,int e):
+    def obj_compute_res(self,int e):
         cdef int process_id = os.getpid()
         print("goodness_of_fit.compute_residuals. component_e: {}; process_id: pid{}".format(e,process_id))
         return computation.compute_event_residual(
@@ -154,18 +155,25 @@ class good_fit:
             self.base_rate[e], self.dec_coef[:,:,e], self.ratios[:,:,e],
             self.labelled_times, self.count)
     
-    def compute_residuals_pc(self):
+    def compute_residuals(self, parallel=True):
         cdef double run_time= - time.time()
-        cdef int n_parallel = max(1,min(self.n_event_types,mp.cpu_count()))
-        print('Compute residuals in parallel on {} cpus'.format(n_parallel))
-        pool=mp.Pool(n_parallel)
-        residuals=pool.map(
-            self.obj_pc_compute_res,list(range(self.n_event_types))
-        )                                
-        pool.close()
-        pool.join()
+        cdef int num_processes = max(1, self.n_event_types)
+        if parallel:
+            print('I am computing residuals in parallel. num_process: {}'.format(num_processes))
+            pool=mp.Pool(num_processes)
+            residuals=pool.map(
+                self.obj_compute_res,list(range(self.n_event_types))
+            )                                
+            pool.close()
+            pool.join()
+        else:
+            print("I am computing residuals serially")
+            residuals = list(
+                map(self.obj_compute_res,list(range(self.n_event_types))
+                )
+            )
         run_time+=time.time()
-        print('Parallel computation of residuals terminates. run_time={}'.format(run_time))
+        print('Computation of residuals terminates. run_time={}'.format(run_time))
         return residuals
     def obj_pc_compute_tot_res(self,int n):
         cdef int e = n//self.n_states

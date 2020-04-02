@@ -171,12 +171,12 @@ class EstimProcedure:
         if compute_L1_norm:
             #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
             self.hawkes_kernel.store_L1_norm(from_param=True)
-    def create_goodness_of_fit(self, str type_of_input='simulated'):
+    def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
         "type_of_input can either be 'simulated' or 'empirical'"
         self.goodness_of_fit=goodness_of_fit.good_fit(
             self.num_event_types,self.num_states,
             self.base_rates,self.hawkes_kernel.alphas,self.hawkes_kernel.betas,self.transition_probabilities,
-            self.times,self.events,self.states,type_of_input=type_of_input
+            self.times,self.events,self.states,type_of_input=type_of_input, parallel=parallel
         )        
     def produce_list_init_guesses_for_mle_estimation(self, int num_additional_random_guesses = 0,
                                                      DTYPEf_t max_imp_coef = 100.0, DTYPEf_t tol=1.0e-07,

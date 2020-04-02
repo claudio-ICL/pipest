@@ -139,11 +139,15 @@ class EstimProcedure:
         np.maximum(0.05*np.amin(np.abs(guess)),self.tol)*np.eye(len(guess))
         cdef int j=0
         cdef int break_point = 1+self.num_event_types*self.num_states
-        for j in range(self.number_of_additional_guesses):
+        for j in range(max(1,self.number_of_additional_guesses//2)):
             new_guess = np.random.multivariate_normal(guess,cov)
             new_guess[0:break_point] = np.maximum(0.0,new_guess[0:break_point])
             new_guess[break_point:] = np.maximum(1.01,new_guess[break_point:])
-            list_init_guesses.append(new_guess)
+            list_init_guesses.append(np.array(new_guess,copy=True))
+        for j in range(max(1,self.number_of_additional_guesses//2)):
+            new_guess[0:break_point] = np.random.uniform(low=0.0, high = 5.0, size=(break_point,))
+            new_guess[break_point:] = np.random.uniform(low=1.5, high = 2.5, size=(len(new_guess)-break_point,))
+            list_init_guesses.append(np.array(new_guess,copy=True))
         return list_init_guesses    
             
     def estimate_hawkes_param_partial(self, int e):

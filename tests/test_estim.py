@@ -63,11 +63,29 @@ import prepare_from_lobster as from_lobster
 import nonparam_estimation as nonparam_estim
 
 
+def redirect_stdout(direction= 'from', # or 'to'
+                    message= '',
+                    path='',
+                    fout=None,saveout=None):
+    if direction=='from':
+        print(message)
+        print("stdout is being redirected to {}".format(path))
+        saveout=sys.stdout
+        fout=open(path,'w')
+        sys.stdout = fout
+        print(message)
+        return fout, saveout
+    elif direction=='to':
+        print(message)
+        fout.close()
+        sys.stdout=saveout
+        print(message)
+    else:
+        print("WARNINNG: redirect_stdout failed! direction={} not recognised".format(direction))
+        print(message)
 
-
-
-    
-def main():    
+        
+def main(model_name= ''):    
     n_states=[3,5]
     n_events = 4  # number of event types, $d_e$
     n_levels = 2
@@ -78,17 +96,13 @@ def main():
         number_of_event_types=n_events,
         number_of_lob_levels=n_levels,
         list_of_n_states=n_states,
-        volume_imbalance_upto_level=upto_level)
+        volume_imbalance_upto_level=upto_level,
+        name_of_model=model_name)
     tot_n_states=model.state_enc.tot_n_states
-    # The transition probabilities $\phi$
     phis = model.state_enc.generate_random_transition_prob(n_events=n_events).astype(np.float)
-    # The base rates $\nu$
     nus = 0.1*np.random.randint(low=15,high=20,size=n_events)
-    # The impact coefficients $\alpha$
     alphas = np.power(10,-np.random.uniform(low=1.0, high=1.2))*np.random.randint(low=0,high=4,size=(n_events, tot_n_states, n_events)).astype(np.float)
-    # The decay coefficients $\beta$
     betas = np.random.uniform(1.25025,2.1,size=(n_events, tot_n_states, n_events)).astype(np.float)
-    # The Dirichlet parameters $\gamma$
     gammas = np.random.uniform(low=1.25, high = 5.6,size=(tot_n_states,2*n_levels))
 
     model.set_hawkes_parameters(nus,alphas,betas)
@@ -96,14 +110,13 @@ def main():
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-    max_number_of_events = 6000
+    max_number_of_events = np.random.randint(low=3050, high=4000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
-        store_results=True,report_full_volumes=False)
+        store_results=True, report_full_volumes=False)
     time_end=float(times[-1])
-
-    model.create_goodness_of_fit(type_of_input='simulated')
+    model.create_goodness_of_fit(type_of_input='simulated', parallel=False)
     model.goodness_of_fit.ks_test_on_residuals()
     model.goodness_of_fit.ad_test_on_residuals()
 
@@ -128,68 +141,54 @@ def main():
                                filter_cutoff=20.0, filter_scale=30.0, num_addpnts_filter=3000,
                                parallel=False, parallel_prep=True
                                )
-    model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-02, tol=1.0e-7)
+    model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-01, tol=1.0e-7)
     model.nonparam_estim.store_base_rates()
     run_time+=time.time()
     model.nonparam_estim.store_runtime(run_time)
-    model.nonparam_estim.create_goodness_of_fit()
+    model.nonparam_estim.create_goodness_of_fit(parallel=False)
     
     print("\nMLE ESTIMATION\n")
     "Initialise the class"
-    model.create_mle_estim(type_of_input = 'simulated')
+    model.create_mle_estim(type_of_input = 'simulated', store_trans_prob = True)
     "Set the estimation"    
     list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
         num_additional_random_guesses = 3, max_imp_coef = 50.0)    
     model.mle_estim.set_estimation_of_hawkes_param(
         time_start, time_end,
         list_of_init_guesses = list_init_guesses,
-        learning_rate = 0.0001,
-        maxiter=10,
-        number_of_additional_guesses=3,
-        parallel=True,
-        pre_estim_ord_hawkes=True,
+        learning_rate = 0.00001,
+        maxiter=20,
+        number_of_additional_guesses=4,
+        parallel=False,
+        pre_estim_ord_hawkes=False,
         pre_estim_parallel=True,
-        number_of_attempts = 2,
+        number_of_attempts = 4,
         num_processes = 10
     )
 #     exit()
     "Launch estimation"
-    model.mle_estim.launch_estimation_of_hawkes_param(e=0)
-#     model.mle_estim.create_goodness_of_fit()
+    model.mle_estim.launch_estimation_of_hawkes_param(partial=False)
+    model.mle_estim.store_hawkes_parameters()
+    model.mle_estim.create_goodness_of_fit(parallel=False)
+    model.dump(path=path_saved_tests) 
     
-    return model
-    
-
-
-
-
-
-
-
-
-
 
 
 if __name__=='__main__':
-    print("I am executing test_estim.py")
     now=datetime.datetime.now()
-    print('\ndate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute))
-    this_test_readout=path_saved_tests+'/nonparam_test_{}-{:02d}-{:02d}_{:02d}{:02d}_readout'.format(now.year,now.month,now.day, now.hour, now.minute)
-    this_test_model=path_saved_tests+'/test_model_{}-{:02d}-{:02d}_{:02d}{:02d}'.format(
-        now.year,now.month,now.day,now.hour,now.minute
-    )
-#     print("stdout is being redirected to "+this_test_readout) 
-#     saveout=sys.stdout
-#     fout=open(this_test_readout,'w')
-#     sys.stdout=fout
-    model=main()
-#     fout.close()
-#     sys.stdout=saveout
-#     print("I am dumping "+this_test_model)
-#     with open(this_test_model, 'wb') as outfile:
-#         pickle.dump(model,outfile)
+    this_test_readout=path_saved_tests\
+    +'/test_estim_readout_{}-{:02d}-{:02d}_{:02d}{:02d}'.format(now.year,now.month,now.day, now.hour, now.minute)
+    this_test_model_name = '/test_estim_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
+    .format(now.year,now.month,now.day,now.hour,now.minute)
+    this_test_model_path=path_saved_tests+this_test_model_name
+    message="I am executing test_estim.py"
+    message+='\ndate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}\n'.format(now.year,now.month,now.day,now.hour,now.minute)
+    fout, saveout = redirect_stdout(direction='from', message=message, path=this_test_readout)
+    
+    main(model_name = this_test_model_name)
+    
     now=datetime.datetime.now()
-    print("Test terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
-        now.year,now.month,now.day,now.hour,now.minute
-    ))
-    print("\nEND OF TEST")
+    message="\nTest terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
+        now.year,now.month,now.day,now.hour,now.minute)
+    message+="\nEND OF TEST"
+    redirect_stdout(direction='to',message=message,fout=fout,saveout=saveout)
