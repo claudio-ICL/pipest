@@ -1,8 +1,7 @@
 #cython: boundscheck=False, wraparound=False, nonecheck=False
 from cython.parallel import prange
 """
-Dispite being imported for consistency with outher versions, this version of the resource "computation.pyx" does not utilise the module cython.prange. This is done in order to allow, at a higher level, the usage of multiprocessing.Pool. 
-Check other versions on git to retrieve the usage of prange.
+This version of the resource "computation.pyx" utilises the module cython.parallel and in particular its function prange
 """
 
 import numpy as np
@@ -46,13 +45,13 @@ def distribute_times_per_event_state(
         dtype=DTYPEf)
     cdef double [:,:,:] t_memview = t
     cdef Py_ssize_t e,x,i
-    with nogil:
-        for e in range(n_event_types):
-            for x in range(n_states):
-                for i in range(len_times):
-                    if ((events[i]==e)&(states[i]==x)):
-                        t_memview[e,x,count_memview[e,x]]=times[i]
-                        count_memview[e,x] +=1
+#     with nogil:
+    for e in prange(n_event_types, nogil=True):
+        for x in range(n_states):
+            for i in range(len_times):
+                if ((events[i]==e)&(states[i]==x)):
+                    t_memview[e,x,count_memview[e,x]]=times[i]
+                    count_memview[e,x] +=1
     return t, count
 
 def update_labelled_times(double time, long event, long state,
@@ -76,14 +75,14 @@ def compute_ESSE_partial(double t,double s,
     cdef int num_event_types=decay_coefficients.shape[0]
     cdef int num_states=decay_coefficients.shape[1]
     cdef double eval_time,power_comp
-    with nogil:
-        for e1 in range(num_event_types):
-            for x in range(num_states):
-                for i in range(count[e1,x]):
-                    if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
-                        eval_time = t-labelled_times[e1,x,i]+1.0
-                        power_comp = pow(eval_time,-decay_coefficients[e1,x])
-                        ESSE_memview[e1,x] += power_comp        
+#     with nogil:
+    for e1 in prange(num_event_types, nogil=True):
+        for x in range(num_states):
+            for i in range(count[e1,x]):
+                if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+                    eval_time = t-labelled_times[e1,x,i]+1.0
+                    power_comp = pow(eval_time,-decay_coefficients[e1,x])
+                    ESSE_memview[e1,x] += power_comp        
     return ESSE
 
 def compute_kernel_of_bm_profile_intensity(double t, int num_states,
@@ -121,15 +120,15 @@ def compute_ESSE_two_partial(double t, double s,
     cdef double  eval_time = 1.0
     cdef double  power_comp = 1.0
     cdef double  log_comp = 0.0
-    with nogil:
-        for e1 in range(num_event_types):
-            for x in range(num_states):
-                for i in range(count[e1,x]):
-                    if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
-                        eval_time = t-labelled_times[e1,x,i]+1.0
-                        power_comp = pow(eval_time,1-decay_coefficients[e1,x])
-                        log_comp = log(eval_time)
-                        result_memview[e1,x] += power_comp*log_comp                
+#     with nogil:
+    for e1 in prange(num_event_types, nogil=True):
+        for x in range(num_states):
+            for i in range(count[e1,x]):
+                if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+                    eval_time = t-labelled_times[e1,x,i]+1.0
+                    power_comp = pow(eval_time,1-decay_coefficients[e1,x])
+                    log_comp = log(eval_time)
+                    result_memview[e1,x] += power_comp*log_comp                
     return result
 
 
@@ -198,16 +197,16 @@ def compute_ESSE_partial_and_ESSE_one_partial(double t,double s,
     cdef int num_states=decay_coefficients.shape[1]
     cdef int len_labelled_times = labelled_times.shape[2]
     cdef double eval_time, power_comp, log_comp
-    with nogil:
-        for e1 in range(num_event_types):    
-            for x in range(num_states):
-                for i in range(count[e1,x]):
-                    if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
-                        eval_time = t-labelled_times[e1,x,i]+1.0
-                        power_comp = pow(eval_time,-decay_coefficients[e1,x])
-                        log_comp = log(eval_time)
-                        ESSE_memview[e1,x] += power_comp
-                        ESSE_one_memview[e1,x] += power_comp*log_comp
+#     with nogil:
+    for e1 in prange(num_event_types, nogil=True):    
+        for x in range(num_states):
+            for i in range(count[e1,x]):
+                if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+                    eval_time = t-labelled_times[e1,x,i]+1.0
+                    power_comp = pow(eval_time,-decay_coefficients[e1,x])
+                    log_comp = log(eval_time)
+                    ESSE_memview[e1,x] += power_comp
+                    ESSE_one_memview[e1,x] += power_comp*log_comp
         
     return ESSE, ESSE_one  
 
@@ -269,14 +268,14 @@ def compute_ESSE_three_partial(double u, double t, double s,
     cdef int e1, x, i
     cdef double eval_time = 0.0
     cdef double  power_comp = 0.0
-    with nogil:
-        for e1 in range(num_event_types):
-            for x in range(num_states):
-                for i in range(count[e1,x]):
-                    if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
-                        eval_time = u-labelled_times[e1,x,i]+1.0
-                        power_comp = pow(eval_time,1-decay_coefficients[e1,x])
-                        result_memview[e1,x] += power_comp
+#     with nogil:
+    for e1 in prange(num_event_types, nogil=True):
+        for x in range(num_states):
+            for i in range(count[e1,x]):
+                if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+                    eval_time = u-labelled_times[e1,x,i]+1.0
+                    power_comp = pow(eval_time,1-decay_coefficients[e1,x])
+                    result_memview[e1,x] += power_comp
 
     return result
 
@@ -541,9 +540,9 @@ def compute_partial_at_arrival_times(
     cdef double power_comp = 0
     cdef double  log_comp = 0
     cdef int count_zero_intensity = 0
-    #for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
-    with nogil:
-        for t in range(num_arrival_times):    
+    for t in prange(num_arrival_times,nogil=True): #schedule='guided'):
+#     with nogil:
+#         for t in range(num_arrival_times):    
             for e1 in range(num_event_types):
                 for x in range(num_states):
                     for i in range(count[e1,x]):
@@ -744,8 +743,8 @@ def labelled_times_within_range(double s, double t,
     cdef np.ndarray[DTYPEi_t, ndim = 2] num = np.zeros((n_event_types,n_states),dtype=DTYPEi)
     cdef long [:,:] num_memview = num
     cdef int e1,x,i
-    with nogil:
-        for e1 in range(n_event_types):
+#     with nogil:
+        for e1 in prange(n_event_types, nogil=True):
             for x in range(n_states):
                 for i in range(count[e1,x]):
                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
