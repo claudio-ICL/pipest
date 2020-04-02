@@ -8,8 +8,6 @@ This version of the resource "computation.pyx" is committed to the git history w
 
 """
 
-
-
 import numpy as np
 cimport numpy as np
 from scipy.stats import dirichlet as scipy_dirichlet
@@ -31,8 +29,6 @@ DTYPEfd = np.longdouble
 DTYPEil = np.int64
 ctypedef np.longdouble_t DTYPEfd_t
 ctypedef np.int64_t DTYPEil_t
-
-
 
 
 def distribute_times_per_event_state(
@@ -68,28 +64,6 @@ def update_labelled_times(double time, long event, long state,
     new_lt[event,state,count[event,state]] = time
     new_count[event,state]+=1
     return new_lt, new_count 
-    
-
-def compute_ESSE_partial(double t,double s,
-                         double [:,:] decay_coefficients,
-                         double [:,:,:] labelled_times,
-                         long [:,:] count,
-                        ):
-    cdef np.ndarray[DTYPEf_t,ndim=2] ESSE = np.zeros_like(decay_coefficients)
-    cdef double [:,:] ESSE_memview = ESSE
-    cdef int e1, x, i
-    cdef int num_event_types=decay_coefficients.shape[0]
-    cdef int num_states=decay_coefficients.shape[1]
-    cdef double eval_time,power_comp
-#     with nogil:
-    for e1 in prange(num_event_types, nogil=True):
-        for x in range(num_states):
-            for i in range(count[e1,x]):
-                if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
-                    eval_time = t-labelled_times[e1,x,i]+1.0
-                    power_comp = pow(eval_time,-decay_coefficients[e1,x])
-                    ESSE_memview[e1,x] += power_comp        
-    return ESSE
 
 def compute_kernel_of_bm_profile_intensity(double t, int num_states,
                                            double [:,:] imp_coef,
@@ -101,7 +75,7 @@ def compute_kernel_of_bm_profile_intensity(double t, int num_states,
     cdef double [:] S_memview = S
     cdef np.ndarray[DTYPEf_t, ndim=1] alpha = np.array(imp_coef[0,:],copy=True)
     cdef int x1,i
-    cdef double eval_time,power_comp
+    cdef double eval_time, power_comp
     with nogil:
         for x1 in range(num_states):
             for i in range(count[0,x1]):
@@ -112,7 +86,25 @@ def compute_kernel_of_bm_profile_intensity(double t, int num_states,
 
     return np.dot(alpha,S)
     
-
+    
+def compute_ESSE_partial(double t, double s,
+                         int num_event_types, int num_states,
+                         double [:,:] decay_coefficients,
+                         double [:,:,:] labelled_times,
+                         long [:,:] count,
+                        ):
+    cdef np.ndarray[DTYPEf_t,ndim=2] ESSE = np.zeros((num_event_types, num_states), dtype=DTYPEf)
+    cdef double [:,:] ESSE_memview = ESSE
+    cdef int e1, x, i
+    cdef double eval_time,power_comp
+    for e1 in prange(num_event_types, nogil=True):
+        for x in range(num_states):
+            for i in range(count[e1,x]):
+                if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
+                    eval_time = t-labelled_times[e1,x,i]+1.0
+                    power_comp = pow(eval_time,-decay_coefficients[e1,x])
+                    ESSE_memview[e1,x] += power_comp        
+    return ESSE    
 
 def compute_ESSE_two_partial(double t, double s,
                              int num_event_types, int num_states,
@@ -137,8 +129,6 @@ def compute_ESSE_two_partial(double t, double s,
                     result_memview[e1,x] += power_comp*log_comp                
     return result
 
-
-
 cdef void ng_compute_ESSE_two_partial(double t, double s,
                                  int num_event_types,
                                  int num_states,
@@ -159,35 +149,6 @@ cdef void ng_compute_ESSE_two_partial(double t, double s,
                     power_comp = pow(eval_time,1-decay_coefficients[e1,x])
                     log_comp = log(eval_time)
                     ESSE_two[e1,x] += power_comp*log_comp                
-
-
-
-"""
-def compute_ESSE_partial_and_ESSE_one_partial_plain(double t,double s,
-                             double [:,:] decay_coefficients,
-                             double [:,:,:] labelled_times,
-                             long [:,:] count,                 
-                            ):
-    cdef np.ndarray[DTYPEf_t,ndim=2] ESSE = np.zeros_like(decay_coefficients)
-    cdef np.ndarray[DTYPEf_t,ndim=2] ESSE_one = np.zeros_like(decay_coefficients)
-    cdef double [:,:] ESSE_memview = ESSE
-    cdef double [:,:] ESSE_one_memview = ESSE_one
-    cdef int e1, x, i
-    cdef int num_event_types=decay_coefficients.shape[0]
-    cdef int num_states=decay_coefficients.shape[1]
-    cdef int len_labelled_times = labelled_times.shape[2]
-    cdef double eval_time, power_comp, log_comp
-    for e1 in range(num_event_types):
-        for x in range(num_states):
-            for i in range(count[e1,x]):
-                if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
-                    eval_time = t-labelled_times[e1,x,i]+1.0
-                    power_comp = pow(eval_time,-decay_coefficients[e1,x])
-                    log_comp = log(eval_time)
-                    ESSE_memview[e1,x] += power_comp
-                    ESSE_one_memview[e1,x] += power_comp*log_comp       
-    return ESSE, ESSE_one  
-"""
 
 def compute_ESSE_partial_and_ESSE_one_partial(double t,double s,
                              double [:,:] decay_coefficients,
@@ -216,54 +177,6 @@ def compute_ESSE_partial_and_ESSE_one_partial(double t,double s,
         
     return ESSE, ESSE_one  
 
-
-
-# def compute_ESSE_partial_and_ESSE_one_partial(float t,float s,
-#                              np.ndarray[DTYPEf_t, ndim=2] decay_coefficients,
-#                              np.ndarray[DTYPEf_t, ndim=3] labelled_times,
-#                              np.ndarray[DTYPEi_t, ndim=2] count,                 
-#                             ):
-#     cdef np.ndarray[DTYPEf_t,ndim=2] ESSE = np.zeros_like(decay_coefficients)
-#     cdef np.ndarray[DTYPEf_t,ndim=2] ESSE_one = np.zeros_like(decay_coefficients)
-# #     cdef np.ndarray[DTYPEf_t,ndim=1] power_component
-# #     cdef np.ndarray[DTYPEf_t,ndim=1] log_component
-#     cdef double [:,:] ESSE_memview = ESSE
-#     cdef double [:,:] ESSE_one_memview = ESSE_one
-#     cdef double [:,:,:] labelled_times_memview = labelled_times
-#     cdef int [:,:] count_memview = count.astype(np.intc)
-#     cdef double [:,:] decay_coefficients_memview = decay_coefficients
-#     cdef int e1, x, i
-#     cdef int num_event_types=decay_coefficients.shape[0]
-#     cdef int num_states=decay_coefficients.shape[1]
-#     cdef int len_labelled_times = labelled_times.shape[2]
-#     cdef int [:,:,:] idx = np.zeros((num_event_types,num_states,len_labelled_times),dtype=np.intc)
-#     cdef double [:,:,:] eval_time = np.zeros((num_event_types,num_states,len_labelled_times),dtype=DTYPEf)
-#     cdef double [:,:,:] power_comp = np.zeros((num_event_types,num_states,len_labelled_times),dtype=DTYPEf)
-#     cdef double [:,:,:] log_comp = np.zeros((num_event_types,num_states,len_labelled_times),dtype=DTYPEf)
-#     for e1 in range(num_event_types):
-#         for x in range(num_states):
-#             for i in range(count_memview[e1,x]):
-#                 idx[e1,x,i] = ((labelled_times_memview[e1,x,i]>=s) & (labelled_times_memview[e1,x,i]<t))
-#                 if (idx[e1,x,i]):
-#                     eval_time[e1,x,i] = t-labelled_times_memview[e1,x,i]+1.0
-#                     power_comp[e1,x,i] = pow(eval_time[e1,x,i],-decay_coefficients_memview[e1,x])
-#                     log_comp[e1,x,i] = log(eval_time[e1,x,i])
-#                     ESSE_memview[e1,x] = ESSE_memview[e1,x]+power_comp[e1,x,i]
-#                     ESSE_one_memview[e1,x] = ESSE_one_memview[e1,x] + power_comp[e1,x,i]*log_comp[e1,x,i]
-        
-# #             idx = np.array(np.logical_not(np.isnan(labelled_times[e1,x,:])),dtype=np.intc)
-# #             idx[idx] = labelled_times[e1,x,idx]>=s
-# #             idx[idx] = labelled_times[e1,x,idx]<t
-# #             power_component = np.power(t-labelled_times[e1,x,idx]+1,
-# #                                        -decay_coefficients[e1,x])
-# #             log_component = np.log(t-labelled_times[e1,x,idx]+1)
-# #             ESSE[e1,x]=np.sum(power_component)
-# #             ESSE_one[e1,x]=np.sum(power_component*log_component)
-#     return ESSE, ESSE_one        
-
-
-
-
 def compute_ESSE_three_partial(double u, double t, double s,
                                int num_event_types, int num_states,
                                double [:,:] decay_coefficients,
@@ -285,8 +198,6 @@ def compute_ESSE_three_partial(double u, double t, double s,
 
     return result
 
-
-
 cdef void ng_compute_ESSE_three_partial(
     double u, double t, double s,
     int num_event_types, int num_states,                               
@@ -307,7 +218,7 @@ cdef void ng_compute_ESSE_three_partial(
                     ESSE_three[e1,x] += power_comp
 
                     
-def compute_intensity_partial(double t,
+def compute_intensity_partial(double t, int num_event_types, int num_states,
                       double base_rate,
                       np.ndarray[DTYPEf_t, ndim=2] impact_coefficients,
                       np.ndarray[DTYPEf_t, ndim=2] decay_coefficients,
@@ -315,7 +226,8 @@ def compute_intensity_partial(double t,
                       np.ndarray[DTYPEi_t, ndim=2] count):
     cdef np.ndarray[DTYPEf_t,ndim=1] alpha = impact_coefficients.flatten()
     cdef float s=np.array(-1,dtype=float)# the input s=-1.0 accounts for summing over all times smaller than t
-    cdef np.ndarray[DTYPEf_t,ndim=1] S = compute_ESSE_partial(t,s,decay_coefficients,labelled_times,count).flatten()
+    cdef np.ndarray[DTYPEf_t,ndim=1] S = compute_ESSE_partial(
+        t,s, num_event_types, num_states, decay_coefficients,labelled_times,count).flatten()
     return base_rate+np.dot(alpha,S)
 
 def compute_intensity_partial_and_ESSE_partial_and_ESSE_one_partial(double t,
@@ -361,7 +273,8 @@ def compute_intensity(double t,
     cdef int e = 0
     cdef double result = 0.0
     for e in range(num_event_types):
-        S[:,e] = compute_ESSE_partial(t,s,dec_coef_memview[:,:,e],labelled_times_memview,count_memview).flatten()    
+        S[:,e] = compute_ESSE_partial(
+            t,s, num_event_types, num_states, dec_coef_memview[:,:,e],labelled_times_memview,count_memview).flatten()    
         result+=base_rates_memview[e]+np.dot(alpha_memview[:,e],S_memview[:,e])
     return result
 
@@ -381,11 +294,10 @@ def compute_intensities_given_lt(double t,
     cdef np.ndarray[DTYPEf_t,ndim=2] S = np.ones_like(reshaped_imp_coef)
     cdef int e = 0
     for e in range(first_event_index,num_event_types):
-        S[:,e] = compute_ESSE_partial(t,s,decay_coefficients[:,:,e],labelled_times,count).flatten()
+        S[:,e] = compute_ESSE_partial(
+            t,s, num_event_types, num_states, decay_coefficients[:,:,e], labelled_times, count).flatten()
         intensities[e]=base_rates[e]+np.dot(reshaped_imp_coef[:,e],S[:,e])
     return intensities 
-
-
 
 def compute_intensities(double t,
                       np.ndarray[DTYPEf_t, ndim=1] times,
@@ -408,7 +320,8 @@ def compute_intensities(double t,
     cdef np.ndarray[DTYPEf_t,ndim=2] S = np.ones_like(alpha)
     cdef int e = 0
     for e in range(num_event_types):
-        S[:,e] = compute_ESSE_partial(t,s,decay_coefficients[:,:,e],labelled_times,count).flatten()
+        S[:,e] = compute_ESSE_partial(
+            t,s, num_event_types, num_states, decay_coefficients[:,:,e],labelled_times,count).flatten()
         intensities[e]=base_rates[e]+np.dot(alpha[:,e],S[:,e])
     return intensities 
 
@@ -465,7 +378,7 @@ def compute_tilda_intensities_given_lt(double t,
                 tilda_intensities_memview[e,x]=current_phi[e,x]*intensities_memview[e]
     return tilda_intensities        
 
-def compute_tilda_intensity_partial(double t,
+def compute_tilda_intensity_partial(double t, int num_event_types, int num_states,
                       np.ndarray[DTYPEf_t, ndim=1] times,              
                       np.ndarray[DTYPEi_t, ndim=1] states,               
                       double base_rate,
@@ -475,18 +388,19 @@ def compute_tilda_intensity_partial(double t,
                       np.ndarray[DTYPEf_t, ndim=3] labelled_times,
                       np.ndarray[DTYPEi_t, ndim=2] count):
     cdef DTYPEf_t intensity = compute_intensity_partial(
-        t,base_rate,impact_coefficients,decay_coefficients,labelled_times,count)
+        t, num_event_types, num_states, base_rate,impact_coefficients,decay_coefficients,labelled_times,count)
     cdef DTYPEi_t current_state = find_current_state(t,times,states)
     return trans_prob[current_state]*intensity
 
-def compute_l_plus_summand(double t,int index_event,
+def compute_l_plus_summand(double t,int index_event, int num_event_types, int num_states,
                            np.ndarray[DTYPEf_t, ndim=1] base_rates,
                            np.ndarray[DTYPEf_t, ndim=3] impact_coefficients,
                            np.ndarray[DTYPEf_t, ndim=3] decay_coefficients,
                            np.ndarray[DTYPEf_t, ndim=3] labelled_times):
     cdef np.ndarray[DTYPEf_t,ndim=1] alpha = impact_coefficients[:,:,index_event].flatten()
     cdef float s=np.array(-1,dtype=float)# the input s=-1.0 accounts for summing over all times smaller than t
-    cdef np.ndarray[DTYPEf_t,ndim=1] S = compute_ESSE_partial(t,s,decay_coefficients[:,:,index_event],labelled_times).flatten()
+    cdef np.ndarray[DTYPEf_t,ndim=1] S = compute_ESSE_partial(
+        t,s, num_event_types, num_states, decay_coefficients[:,:,index_event],labelled_times).flatten()
     return np.log(base_rates[index_event]+np.dot(alpha,S))
 
 
@@ -625,119 +539,7 @@ def compute_l_plus_partial_and_gradient_partial(
                     ESSE_one_at_arrival_times[e1,x,:],
                     lambda_inverse)
             
-    return l_plus, grad_base_rate, grad_imp_coef, grad_dec_coef         
-
-    
-    
-    
-"The following is the old version of compute_l_plus_partial_and_gradient_partial:"
-
-"""
-def compute_l_plus_partial_and_gradient_partial(int index_event,double time_start,
-                                    double base_rate,
-                                    np.ndarray[DTYPEf_t, ndim=2] impact_coefficients,
-                                    np.ndarray[DTYPEf_t, ndim=2] decay_coefficients,      
-                                    np.ndarray[DTYPEf_t, ndim=3] labelled_times,
-                                    np.ndarray[DTYPEi_t, ndim=2] count
-                                    ):
-    
-    cdef int num_event_types=decay_coefficients.shape[0]
-    cdef int num_states=decay_coefficients.shape[1]
-    cdef int e1, x, M, i
-    cdef np.ndarray[DTYPEf_t, ndim = 2] labelled_times_of_event = labelled_times[index_event,:,:]
-    cdef double [:,:] times_memview = labelled_times_of_event
-    cdef np.ndarray[DTYPEi_t, ndim=2] idx = np.zeros_like(labelled_times_of_event,dtype=DTYPEi)
-    cdef long [:,:] idx_memview = idx
-    cdef long [:,:] count_memview = count
-    for x in range(num_states):
-            for i in range(count_memview[index_event,x]):
-                if (times_memview[x,i]>=time_start):
-                    idx_memview[x,i]=1
-    cdef int num_arrival_times = np.sum(idx,axis=None)                 
-#     print('np.sum(idx,axis=None)={}'.format(num_arrival_times)) 
-    cdef np.ndarray[DTYPEf_t,ndim=1] arrival_times = np.zeros(num_arrival_times,dtype=DTYPEf)
-    cdef double [:] arrival_times_memview = arrival_times
-    cdef int n=0
-    with nogil:
-        for x in range(num_states):
-                for i in range(count_memview[index_event,x]):
-                    if (idx_memview[x,i]):
-                        arrival_times_memview[n] = times_memview[x,i]
-                        n+=1
-                    
-#     idx = np.array(np.logical_not(np.isnan(labelled_times[index_event,:,:])),dtype=np.bool)
-#     idx[idx]=labelled_times[index_event,idx]>=time_start
-#     cdef np.ndarray[DTYPEf_t,ndim=1] arrival_times = np.sort(labelled_times_of_event[idx].flatten(),axis=None)
-#     cdef int num_arrival_times = arrival_times.shape[0]
-#     print('num_arrival_times ={}'.format(num_arrival_times))
-    cdef np.ndarray[DTYPEf_t,ndim=1] lambda_ = np.ones(num_arrival_times,dtype=DTYPEf)
-    cdef double [:] lambda_memview = lambda_
-    cdef np.ndarray[DTYPEf_t,ndim=1] lambda_inverse = np.ones(num_arrival_times,dtype=DTYPEf)
-    cdef double [:] lambda_inverse_memview = lambda_inverse
-    cdef np.ndarray[DTYPEf_t,ndim=3] ESSE_at_arrival_times = np.zeros(
-        (num_event_types,num_states,num_arrival_times),dtype=DTYPEf)
-    cdef np.ndarray[DTYPEf_t,ndim=3] ESSE_one_at_arrival_times = np.zeros(
-        (num_event_types,num_states,num_arrival_times),dtype=DTYPEf)
-    for t in range(num_arrival_times):
-        lambda_[t],ESSE_at_arrival_times[:,:,t],ESSE_one_at_arrival_times[:,:,t] =\
-        compute_intensity_partial_and_ESSE_partial_and_ESSE_one_partial(
-            arrival_times[t],
-            base_rate,impact_coefficients,decay_coefficients,labelled_times,count)
-
-    cdef float l_plus = 0.0
-    cdef float grad_base_rate = 0.0
-    cdef int count_zeros = 0
-    for i in prange(num_arrival_times,nogil=True):
-        if (lambda_memview[i]>0):
-            lambda_inverse_memview[i]= 1/lambda_memview[i]
-            l_plus +=log(lambda_memview[i])
-            grad_base_rate +=lambda_inverse_memview[i]
-        else:
-            count_zeros+=1
-    if count_zeros>0:
-        print('compute_l_plus_partial_and_gradient_partial: WARNING:')
-        print('   The array lambda_ of intensities has {} null entries'.format(count_zeros))
-            
-#     idx_nonzeroIntensity = np.array(lambda_>0,dtype=np.bool)
-#     if not np.all(idx_nonzeroIntensity):
-#         Message = 'compute_l_plus_partial_and_gradient_partial: '
-#         Message += ' {} of the computed intensities are null'.format(num_arrival_times-np.sum(idx_nonzeroIntensity))
-# #         print(Message)
-    cdef np.ndarray[DTYPEf_t,ndim=2] grad_imp_coef = np.zeros_like(impact_coefficients)
-    cdef np.ndarray[DTYPEf_t,ndim=2] grad_dec_coef = np.zeros_like(decay_coefficients)
-    cdef double [:] memview_1, memview_2
-
-    for e1 in range(num_event_types):
-        for x in range(num_states):
-            try:
-                grad_imp_coef[e1,x] = np.dot(
-                    ESSE_at_arrival_times[e1,x,:],
-                    lambda_inverse)
-            except ValueError:
-                ErrorMessage = 'compute_l_plus_partial_and_gradient_partial:'
-                ErrorMessage += ' ValueError in np.dot(ESSE_at_arrival_times[e1,x,:],lambda_inverse)'
-                ErrorMessage += ' \n I am correcting this manually'
-                print(ErrorMessage)
-                M = np.minimum(len(ESSE_at_arrival_times[e1,x,:]),len(lambda_inverse)).astype(np.intc)
-                memview_1 = ESSE_at_arrival_times[e1,x,:M]
-                memview_2 = lambda_inverse [:M]
-                grad_imp_coef[e1,x] = np.dot(memview_1,memview_2)
-            try:    
-                grad_dec_coef[e1,x] = -impact_coefficients[e1,x]*np.dot(
-                    ESSE_one_at_arrival_times[e1,x,:],
-                    lambda_inverse)
-            except ValueError:
-                ErrorMessage = 'compute_l_plus_partial_and_gradient_partial:'
-                ErrorMessage += ' ValueError in np.dot(ESSE_one_at_arrival_times[e1,x,:],lambda_inverse)'
-                ErrorMessage += ' \n I am correcting this manually'
-                print(ErrorMessage)
-                M = np.minimum(len(ESSE_one_at_arrival_times[e1,x,:]),len(lambda_inverse)).astype(np.intc)
-                memview_1 = ESSE_one_at_arrival_times[e1,x,:M]
-                memview_2 = lambda_inverse [:M]
-                grad_imp_coef[e1,x] = np.dot(memview_1,memview_2)
-#     return arrival_times,lambda_, ESSE_at_arrival_times, ESSE_one_at_arrival_times            
-    return l_plus, grad_base_rate, grad_imp_coef, grad_dec_coef  
-"""
+    return l_plus, grad_base_rate, grad_imp_coef, grad_dec_coef          
         
 
 def labelled_times_within_range(double s, double t,
@@ -749,8 +551,8 @@ def labelled_times_within_range(double s, double t,
     cdef np.ndarray[DTYPEi_t, ndim = 2] num = np.zeros((n_event_types,n_states),dtype=DTYPEi)
     cdef long [:,:] num_memview = num
     cdef int e1,x,i
-#     with nogil:
-        for e1 in prange(n_event_types, nogil=True):
+    with nogil:
+        for e1 in range(n_event_types):
             for x in range(n_states):
                 for i in range(count[e1,x]):
                     if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
@@ -1293,7 +1095,8 @@ def compute_intensity_of_bm_profile(#np.ndarray[DTYPEf_t, ndim=1] eval_time,
         for x in deflationary_states:
             lambda_tilda_0_defl+=transition_probabilities[current_state,0,x]
         lambda_tilda_0_defl*=compute_intensity_partial(
-            t,base_rates[0],impact_coefficients[:,:,0],decay_coefficients[:,:,0],labelled_times,count)
+            t, n_event_types, n_states, 
+            base_rates[0], impact_coefficients[:,:,0], decay_coefficients[:,:,0], labelled_times,count)
     cdef np.ndarray[DTYPEf_t, ndim=1] time_kernel = np.zeros(n_event_types,dtype=DTYPEf)
     "Notice that the first entry time_kernel[0] will remain null; this is because the index e=0 corresponds to the liquidator"
     cdef np.ndarray[DTYPEf_t, ndim=1] state_transition = np.zeros(n_event_types,dtype=DTYPEf)
