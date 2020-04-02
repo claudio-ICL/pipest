@@ -106,45 +106,48 @@ class EstimProcedure:
         print("EstimProcedure has been successfully initialised") 
     def store_runtime(self,DTYPEf_t run_time):
         self.estimation_runtime=run_time
-    def prepare_estimation_of_hawkes_kernel(self, use_filter=False):
+    def prepare_estimation_of_hawkes_kernel(self, use_filter=False, parallel=True):
         print("I am preparing estimation of hawkes kernel")
         if use_filter:
             self.filter_nonsingular_expected_jumps(
-                pre_estimation=True)
+                pre_estimation=True, parallel=parallel)
         else:
-            self.store_nonsingular_expected_jumps()
+            self.store_nonsingular_expected_jumps(parallel=parallel)
         self.store_convolution_kernels(use_filter=use_filter)
         self.store_matrix_A()
         print("Estimation of hawkes kernel is now ready")
     def estimate_hawkes_kernel(self, store_L1_norm=False,
                                use_filter=False, enforce_positive_g_hat=False,
-                               DTYPEf_t filter_cutoff=100.0, DTYPEf_t filter_scale=1.0, num_addpnts_filter=2000):
+                               DTYPEf_t filter_cutoff=100.0, DTYPEf_t filter_scale=1.0, num_addpnts_filter=2000,
+                               parallel=False, parallel_prep=True):
         self.use_filter=use_filter
         if use_filter:
             self.set_filter_param(enforce_positivity=enforce_positive_g_hat,
                            cutoff=filter_cutoff, scale=filter_scale, num_addpnts=num_addpnts_filter)
         self.prepare_estimation_of_hawkes_kernel(
-            use_filter=use_filter)
-        cdef int N = max(1,min(self.num_event_types,mp.cpu_count()))
+            use_filter=use_filter, parallel=parallel_prep)
+        cdef int N = max(1,self.num_event_types)
         cdef DTYPEf_t run_time=-time.time()
         cdef list results = []
         #The pool procedure runs out of memory when executed on my EliteBook with resonably large data. Use the plain serial map instead
-        #print("I am performing estimation of hawkes kernel in parallel on {} cpus".format(N))
-        #with mp.Pool(N) as pool:
-        #    solver=pool.map_async(
-        #        self.solve_linear_system_partial,
-        #        list(range(self.num_event_types))
-        #    )
-        #    pool.close()
-        #    pool.join()
-        #    results=solver.get()
+        if parallel:
+            print("I am performing estimation of hawkes kernel in parallel. num_processes: {}".format(N))
+            with mp.Pool(N) as pool:
+                solver=pool.map_async(
+                   self.solve_linear_system_partial,
+                   list(range(self.num_event_types))
+                )
+                pool.close()
+                pool.join()
+                results=solver.get()
+        else:        
         #Here the serial implementation is favoured because of limited RAM memory
-        print("I am performing estimation of hawkes kernel serially")
-        results=list(
-            map(self.solve_linear_system_partial,
-                list(range(self.num_event_types))
-               )
-        )       
+            print("I am performing estimation of hawkes kernel serially")
+            results=list(
+                map(self.solve_linear_system_partial,
+                    list(range(self.num_event_types))
+                   )
+            )       
         run_time+=time.time()
         self.results_estimation_of_hawkes_kernel=results
         print("Estimation of hawkes kernel terminates. run_time={}".format(run_time))
@@ -230,19 +233,27 @@ class EstimProcedure:
         cdef np.ndarray[DTYPEf_t, ndim=1] Lambda = np.zeros(self.num_event_types, dtype=DTYPEf)
         Lambda=store_expected_intensities(self.num_event_types,events_memview, self.time_horizon)
         self.expected_intensities = Lambda
-    def store_nonsingular_expected_jumps(self):
-        cdef int N = max(1,min(self.num_event_types,mp.cpu_count()))
-        print("I am storing non-singular expected jumps in parallel on {} cpus".format(N))
+    def store_nonsingular_expected_jumps(self, parallel=True):
+        cdef int N = max(1,self.num_event_types)
         cdef DTYPEf_t run_time=-time.time()
-        pool=mp.Pool(N)
-        results=pool.map_async(
-            self.estimate_nonsingular_expected_jumps_partial,
-            list(range(self.num_event_types))
-        ).get()
-        pool.close()
-        pool.join()
+        if parallel:
+            print("I am storing non-singular expected jumps in parallel. num_processes: {}".format(N))
+            pool=mp.Pool(N)
+            results=pool.map_async(
+                self.estimate_nonsingular_expected_jumps_partial,
+                list(range(self.num_event_types))
+            ).get()
+            pool.close()
+            pool.join()
+        else:
+            print("I am storing non-singular expected jumps serially")
+            results=list(
+                map(self.estimate_nonsingular_expected_jumps_partial,
+                    list(range(self.num_event_types))
+                   )
+            )
         run_time+=time.time()
-        print("Parallel execution of non-singular expected jumps terminates. run_time={}".format(run_time))
+        print("Execution of non-singular expected jumps terminates. run_time={}".format(run_time))
         cdef int d_E = self.num_event_types
         cdef int d_S = self.num_states
         cdef int Q = self.quadrature.num_pnts
@@ -282,7 +293,8 @@ class EstimProcedure:
         self.set_matrix_A()
     
     def estimate_nonsingular_expected_jumps_partial(self, int e):
-#         print("I am estimating non-singular expected jumps for the component e={}".format(e))
+        cdef int process_id = os.getpid()
+        print("I am estimating non-singular expected jumps for the component e={}. process_id: pid{}".format(e,process_id))
         cdef int d_E = self.num_event_types
         cdef int d_S = self.num_states
         cdef int Q = self.quadrature.num_pnts
@@ -388,7 +400,8 @@ class EstimProcedure:
                 )
         return b_e        
     def solve_linear_system_partial(self, int e):
-        print("I am solving for the component e={}".format(e))
+        cdef int process_id = os.getpid()
+        print("I am solving for the component e={}. process_id: pid{}".format(e,process_id))
         cdef int d_E = self.num_event_types
         cdef int d_S = self.num_states
         cdef int Q = self.quadrature.num_pnts
@@ -409,6 +422,7 @@ class EstimProcedure:
                            cutoff=cutoff, scale=scale, num_addpnts=num_addpnts)
     def filter_nonsingular_expected_jumps(self,
                                           pre_estimation=False,
+                                          parallel=True,
                                          ):
         cdef int d_E = self.num_event_types
         cdef int d_S = self.num_states
@@ -418,22 +432,24 @@ class EstimProcedure:
         if pre_estimation:
             self.g_hat_at_gridpnts = np.zeros((d_E,d_S,d_E,G),dtype=DTYPEf)
         cdef DTYPEf_t run_time = -time.time()    
-        cdef int N=max(1,min(self.num_event_types,mp.cpu_count()))
-        print("I am filtering non-singular expected jumps in parallel on {} cpus".format(N))
-        with mp.Pool(N) as pool:
-            solver=pool.map_async(
-                self.filter_nonsingular_expected_jumps_partial,
-                list(range(self.num_event_types))
-            )
-            pool.close()
-            pool.join()
-            results=solver.get()
-        #print("I am filtering non-singular expected jumps serially")
-        #results=list(
-        #        map(self.filter_nonsingular_expected_jumps_partial,
-        #        list(range(self.num_event_types))
-        #        )
-        #        )
+        cdef int N=max(1,self.num_event_types)
+        if parallel:
+            print("I am filtering non-singular expected jumps in parallel. num_process: {}".format(N))
+            with mp.Pool(N) as pool:
+                solver=pool.map_async(
+                    self.filter_nonsingular_expected_jumps_partial,
+                    list(range(self.num_event_types))
+                )
+                pool.close()
+                pool.join()
+                results=solver.get()
+        else:        
+            print("I am filtering non-singular expected jumps serially")
+            results=list(
+                   map(self.filter_nonsingular_expected_jumps_partial,
+                   list(range(self.num_event_types))
+                   )
+                   )
         run_time+=time.time()
         print("Filtering terminates. run_time={}".format(run_time))
         
@@ -452,6 +468,8 @@ class EstimProcedure:
         self.filtered_g_hat_at_quadpnts=filtered_g_hat_at_quadpnts    
         self.filtered_g_hat_at_gridpnts=filtered_g_hat_at_gridpnts    
     def filter_nonsingular_expected_jumps_partial(self,int e):
+        cdef int process_id = os.getpid()
+        print("Filter non-singular expected jumps. component_e: {}; process_id: pid{}".format(e,process_id))
         pre_estimation=self.filter_pre_estimation
         cdef int d_E = self.num_event_types
         cdef int d_S = self.num_states
@@ -528,6 +546,7 @@ class EstimProcedure:
                     quadpnts_memview,
                     gridpnts_memview,
                 )
+        print("component_e {}, pid{} terminates.".format(e,process_id))        
         return filtered_g_hat, filtered_g_hat_one, filtered_g_hat_at_quadpnts, filtered_g_hat_at_gridpnts        
                 
         

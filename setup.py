@@ -132,7 +132,8 @@ ext_modules = [
             "minimisation_algo",
             sources=["minimisation_algo.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"]
+            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_link_args=['-fopenmp']
             )
 ]
 

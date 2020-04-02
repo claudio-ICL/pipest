@@ -237,7 +237,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
 #         print("compute_f_and_grad: ready to return")
         return -log_likelihood,-grad_loglikelihood
     cdef int process_id = os.getpid()
-    print("Launching grad_descent_partial. pid={}".format(process_id))
+    print("Launching grad_descent_partial. Process_id: pid{}".format(process_id))
     assert learning_rate>0.0
     assert learning_rate<1.0
     assert max_imp_coef>=1.0
@@ -263,7 +263,8 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
     cdef int attempt_num=0
     minimisation_conclusive = False
     while (attempt_num<number_of_attempts) & (not minimisation_conclusive):
-        print("grad_descent_partial pid{}: component_e={}, attempt_num={}".format(process_id,event_type,1+attempt_num))
+        print("grad_descent_partial component_e={}, pid{}: attempt_num={}/{}"\
+              .format(event_type, process_id, 1+attempt_num, number_of_attempts))
         n, m = 0, 0
         f = np.zeros(maxiter,dtype=DTYPEf)
         f[0],grad = compute_f_and_grad(x)
@@ -274,7 +275,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         x_min = np.array(initial_guess, copy=True,dtype=DTYPEf)
         grad_min = np.array(grad,copy=True,dtype=DTYPEf)
         while (norm_grad>=tol) & (n<=idx_alt):
-            print("grad_descent_partial pid{}: attempt_num={}, count={}".format(process_id,1+attempt_num,n))
+#             print("grad_descent_partial pid{}: attempt_num={}, count={}".format(process_id,1+attempt_num,n))
             with nogil:
                 n+=1
                 m = 0
@@ -327,7 +328,8 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         else:
             attempt_num+=1
             minimisation_conclusive = True
-            print("grad_descent_partial pid{}: Minimisation conclusive after {} attempts".format(process_id, attempt_num))   
+            print("grad_descent_partial component_e {}, pid{}: Minimisation conclusive after {} attempts"\
+                  .format(event_type, process_id, attempt_num))   
     res={
         'x_min':x_min,
         'f_min': f_min,

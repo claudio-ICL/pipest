@@ -56,8 +56,8 @@ type_of_preestim='ordinary_hawkes' #'ordinary_hawkes' or 'nonparam'
 max_imp_coef = 15.0
 learning_rate = 0.0001
 maxiter = 10
-num_guesses = 6
-num_processes = 8
+num_guesses = 8
+num_processes = 10
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 50
 quad_tmax = 1.0

@@ -125,7 +125,9 @@ def main():
                                )
     model.nonparam_estim.estimate_hawkes_kernel(store_L1_norm=False,
                                use_filter=True, enforce_positive_g_hat=True,
-                               filter_cutoff=20.0, filter_scale=30.0, num_addpnts_filter=3000)
+                               filter_cutoff=20.0, filter_scale=30.0, num_addpnts_filter=3000,
+                               parallel=False, parallel_prep=True
+                               )
     model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-02, tol=1.0e-7)
     model.nonparam_estim.store_base_rates()
     run_time+=time.time()
