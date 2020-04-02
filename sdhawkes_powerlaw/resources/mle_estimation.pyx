@@ -190,12 +190,12 @@ class EstimProcedure:
         self.base_rates=base_rates
         self.hawkes_kernel.store_parameters(imp_coef,dec_coef)
         self.hawkes_kernel.compute_L1_norm_param()
-    def create_goodness_of_fit(self):
+    def create_goodness_of_fit(self, parallel=True):
         "type_of_input can either be 'simulated' or 'empirical'"
         self.goodness_of_fit=goodness_of_fit.good_fit(
             self.num_event_types, self.num_states,
             self.base_rates, self.hawkes_kernel.alphas, self.hawkes_kernel.betas, self.transition_probabilities,
-            self.times, self.events,self.states, type_of_input=self.type_of_input
+            self.times, self.events,self.states, type_of_input=self.type_of_input, parallel=parallel
         )      
         
 
@@ -410,17 +410,18 @@ def pre_estimate_ordinary_hawkes(
     labelled_times,count=computation.distribute_times_per_event_state(
         n_event_types, 1,
         times, events, states)
-    cdef np.ndarray [DTYPEf_t, ndim=3] lt_copy = np.array(labelled_times, copy=True)
-    cdef np.ndarray [DTYPEi_t, ndim=2] count_copy = np.array(count, copy=True)
-    preguess_base_rate, preguess_imp_coef, preguess_dec_coef =\
-    preguess_ordinary_hawkes_param(event_index,
-                                   lt_copy, count_copy,
-                                   max_imp_coef = max_imp_coef,
-                                   tol = tol,
-                                   print_res = True,
-                                  )
-#     cdef DTYPEf_t preguess_base_rate = 1.0
-#     cdef np.ndarray[DTYPEf_t, ndim=2] preguess_imp_coef = np.random.uniform(low=0.0, high=2.0, size=(n_event_types, 1))
+#     cdef np.ndarray [DTYPEf_t, ndim=3] lt_copy = np.array(labelled_times, copy=True)
+#     cdef np.ndarray [DTYPEi_t, ndim=2] count_copy = np.array(count, copy=True)
+#     preguess_base_rate, preguess_imp_coef, preguess_dec_coef =\
+#     preguess_ordinary_hawkes_param(event_index,
+#                                    lt_copy, count_copy,
+#                                    max_imp_coef = max_imp_coef,
+#                                    tol = tol,
+#                                    print_res = True,
+#                                   )
+    cdef DTYPEf_t preguess_base_rate = 1.0
+    cdef np.ndarray[DTYPEf_t, ndim=2] preguess_imp_coef = np.random.uniform(low=0.0, high=2.0, size=(n_event_types, 1))
+    cdef np.ndarray[DTYPEf_t, ndim=2] preguess_dec_coef = np.random.uniform(low=1.5, high=2.5, size=(n_event_types, 1))
     cdef np.ndarray[DTYPEf_t, ndim=1] mean = preguess_imp_coef.flatten()
     cdef np.ndarray[DTYPEf_t, ndim=2] cov = np.maximum(0.01*np.amin(mean),tol)*np.eye(len(mean))
     cdef DTYPEf_t guess_base_rate = 1.0
