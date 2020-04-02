@@ -147,6 +147,8 @@ class good_fit:
     
         
     def obj_pc_compute_res(self,int e):
+        cdef int process_id = os.getpid()
+        print("goodness_of_fit.compute_residuals. component_e: {}; process_id: pid{}".format(e,process_id))
         return computation.compute_event_residual(
             e, self.n_event_types, self.n_states, self.len_labelled_times,
             self.base_rate[e], self.dec_coef[:,:,e], self.ratios[:,:,e],
