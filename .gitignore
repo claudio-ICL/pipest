@@ -1,10 +1,12 @@
-/home/claudio/pipest/tests/saved_tests/*
+tests/saved_tests/*
 *.csv
-/home/claudio/pipest/lobster_for_sdhawkes/data/*
+lobster_for_sdhawkes/data/*/*.csv
+lobster_for_sdhawkes/data/*
 .ipynb_checkpoints/
-/home/claudio/pipest/sdhawkes_powerlaw/resources/*linux-gnu.so
-/home/claudio/pipest/sdhawkes_powerlaw/resources/*.c
-build/*
+sdhawkes_powerlaw/resources/*linux-gnu.so
+sdhawkes_powerlaw/resources/*.c
+sdhawkes_powerlaw/resources/build/*
+sdhawkes_powerlaw/modelling/build/*
 lobster_for_sdhawkes/.ipynb_checkpoints/
 /home/claudio/pipest/lobster_for_sdhawkes/data/*
 old_setup.py
