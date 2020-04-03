@@ -122,7 +122,7 @@ def instantiate_and_simulate():
     model.dump(path=path_saved_tests)
     now=datetime.datetime.now()
     message='\nSimulation terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
-    .format(n.year, n.month, n.day, n.hour, n.minute)
+    .format(now.year, now.month, now.day, now.hour, now.minute)
     redirect_stdout(direction="to", message=message, fout=fout, saveout=saveout) 
 
 def nonparam_preestim():
@@ -157,7 +157,7 @@ def nonparam_preestim():
     model.dump(path=path_saved_tests)
     now=datetime.datetime.now()
     message='\nNon-parametric pre-estimation terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
-    .format(n.year, n.month, n.day, n.hour, n.minute)
+    .format(now.year, now.month, now.day, now.hour, now.minute)
     redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
 
 
@@ -229,17 +229,22 @@ def main():
     global action
     action=str(sys.argv[1])
     print("\n\n$python {} {}".format(sys.argv[0],action))
-    now = datetime.datetime.now()
-    global this_test_model_name
-    this_test_model_name = 'test_estim_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
-    .format(now.year,now.month,now.day,now.hour,now.minute)     
+    global this_test_model_name     
     if action=='s' or action=='simulate':
+        now = datetime.datetime.now()
+        global this_test_model_name
+        this_test_model_name = 'test_estim_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
+        .format(now.year,now.month,now.day,now.hour,now.minute)
+        os.environ["TEST_MODEL_NAME"]= this_test_model_name
         instantiate_and_simulate()
     elif action=='p' or (action=='preestim' or action=='nonparam_preestim'):
+        this_test_model_name = os.environ["TEST_MODEL_NAME"]
         nonparam_preestim()
     elif action=='e' or (action=='estimate' or action=='mle'):
+        this_test_model_name = os.environ["TEST_MODEL_NAME"]
         estimate()
     elif action=='m' or action=='merge':
+        this_test_model_name = os.environ["TEST_MODEL_NAME"]
         merge_from_partial()
     else:
         print("action: {}".format(action))
