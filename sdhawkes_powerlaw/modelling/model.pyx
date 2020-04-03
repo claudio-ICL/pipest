@@ -289,6 +289,7 @@ class SDHawkes:
         self.impact_decay_ratios = impact_decay_ratios
         cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.zeros((number_of_states,2*number_of_lob_levels),dtype=DTYPEf)
         self.dirichlet_param = dirichlet_param
+        self.hawkes_kernel=HawkesKernel(self.number_of_event_types, self.number_of_states)
     def set_name_of_model(self,str name):
         self.name_of_model=name
     def dump(self, str name='', str path=''):
@@ -524,6 +525,8 @@ class SDHawkes:
         self.decay_coefficients = betas
         cdef np.ndarray[DTYPEf_t, ndim=3] ratios = np.divide(self.impact_coefficients, self.decay_coefficients-1)
         self.impact_decay_ratios = ratios
+        self.hawkes_kernel.store_parameters(alphas,betas)
+        self.hawkes_kernel.compute_L1_norm_param()
         print('Hawkes parameters have been set')
         
         

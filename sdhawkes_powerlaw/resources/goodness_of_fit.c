@@ -2476,7 +2476,7 @@ static PyObject *__pyx_pw_15goodness_of_fit_8good_fit_1__init__(PyObject *__pyx_
  *               np.ndarray[DTYPEi_t, ndim=1] states,
  *               parallel=True,             # <<<<<<<<<<<<<<
  *               compute_total_residuals = False,
- *               str type_of_input = 'simulated'
+ *               str type_of_input = 'simulated' #it can be either 'simulated' or 'empirical'
  */
     values[10] = ((PyObject *)((PyObject *)Py_True));
 
@@ -2484,7 +2484,7 @@ static PyObject *__pyx_pw_15goodness_of_fit_8good_fit_1__init__(PyObject *__pyx_
  *               np.ndarray[DTYPEi_t, ndim=1] states,
  *               parallel=True,
  *               compute_total_residuals = False,             # <<<<<<<<<<<<<<
- *               str type_of_input = 'simulated'
+ *               str type_of_input = 'simulated' #it can be either 'simulated' or 'empirical'
  *               ):
  */
     values[11] = ((PyObject *)((PyObject *)Py_False));
@@ -2767,7 +2767,7 @@ static PyObject *__pyx_pf_15goodness_of_fit_8good_fit___init__(CYTHON_UNUSED PyO
   __pyx_pybuffernd_states.diminfo[0].strides = __pyx_pybuffernd_states.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_states.diminfo[0].shape = __pyx_pybuffernd_states.rcbuffer->pybuffer.shape[0];
 
   /* "goodness_of_fit.pyx":57
- *               str type_of_input = 'simulated'
+ *               str type_of_input = 'simulated' #it can be either 'simulated' or 'empirical'
  *               ):
  *         self.n_event_types = n_event_types             # <<<<<<<<<<<<<<
  *         self.n_states =n_states
