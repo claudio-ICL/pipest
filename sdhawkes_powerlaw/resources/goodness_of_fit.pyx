@@ -52,7 +52,7 @@ class good_fit:
               np.ndarray[DTYPEi_t, ndim=1] states,
               parallel=True,   
               compute_total_residuals = False,
-              str type_of_input = 'simulated'
+              str type_of_input = 'simulated' #it can be either 'simulated' or 'empirical'
               ):
         self.n_event_types = n_event_types
         self.n_states =n_states

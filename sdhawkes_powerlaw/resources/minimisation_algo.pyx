@@ -86,7 +86,8 @@ class MinimisationProcedure:
         self.number_of_attempts = number_of_attempts
         self.max_imp_coef = copy.copy(max_imp_coef)
     def launch_minimisation(self, parallel=False, int num_processes = 0):
-        print('I am launching minimisation. Number of initial guesses={}, parallel={}'.format(len(self.list_init_guesses),parallel))
+        print('I am launching minimisation. Number of initial guesses: {}; parallel:{}'\
+              .format(len(self.list_init_guesses),parallel))
         cdef list results = []
         self.parallel_minimisation = parallel
         if parallel:            
@@ -109,7 +110,8 @@ class MinimisationProcedure:
                                self.time_start, self.time_end,
                                x,
                                self.max_imp_coef,
-                               self.learning_rate, self.tol, self.maxiter),
+                               self.learning_rate, self.tol, self.maxiter,
+                               number_of_attempts = self.number_of_attempts),
                        self.list_init_guesses)
             results=list(solver)
         print("MinimisationProcedure: minimisation finished")
@@ -237,6 +239,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
 #         print("compute_f_and_grad: ready to return")
         return -log_likelihood,-grad_loglikelihood
     cdef int process_id = os.getpid()
+    cdef DTYPEf_t run_time = -time.time()
     print("Launching grad_descent_partial. Process_id: pid{}".format(process_id))
     assert learning_rate>0.0
     assert learning_rate<1.0
@@ -251,12 +254,10 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
     cdef np.ndarray[DTYPEf_t, ndim = 2] cov = np.array(eye_d,copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=1] grad = np.zeros_like(x,dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=1] f = np.zeros(maxiter,dtype=DTYPEf)
-    cdef DTYPEf_t [:] f_memview = f
     cdef DTYPEf_t norm_grad  = 1.0
-    cdef DTYPEf_t f_new = copy.copy(f_memview[0])
+    cdef DTYPEf_t f_new, f_min
     cdef np.ndarray[DTYPEf_t,ndim=1] x_new = np.array(initial_guess,copy=True,dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=1] grad_new = np.array(grad,copy=True,dtype=DTYPEf)
-    cdef DTYPEf_t f_min =  copy.copy(f_memview[0])
     cdef np.ndarray[DTYPEf_t,ndim=1] x_min = np.array(x,copy=True,dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=1] grad_min = np.array(grad,copy=True,dtype=DTYPEf)
     cdef int idx_alt = max(1,maxiter-2)
@@ -267,19 +268,19 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
               .format(event_type, process_id, 1+attempt_num, number_of_attempts))
         n, m = 0, 0
         f = np.zeros(maxiter,dtype=DTYPEf)
-        f[0],grad = compute_f_and_grad(x)
+        f[0], grad = compute_f_and_grad(x)
         norm_grad = np.linalg.norm(grad,2)
         f[1:] = np.repeat(f[0],maxiter-1)
-        f_min =  copy.copy(f_memview[0])
+        f_min =  copy.copy(f[0])
         x = np.array(initial_guess, copy=True,dtype=DTYPEf)
         x_min = np.array(initial_guess, copy=True,dtype=DTYPEf)
         grad_min = np.array(grad,copy=True,dtype=DTYPEf)
         while (norm_grad>=tol) & (n<=idx_alt):
 #             print("grad_descent_partial pid{}: attempt_num={}, count={}".format(process_id,1+attempt_num,n))
-            with nogil:
-                n+=1
-                m = 0
-                f_new = f_memview[n]
+#             with nogil:
+            n+=1
+            m = 0
+            f_new = copy.copy(f[n])
             while (f_min <= f_new) & (m<=maxiter_inner):
                 x_new = x-learning_rate*grad
                 x_new[0] = max(x_new[0], tol)
@@ -296,7 +297,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
             if update along gradient direction did not produce 
             decrease of objective function, use random update near previous evaluation point
             """
-            if f_new > 0.05*np.abs(f_memview[n-1])+f_memview[n-1]:
+            if f_new > 0.05*np.abs(f[n-1])+f[n-1]:
 #                 print("grad_descent_partial pid{}: count={}. Entering random update".format(process_id,n))
                 x_new= x - tol*grad*rand()/float(RAND_MAX)
                 x_new[0]=max(tol,x_new[0])
@@ -308,14 +309,14 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
             f[n] = copy.copy(f_new)
             x = np.array(x_new,copy=True)
             grad = np.array(grad_new,copy=True)
-            if (f_min > f_memview[n]):
-                f_min = f_memview[n]
-                x_min = np.arrray(x,copy=True)
+            if (f_min > f[n]):
+                f_min = f[n]
+                x_min = np.array(x,copy=True)
                 grad_min = np.array(grad,copy=True)
             norm_grad = np.linalg.norm(grad,2).astype(float)
 #             if n<maxiter:
 #                 print("grad_descent_partial pid{}: f[{}]={},  x_n[0]={}, norm(grad_n)={}".format(process_id,n,f[n],x[0],norm_grad))
-            if (isnan(f_memview[n])):
+            if (isnan(f[n])):
                 print("grad_descent_partial pid{}: f_memview[{}]=nan".format(process_id,n))
                 raise ValueError('nan')   
         if n<maxiter-1:
@@ -330,12 +331,14 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
             minimisation_conclusive = True
             print("grad_descent_partial component_e {}, pid{}: Minimisation conclusive after {} attempts"\
                   .format(event_type, process_id, attempt_num))   
+    run_time+=time.time()
     res={
         'x_min':x_min,
         'f_min': f_min,
         'grad_min': grad_min,
         'f':f,
-        'steps':n+1
+        'steps':n+1,
+        'run_time':run_time
     }
     try:
         return res

@@ -211,21 +211,21 @@ def estimate_transition_probabilities(int n_event_types, int n_states,
     cdef double [:,:,:] result_memview = result
     cdef long [:,:] count_memview  = count_of_states_events
     cdef int N = len(events)-1
-    cdef int n
+    cdef int n, x1, x2, e
     cdef int event,state_before,state_after
     for n in prange(1,N,nogil=True):
         event = events[n]
         state_before = states[n-1]
         state_after = states[n]
         count_memview[state_before, event] += 1
-        result_memview[state_before, event, state_after] += 1
+        result_memview[state_before, event, state_after] += 1.0
     cdef long size=0   
     for x1 in range(n_states):
         for e in range(n_event_types):
             size = count_of_states_events[x1, e]
             if size > 0:
                 for x2 in range(n_states):
-                    result[x1, e, x2] /= size
+                    result[x1, e, x2] /= float(size)
             else:
                 result[x1,e,:]=1/n_states
                 if verbose:
@@ -423,7 +423,7 @@ def pre_estimate_ordinary_hawkes(
 #                                    tol = tol,
 #                                    print_res = True,
 #                                   )
-    cdef DTYPEf_t preguess_base_rate = 1.0
+    cdef DTYPEf_t preguess_base_rate = float(rand())/float(RAND_MAX)
     cdef np.ndarray[DTYPEf_t, ndim=2] preguess_imp_coef = np.random.uniform(low=0.0, high=2.0, size=(n_event_types, 1))
     cdef np.ndarray[DTYPEf_t, ndim=2] preguess_dec_coef = np.random.uniform(low=1.5, high=2.5, size=(n_event_types, 1))
     cdef np.ndarray[DTYPEf_t, ndim=1] mean = preguess_imp_coef.flatten()

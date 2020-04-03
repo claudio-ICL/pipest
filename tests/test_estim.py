@@ -110,7 +110,7 @@ def main(model_name= ''):
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-    max_number_of_events = np.random.randint(low=3050, high=4000)
+    max_number_of_events = np.random.randint(low=4050, high=5000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -123,8 +123,8 @@ def main(model_name= ''):
     print("\nNON-PARAMETRIC ESTIMATION\n")
     upperbound_of_support_of_kernel=1.0e+00
     lowerbound_of_support_of_kernel=1.0e-01
-    num_quadpnts = 80
-    num_gridpnts= 75
+    num_quadpnts = 70
+    num_gridpnts= 80
     run_time = -time.time()
     model.create_nonparam_estim(type_of_input='simulated',
                                 num_quadpnts = num_quadpnts,
@@ -152,16 +152,16 @@ def main(model_name= ''):
     model.create_mle_estim(type_of_input = 'simulated', store_trans_prob = True)
     "Set the estimation"    
     list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-        num_additional_random_guesses = 3, max_imp_coef = 50.0)    
+        num_additional_random_guesses = 2, max_imp_coef = 50.0)    
     model.mle_estim.set_estimation_of_hawkes_param(
         time_start, time_end,
         list_of_init_guesses = list_init_guesses,
         learning_rate = 0.00001,
-        maxiter=20,
+        maxiter=15,
         number_of_additional_guesses=4,
         parallel=False,
-        pre_estim_ord_hawkes=False,
-        pre_estim_parallel=True,
+        pre_estim_ord_hawkes=True,
+        pre_estim_parallel=False,
         number_of_attempts = 4,
         num_processes = 10
     )
