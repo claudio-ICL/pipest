@@ -48,10 +48,10 @@ num_guesses = 4
 num_processes = 10
 parallel=False
 #Optional parameters for "nonparam_estim"
-num_quadpnts = 80
+num_quadpnts = 70
 quad_tmax = 1.0
 quad_tmin = 1.0e-1
-num_gridpnts = 100
+num_gridpnts = 80
 grid_tmax = 1.1
 grid_tmin = 1.5e-1
 
@@ -212,7 +212,7 @@ def merge_from_partial():
     with open(path_saved_tests+'/'+this_test_model_name,'rb') as source:
         model=pickle.load(source)    
     for mn in list_of_partial_names:
-        with open(path_saved_tests'/'+mn,'rb') as source:
+        with open(path_saved_tests+'/'+mn,'rb') as source:
             partial_model=pickle.load(source)
             partial_models.append(partial_model)
     model.initialise_from_partial(partial_models, dump_after_merging=True, name_of_model=this_test_model_name)  
@@ -232,20 +232,21 @@ def main():
     global this_test_model_name     
     if action=='s' or action=='simulate':
         now = datetime.datetime.now()
-        global this_test_model_name
         this_test_model_name = 'test_estim_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
         .format(now.year,now.month,now.day,now.hour,now.minute)
-        os.environ["TEST_MODEL_NAME"]= this_test_model_name
         instantiate_and_simulate()
-    elif action=='p' or (action=='preestim' or action=='nonparam_preestim'):
-        this_test_model_name = os.environ["TEST_MODEL_NAME"]
-        nonparam_preestim()
-    elif action=='e' or (action=='estimate' or action=='mle'):
-        this_test_model_name = os.environ["TEST_MODEL_NAME"]
-        estimate()
-    elif action=='m' or action=='merge':
-        this_test_model_name = os.environ["TEST_MODEL_NAME"]
-        merge_from_partial()
+        with open(path_saved_tests+'/name_test_estim_', 'wb') as outfile:
+            pickle.dump(this_test_model_name, outfile)
+    else:
+        with open(path_saved_tests+'/name_test_estim_', 'rb') as source:
+            this_test_model_name = pickle.load(source)
+        if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
+            nonparam_preestim()
+        if action=='e' or (action=='estimate' or action=='mle'):
+            estimate()
+        if action=='m' or action=='merge':
+            merge_from_partial()
+            os.remove(path_saved_tests+'/name_test_estim_')
     else:
         print("action: {}".format(action))
         raise ValueError("action not recognised")

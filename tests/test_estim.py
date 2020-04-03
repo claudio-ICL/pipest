@@ -123,8 +123,8 @@ def main(model_name= ''):
     print("\nNON-PARAMETRIC ESTIMATION\n")
     upperbound_of_support_of_kernel=1.0e+00
     lowerbound_of_support_of_kernel=1.0e-01
-    num_quadpnts = 120
-    num_gridpnts= 100
+    num_quadpnts = 100
+    num_gridpnts= 90
     run_time = -time.time()
     model.create_nonparam_estim(type_of_input='simulated',
                                 num_quadpnts = num_quadpnts,
