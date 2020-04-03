@@ -304,7 +304,7 @@ def merge_from_partial():
             partial_models.append(model)
     if type_of_preestim == 'nonparam':
         MODEL.store_nonparam_estim_class(model.nonparam_estim)
-    MODEL.initialise_from_partial(partial_models, dump_after_merging=True, name_of_model=name_of_model)  
+    MODEL.initialise_from_partial_calibration(partial_models, dump_after_merging=True, name_of_model=name_of_model)  
     n=datetime.datetime.now()
     message='\nMerging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute)
     redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout)

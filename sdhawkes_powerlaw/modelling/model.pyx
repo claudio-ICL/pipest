@@ -563,8 +563,44 @@ class SDHawkes:
         self.volume_enc.store_dirichlet_param(dirichlet_param, num_of_st2 = self.state_enc.array_of_n_states[1])
         self.volume_enc.store_param_for_rejection_sampling()
         print('Dirichlet parameters have been set')
-        
-    def initialise_from_partial(self,list partial_models, dump_after_merging=True, str name_of_model=''):
+    
+    def initialise_from_partial(self,list partial_models, 
+                                dump_after_merging=True, str name_of_model='',
+                                type_of_input = 'simulated'):
+        """
+        It is assumed that all part models have been calibrated on the same sample.
+        """
+        cdef int e=0, event_type=0
+        cdef list list_of_mle_results = []
+        for e in range(len(partial_models)):
+            model=partial_models[e]
+            assert model.n_levels == self.n_levels
+            assert np.all(model.state_enc.list_of_n_states == self.state_enc.list_of_n_states)
+            assert model.number_of_event_types == self.number_of_event_types
+            assert model.number_of_states == self.number_of_states
+            event_type=copy.copy(model.mle_estim.results_of_estimation[0].get("component_e"))
+            print('I am reading from model number {}, referring to event_type={}'.format(e, event_type))
+            print("model name is: {}".format(model.name_of_model))
+            print("len(mle_estim.results_of_estimation) = {}".format(len(model.mle_estim.results_of_estimation)))
+            for res in model.mle_estim.results_of_estimation:
+                list_of_mle_results.append(res)
+        print("{} mle results have been loaded".format(len(list_of_mle_results)))
+        if len(list_of_mle_results)!= self.number_of_event_types:
+            warning_message="WARNING: It was expected that len(list_of_mle_results) == self.number_of_event_types"
+            warning_message+="\nBut:\n"
+            warning_message+="len(list_of_mle_results)={};  ".format(len(list_of_mle_results))
+            warning_message+="self.number_of_event_types={}.\n".format(self.number_of_event_types)
+            print(warning_message)
+            print("list_of_mle_results=\n{}".format(list_of_mle_results))
+        self.create_mle_estim(type_of_input=type_of_input,store_trans_prob=True)
+        self.mle_estim.store_results_of_estimation(list_of_mle_results)
+        self.mle_estim.store_hawkes_parameters()
+        self.set_hawkes_parameters(self.mle_estim.base_rates,
+                                   self.mle_estim.hawkes_kernel.alphas,
+                                   self.mle_estim.hawkes_kernel.betas)
+        self.mle_estim.create_goodness_of_fit()
+    
+    def initialise_from_partial_calibration(self,list partial_models, dump_after_merging=True, str name_of_model=''):
         """
         It is assumed that all part models have been calibrated on the same dataset.
         """

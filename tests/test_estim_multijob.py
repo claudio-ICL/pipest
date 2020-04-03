@@ -169,6 +169,7 @@ def estimate():
 
     for event_type in range(model.number_of_event_types):
         if (event_type == array_index):
+            model.set_name_of_model(this_test_model_name+"_partial{}".format(event_type))
             path_readout=path_saved_tests+'/'+this_test_model_name+'_mle_readout_partial{}'.format(event_type)
             now=datetime.datetime.now()
             message="I am executing {} --mle_estimation".format(sys.argv[0])
