@@ -110,7 +110,7 @@ def main(model_name= ''):
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-    max_number_of_events = np.random.randint(low=4050, high=5000)
+    max_number_of_events = np.random.randint(low=12050, high=15000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -123,8 +123,8 @@ def main(model_name= ''):
     print("\nNON-PARAMETRIC ESTIMATION\n")
     upperbound_of_support_of_kernel=1.0e+00
     lowerbound_of_support_of_kernel=1.0e-01
-    num_quadpnts = 70
-    num_gridpnts= 80
+    num_quadpnts = 120
+    num_gridpnts= 100
     run_time = -time.time()
     model.create_nonparam_estim(type_of_input='simulated',
                                 num_quadpnts = num_quadpnts,
@@ -157,10 +157,10 @@ def main(model_name= ''):
         time_start, time_end,
         list_of_init_guesses = list_init_guesses,
         learning_rate = 0.00001,
-        maxiter=15,
+        maxiter=30,
         number_of_additional_guesses=4,
         parallel=False,
-        pre_estim_ord_hawkes=True,
+        pre_estim_ord_hawkes=False,
         pre_estim_parallel=False,
         number_of_attempts = 4,
         num_processes = 10
@@ -181,7 +181,7 @@ if __name__=='__main__':
     this_test_model_name = '/test_estim_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
     .format(now.year,now.month,now.day,now.hour,now.minute)
     this_test_model_path=path_saved_tests+this_test_model_name
-    message="I am executing test_estim.py"
+    message="I am executing {}".format(str(sys.argv[0]))
     message+='\ndate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}\n'.format(now.year,now.month,now.day,now.hour,now.minute)
     fout, saveout = redirect_stdout(direction='from', message=message, path=this_test_readout)
     
