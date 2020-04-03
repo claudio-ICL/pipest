@@ -242,14 +242,14 @@ def main():
             this_test_model_name = pickle.load(source)
         if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
             nonparam_preestim()
-        if action=='e' or (action=='estimate' or action=='mle'):
+        elif action=='e' or (action=='estimate' or action=='mle'):
             estimate()
-        if action=='m' or action=='merge':
+        elif action=='m' or action=='merge':
             merge_from_partial()
             os.remove(path_saved_tests+'/name_test_estim_')
-    else:
-        print("action: {}".format(action))
-        raise ValueError("action not recognised")
+        else:
+            print("action: {}".format(action))
+            raise ValueError("action not recognised")
     print("{}: main() end of file".format(str(sys.argv[0])))    
         
         
