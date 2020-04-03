@@ -11,3 +11,6 @@ old_setup.py
 read_and_calibrate.py
 scratch_notebook.ipynb
 tests/saved_tests/*
+calibration/calibr_main-?.?1*
+cython_setup.?1*
+lobster_for_sdhawkes/read_lobsterdata.?1*
