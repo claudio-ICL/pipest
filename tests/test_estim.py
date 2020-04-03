@@ -177,7 +177,7 @@ def main(model_name= ''):
 if __name__=='__main__':
     now=datetime.datetime.now()
     this_test_readout=path_saved_tests\
-    +'/test_estim_readout_{}-{:02d}-{:02d}_{:02d}{:02d}'.format(now.year,now.month,now.day, now.hour, now.minute)
+    +'test_estim_readout_{}-{:02d}-{:02d}_{:02d}{:02d}'.format(now.year,now.month,now.day, now.hour, now.minute)
     this_test_model_name = '/test_estim_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
     .format(now.year,now.month,now.day,now.hour,now.minute)
     this_test_model_path=path_saved_tests+this_test_model_name

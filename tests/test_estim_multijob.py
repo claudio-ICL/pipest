@@ -40,12 +40,13 @@ n_states=[3,5]
 n_events = 4  # number of event types, $d_e$
 n_levels = 2
 upto_level = 2
-#Optional parameters for "simulate"
+#Optional parameters for "estimate"
 max_imp_coef = 15.0
 learning_rate = 0.0001
 maxiter = 15
 num_guesses = 4
 num_processes = 10
+parallel=False
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 80
 quad_tmax = 1.0
@@ -177,10 +178,11 @@ def estimate():
             model.create_mle_estim(type_of_input='simulated', store_trans_prob=False)
             "Set the estimation"    
             list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-                num_additional_random_guesses = 2, max_imp_coef=50.0)    
+                num_additional_random_guesses = 2, max_imp_coef=max_imp_coef)    
             model.mle_estim.set_estimation_of_hawkes_param(
                 time_start, time_end,
                 list_of_init_guesses = list_init_guesses,
+                max_imp_coef = max_imp_coef,
                 learning_rate = learning_rate,
                 maxiter=maxiter,
                 number_of_additional_guesses = num_guesses,
