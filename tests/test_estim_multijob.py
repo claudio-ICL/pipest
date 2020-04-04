@@ -212,6 +212,7 @@ def merge_from_partial():
     list_of_partial_names=[this_test_model_name+'_partial{}'.format(e) for e in range(number_of_event_types)]
     partial_models=[]
     with open(path_saved_tests+'/'+this_test_model_name,'rb') as source:
+        print("I am loading "+path_saved_tests+'/'+this_test_model_name)
         model=pickle.load(source)    
     for mn in list_of_partial_names:
         with open(path_saved_tests+'/'+mn,'rb') as source:
@@ -244,6 +245,7 @@ def main():
     else:
         with open(path_saved_tests+'/name_test_estim_', 'rb') as source:
             this_test_model_name = pickle.load(source)
+        print("this_test_model_name: {}".format(this_test_model_name))
         if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
             nonparam_preestim()
         elif action=='e' or (action=='estimate' or action=='mle'):
