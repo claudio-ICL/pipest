@@ -217,9 +217,11 @@ def merge_from_partial():
         with open(path_saved_tests+'/'+mn,'rb') as source:
             partial_model=pickle.load(source)
             partial_models.append(partial_model)
-    model.initialise_from_partial(partial_models, dump_after_merging=True, name_of_model=this_test_model_name)  
+    model.initialise_from_partial(partial_models,
+                                  dump_after_merging=True,
+                                  name_of_model=this_test_model_name, path=path_saved_tests)  
     now=datetime.datetime.now()
-    message='\nMerging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'\
+    message='\nMerging has been completed  on {}-{:02d}-{:02d} at {:02d}:{:02d}'\
     .format(now.year,now.month,now.day,now.hour,now.minute)
     redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout)
         

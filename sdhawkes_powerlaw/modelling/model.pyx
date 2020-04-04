@@ -565,7 +565,7 @@ class SDHawkes:
         print('Dirichlet parameters have been set')
     
     def initialise_from_partial(self,list partial_models, 
-                                dump_after_merging=True, str name_of_model='',
+                                dump_after_merging=True, str name_of_model='', str path = '',
                                 type_of_input = 'simulated'):
         """
         It is assumed that all part models have been calibrated on the same sample.
@@ -599,6 +599,13 @@ class SDHawkes:
                                    self.mle_estim.hawkes_kernel.alphas,
                                    self.mle_estim.hawkes_kernel.betas)
         self.mle_estim.create_goodness_of_fit()
+        if dump_after_merging:
+            if name_of_model == '':
+                name_of_model = self.name_of_model
+            if path == '':
+                path = path_models
+            self.dump(name=name_of_model, path=path)
+            
     
     def initialise_from_partial_calibration(self,list partial_models, dump_after_merging=True, str name_of_model=''):
         """
