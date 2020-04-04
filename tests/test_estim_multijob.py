@@ -42,7 +42,7 @@ n_events = number_of_event_types  # number of event types, $d_e$
 n_levels = 2
 upto_level = 2
 time_start = 0.0
-time_end = time_start+ 1.0*60*60
+time_end = time_start + 1.0*60*60
 #Optional parameters for "estimate"
 max_imp_coef = 15.0
 learning_rate = 0.0001
@@ -86,10 +86,10 @@ def redirect_stdout(direction= 'from', # 'from' or 'to'
 
 
 def instantiate_and_simulate():
-    path_readout=path_saved_tests+'/'+this_test_model_name+'_simulation_readout'
+    path_readout=path_saved_tests+'/'+this_test_model_name+'_simulation_readout.txt'
     now=datetime.datetime.now()
     message="I am executing {} --simulation".format(sys.argv[0])
-    message+="\nDate of run: {}-{:02d}-{:02d} at {}:{}".format(now.year, now.month, now.day, now.hour, now.minute)
+    message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
     fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
     model = sd_hawkes_model.SDHawkes(
         number_of_event_types=n_events,
@@ -109,6 +109,8 @@ def instantiate_and_simulate():
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
+    global time_start
+    global time_end
     max_number_of_events = np.random.randint(low=4050, high=5000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
@@ -120,15 +122,15 @@ def instantiate_and_simulate():
     model.goodness_of_fit.ad_test_on_residuals()
     model.dump(path=path_saved_tests)
     now=datetime.datetime.now()
-    message='\nSimulation terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
+    message='\nSimulation terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}\n'\
     .format(now.year, now.month, now.day, now.hour, now.minute)
     redirect_stdout(direction="to", message=message, fout=fout, saveout=saveout) 
 
 def nonparam_preestim():
-    path_readout=path_saved_tests+'/'+this_test_model_name+'_nonp_readout'
+    path_readout=path_saved_tests+'/'+this_test_model_name+'_nonp_readout.txt'
     now=datetime.datetime.now()
     message="I am executing {} --nonparam_preestim".format(sys.argv[0])
-    message+="\nDate of run: {}-{:02d}-{:02d} at {}:{}".format(now.year, now.month, now.day, now.hour, now.minute)
+    message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
     fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
      
     with open(path_saved_tests+'/'+this_test_model_name,'rb') as source:
@@ -165,14 +167,15 @@ def estimate():
     array_index=int(os.environ['PBS_ARRAY_INDEX'])
     with open(path_saved_tests+'/'+this_test_model_name, 'rb') as source:
         model=pickle.load(source)
-
+    time_start = float(model.simulated_times[0])
+    time_end = float(model.simulated_times[-1])
     for event_type in range(model.number_of_event_types):
         if (event_type == array_index):
             model.set_name_of_model(this_test_model_name+"_partial{}".format(event_type))
-            path_readout=path_saved_tests+'/'+this_test_model_name+'_mle_readout_partial{}'.format(event_type)
+            path_readout=path_saved_tests+'/'+this_test_model_name+'_mle_readout_partial{}.txt'.format(event_type)
             now=datetime.datetime.now()
             message="I am executing {} --mle_estimation".format(sys.argv[0])
-            message+="\nDate of run: {}-{:02d}-{:02d} at {}:{}".format(now.year, now.month, now.day, now.hour, now.minute)
+            message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
             "Initialise the class"
             model.create_mle_estim(type_of_input='simulated', store_trans_prob=False)
@@ -196,15 +199,15 @@ def estimate():
             model.mle_estim.launch_estimation_of_hawkes_param(e=event_type)
             model.dump(name=this_test_model_name+'_partial{}'.format(event_type), path=path_saved_tests) 
             now=datetime.datetime.now()
-            message='\nEstimation of component e{} terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
+            message='\nEstimation of component_e {} terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
             .format(event_type, now.year, now.month, now.day, now.hour, now.minute)
             redirect_stdout(direction='to',message=message, fout=fout, saveout=saveout)
             
 def merge_from_partial():
-    path_readout=path_saved_tests+'/'+this_test_model_name+'_merge_readout'
+    path_readout=path_saved_tests+'/'+this_test_model_name+'_merge_readout.txt'
     now=datetime.datetime.now()
     message="I am executing {} --merge".format(sys.argv[0])
-    message+="\nDate of run: {}-{:02d}-{:02d} at {}:{}".format(now.year, now.month, now.day, now.hour, now.minute)
+    message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
     fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)    
     list_of_partial_names=[this_test_model_name+'_partial{}'.format(e) for e in range(number_of_event_types)]
     partial_models=[]
