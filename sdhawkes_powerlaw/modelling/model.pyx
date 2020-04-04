@@ -592,12 +592,9 @@ class SDHawkes:
             warning_message+="self.number_of_event_types={}.\n".format(self.number_of_event_types)
             print(warning_message)
             print("list_of_mle_results=\n{}".format(list_of_mle_results))
-        self.create_mle_estim(type_of_input=type_of_input,store_trans_prob=True)
+        self.create_mle_estim(type_of_input=type_of_input,store_trans_prob=True, store_dirichlet_param=True)
         self.mle_estim.store_results_of_estimation(list_of_mle_results)
         self.mle_estim.store_hawkes_parameters()
-        self.set_hawkes_parameters(self.mle_estim.base_rates,
-                                   self.mle_estim.hawkes_kernel.alphas,
-                                   self.mle_estim.hawkes_kernel.betas)
         self.mle_estim.create_goodness_of_fit()
         if dump_after_merging:
             if name_of_model == '':
@@ -607,7 +604,10 @@ class SDHawkes:
             self.dump(name=name_of_model, path=path)
             
     
-    def initialise_from_partial_calibration(self,list partial_models, dump_after_merging=True, str name_of_model=''):
+    def initialise_from_partial_calibration(self,list partial_models,
+                                            set_parameters = False,
+                                            dump_after_merging=True, str name_of_model='',
+                                           ):
         """
         It is assumed that all part models have been calibrated on the same dataset.
         """
@@ -626,6 +626,7 @@ class SDHawkes:
             print("len(mle_estim.results_of_estimation) = {}".format(len(model.mle_estim.results_of_estimation)))
             for res in model.mle_estim.results_of_estimation:
                 list_of_mle_results.append(res)
+        self.get_input_data(model.data, copy=True) #copy from last model in the list partial models
         print("{} mle results have been loaded".format(len(list_of_mle_results)))
         if len(list_of_mle_results)!= self.number_of_event_types:
             warning_message="WARNING: It was expected that len(list_of_mle_results) == self.number_of_event_types"
@@ -634,19 +635,21 @@ class SDHawkes:
             warning_message+="self.number_of_event_types={}.\n".format(self.number_of_event_types)
             print(warning_message)
             print("list_of_mle_results=\n{}".format(list_of_mle_results))
-        self.create_mle_estim(type_of_input='empirical',store_trans_prob=True)
+        self.create_mle_estim(type_of_input='empirical',store_trans_prob=True, store_dirichlet_param=True)
         self.mle_estim.store_results_of_estimation(list_of_mle_results)
         self.mle_estim.store_hawkes_parameters()
-        self.set_hawkes_parameters(self.mle_estim.base_rates,
-                                   self.mle_estim.hawkes_kernel.alphas,
-                                   self.mle_estim.hawkes_kernel.betas)
+        if set_parameters:
+            self.set_hawkes_parameters(self.mle_estim.base_rates,
+                                       self.mle_estim.hawkes_kernel.alphas,
+                                       self.mle_estim.hawkes_kernel.betas)
+            self.set_transition_probabilities(self.mle_estim.transition_probabilities)
+            self.set_dirichlet_parameters(self.mle_estim.dirichlet_param, N_samples_for_prob_constraints = 15000)
         self.mle_estim.create_goodness_of_fit()
-        self.get_input_data(model.data, copy=True) #copy from last model in the list partial models
         type_of_preestim = model.calibration.type_of_preestim #copy from last model in the list partial models
         self.calibrate_on_input_data(partial=False,
                                      type_of_preestim = model.calibration.type_of_preestim,
                                      skip_mle_estim=True,
-                                     skip_estim_of_state_processes=False,
+#                                      skip_estim_of_state_processes=False,
                                      dump_after_calibration=True,
                                      verbose=True,
                                      )        
@@ -671,7 +674,7 @@ class SDHawkes:
                                 int number_of_attempts = 2,
                                 int num_processes = 0,
                                 skip_mle_estim=False,
-                                skip_estim_of_state_processes=False,
+#                                 skip_estim_of_state_processes=False,
                                 dump_after_calibration=False,
                                 verbose=False,
                                 DTYPEf_t tol = 1.0e-7,
@@ -728,14 +731,14 @@ class SDHawkes:
             )
             self.mle_estim.launch_estimation_of_hawkes_param(partial=partial, e=e)
             self.calibration.store_mle_info(self.mle_estim.results_of_estimation)
-        if not skip_estim_of_state_processes:
-            run_time=-time.time()
-            phi = self.estimate_transition_probabilities(events,states,verbose=verbose)
-            gamma = self.estimate_dirichlet_parameters(volumes,states,tolerance=tol,verbose=verbose)
-            self.set_transition_probabilities(phi)
-            self.set_dirichlet_parameters(gamma, N_samples_for_prob_constraints = 15000)
-            run_time+=time.time()
-            self.calibration.store_runtime_for_state_processes(run_time)
+#         if not skip_estim_of_state_processes:
+#             run_time=-time.time()
+#             phi = self.estimate_transition_probabilities(events,states,verbose=verbose)
+#             gamma = self.estimate_dirichlet_parameters(volumes,states,tolerance=tol,verbose=verbose)
+#             self.set_transition_probabilities(phi)
+#             self.set_dirichlet_parameters(gamma, N_samples_for_prob_constraints = 15000)
+#             run_time+=time.time()
+#             self.calibration.store_runtime_for_state_processes(run_time)
         if dump_after_calibration:
             name=name_of_model
             path=self.path_models+'/'+self.data.symbol
@@ -1095,22 +1098,33 @@ class SDHawkes:
         )
     def store_nonparam_estim_class(self,nonparam_estim):
         self.nonparam_estim = copy.copy(nonparam_estim)
-    def create_mle_estim(self, str type_of_input = 'simulated', store_trans_prob=True):
+    def create_mle_estim(self, str type_of_input = 'simulated', store_trans_prob=True, store_dirichlet_param = False):
         if type_of_input == 'simulated':
             times=self.simulated_times
             events=self.simulated_events
             states=self.simulated_states
+            try:
+                volumes = self.simulated_volumes
+            except:
+                volumes = None
         elif type_of_input =='empirical':
             times=self.data.observed_times
             events=self.data.observed_events
             states=self.data.observed_states
+            volumes = self.data.observed_volumes
+            assert self.n_levels == self.data.n_levels
         else:
-            raise ValueError("{}: type of input not recognised. It must be either 'simulated' or 'empirical'".format(type_of_input))
-        self.mle_estim=mle_estim.EstimProcedure(self.number_of_event_types,self.number_of_states,
-                                 times,events,states,
-                                 type_of_input = type_of_input,
-                                 store_trans_prob = store_trans_prob               
-                                )    
+            print("ERROR: type_of_input = '{}' not recognised".format(type_of_input))
+            raise ValueError("type of input not recognised. It must be either 'simulated' or 'empirical'")
+        self.mle_estim=mle_estim.EstimProcedure(
+            self.number_of_event_types, self.number_of_states,
+            times, events, states,
+            volumes = volumes,
+            n_levels = self.n_levels, 
+            type_of_input = type_of_input,
+            store_trans_prob = store_trans_prob,
+            store_dirichlet_param = store_dirichlet_param
+        )    
         
 
     def compute_history_of_intensities(self,times,events,states,

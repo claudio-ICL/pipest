@@ -52,7 +52,8 @@ class EstimProcedure:
                  np.ndarray[DTYPEi_t , ndim=1] events,
                  np.ndarray[DTYPEi_t , ndim=1] states,
                  str type_of_input = 'simulated',
-                 store_trans_prob = False,
+                 store_trans_prob = False, store_dirichlet_param = False,
+                 volumes = None, int n_levels = 2,
                 ):
         print("mle_estimation.EstimProcedure is being initialised")
         self.type_of_input = type_of_input
@@ -60,6 +61,7 @@ class EstimProcedure:
             raise ValueError("All shapes must agree, but input was:\n len(times)={} \n len(events)={} \n len(states)={}".format(len(times),len(events),len(states)))
         self.num_event_types = num_event_types
         self.num_states = num_states
+        self.n_levels = n_levels
         cdef np.ndarray[DTYPEf_t, ndim=3] labelled_times = np.zeros((num_event_types,num_states,len(times)), dtype=DTYPEf)
         cdef np.ndarray[DTYPEi_t, ndim=2] count = np.zeros((num_event_types, num_states), dtype=DTYPEi)
         labelled_times, count = computation.distribute_times_per_event_state(
@@ -72,6 +74,10 @@ class EstimProcedure:
         self.events=np.array(events,copy=True,dtype=DTYPEi)
         self.states=np.array(states,copy=True,dtype=DTYPEi)
         self.hawkes_kernel=model.HawkesKernel(num_event_types, num_states)
+        if not volumes==None:
+            self.volumes = np.array(volumes, copy=True, dtype=DTYPEf)
+            if store_dirichlet_param:
+                self.store_dirichlet_parameters()
         if store_trans_prob:
             self.store_transition_probabilities()
         print("EstimProcedure has been successfully initialised")   
@@ -79,8 +85,20 @@ class EstimProcedure:
     def store_transition_probabilities(self,verbose=False):
         print('I am storing transition probabilities')
         cdef int v = int(verbose)
+        cdef DTYPEf_t run_time = -time.time()
         self.transition_probabilities =  estimate_transition_probabilities(
             self.num_event_types,self.num_states,self.events,self.states,verbose=v)
+        run_time += time.time()
+        print("Transition probabilities have been estimated and store. run_time={}".format(run_time))
+    def store_dirichlet_parameters(self,verbose=False):
+        print("I am storing dirichlet parameters")
+        cdef DTYPEf_t run_time = -time.time()
+        self.dirichlet_param = estimate_dirichlet_parameters(
+            self.num_states, self.n_levels,
+            self.states, self.volumes,
+            verbose=verbose)
+        run_time += time.time()
+        print("Dirichlet parameters have been estimated and store. run_time={}".format(run_time))
     def set_estimation_of_hawkes_param(self,
                                        DTYPEf_t time_start, DTYPEf_t time_end,
                                        list list_of_init_guesses=[],
@@ -271,8 +289,8 @@ def estimate_liquidator_transition_prob(int n_states,
 def estimate_dirichlet_parameters(int num_of_states, int n_levels,
                                   np.ndarray[DTYPEi_t, ndim=1] states,
                                   np.ndarray[DTYPEf_t, ndim=2] volumes,
-                                  float tolerance=1e-8,verbose=False, DTYPEf_t epsilon=1.0e-7):
-    cdef float tol = tolerance
+                                  DTYPEf_t tolerance=1e-8,verbose=False, DTYPEf_t epsilon=1.0e-7):
+    cdef DTYPEf_t tol = tolerance
     cdef np.ndarray[DTYPEf_t, ndim=2] estimator = np.zeros((num_of_states,2*n_levels),dtype=DTYPEf)
     cdef int s =0 
     for s in range(num_of_states):
