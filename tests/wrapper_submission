@@ -1,6 +1,6 @@
 #!/bin/bash
-#PBS -l walltime=2:00:00
-#PBS -l select=1:ncpus=6:mem=20gb
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=4:mem=10gb
 #PBS -N pipest_test
 
 echo "I am submitting $script_name"

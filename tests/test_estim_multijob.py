@@ -37,9 +37,12 @@ import prepare_from_lobster as from_lobster
 
 #parameters of model
 n_states=[3,5]
-n_events = 4  # number of event types, $d_e$
+number_of_event_types = 4 
+n_events = number_of_event_types  # number of event types, $d_e$
 n_levels = 2
 upto_level = 2
+time_start = 0.0
+time_end = time_start+ 1.0*60*60
 #Optional parameters for "estimate"
 max_imp_coef = 15.0
 learning_rate = 0.0001
@@ -88,10 +91,6 @@ def instantiate_and_simulate():
     message="I am executing {} --simulation".format(sys.argv[0])
     message+="\nDate of run: {}-{:02d}-{:02d} at {}:{}".format(now.year, now.month, now.day, now.hour, now.minute)
     fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
-    global time_start
-    time_start=np.random.uniform()
-    global time_end
-    time_end=time_start+1.0*60*60
     model = sd_hawkes_model.SDHawkes(
         number_of_event_types=n_events,
         number_of_lob_levels=n_levels,
