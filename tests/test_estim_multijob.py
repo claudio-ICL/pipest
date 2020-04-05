@@ -46,7 +46,7 @@ time_end = time_start + 1.0*60*60
 #Optional parameters for "estimate"
 max_imp_coef = 15.0
 learning_rate = 0.0001
-maxiter = 15
+maxiter = 25
 num_guesses = 4
 num_processes = 10
 parallel=False
@@ -111,7 +111,7 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=4050, high=5000)
+    max_number_of_events = np.random.randint(low=18050, high=22000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -121,6 +121,7 @@ def instantiate_and_simulate():
     model.goodness_of_fit.ks_test_on_residuals()
     model.goodness_of_fit.ad_test_on_residuals()
     model.dump(path=path_saved_tests)
+    model.dump(name=this_test_model_name+"_simulation", path=path_saved_tests)
     now=datetime.datetime.now()
     message='\nSimulation terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}\n'\
     .format(now.year, now.month, now.day, now.hour, now.minute)
@@ -192,7 +193,7 @@ def estimate():
                 parallel=parallel,
                 pre_estim_ord_hawkes=True,
                 pre_estim_parallel=parallel,
-                number_of_attempts = 4,
+                number_of_attempts = 3,
                 num_processes = num_processes
             )
             "Launch estimation"
