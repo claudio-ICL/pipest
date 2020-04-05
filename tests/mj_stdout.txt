@@ -1,0 +1,56 @@
+\n'simulation' launched with pid20320
+
+
+$python test_estim_multijob.py s
+I am executing test_estim_multijob.py --simulation
+Date of run: 2020-04-05 at 11:25
+stdout is being redirected to /home/claudio/pipest/tests/saved_tests/test_estim_model_2020-04-05_1125_simulation_readout.txt
+
+Simulation terminates on 2020-04-05 at 11:25
+
+test_estim_multijob.py: main() end of file
+\n'non-parametric pre-estimation' launched with pid20324
+
+
+$python test_estim_multijob.py p
+this_test_model_name: test_estim_model_2020-04-05_1125
+I am executing test_estim_multijob.py --nonparam_preestim
+Date of run: 2020-04-05 at 11:25
+stdout is being redirected to /home/claudio/pipest/tests/saved_tests/test_estim_model_2020-04-05_1125_nonp_readout.txt
+
+Non-parametric pre-estimation terminates on 2020-04-05 at 11:26
+
+test_estim_multijob.py: main() end of file
+\n 'mle_estimation' launched with pid20369
+
+
+$python test_estim_multijob.py e
+this_test_model_name: test_estim_model_2020-04-05_1125
+switch = True: No PBS_ARRAY_INDEX was found
+I am executing test_estim_multijob.py --mle_estimation
+Date of run: 2020-04-05 at 11:26
+stdout is being redirected to /home/claudio/pipest/tests/saved_tests/test_estim_model_2020-04-05_1125_mle_readout_partial0.txt
+
+Estimation of component_e 0 terminates on 2020-04-05 at 11:26
+
+I am executing test_estim_multijob.py --mle_estimation
+Date of run: 2020-04-05 at 11:26
+stdout is being redirected to /home/claudio/pipest/tests/saved_tests/test_estim_model_2020-04-05_1125_mle_readout_partial1.txt
+
+Estimation of component_e 1 terminates on 2020-04-05 at 11:27
+
+I am executing test_estim_multijob.py --mle_estimation
+Date of run: 2020-04-05 at 11:27
+stdout is being redirected to /home/claudio/pipest/tests/saved_tests/test_estim_model_2020-04-05_1125_mle_readout_partial2.txt
+
+Estimation of component_e 2 terminates on 2020-04-05 at 11:27
+
+I am executing test_estim_multijob.py --mle_estimation
+Date of run: 2020-04-05 at 11:27
+stdout is being redirected to /home/claudio/pipest/tests/saved_tests/test_estim_model_2020-04-05_1125_mle_readout_partial3.txt
+
+Estimation of component_e 3 terminates on 2020-04-05 at 11:27
+
+test_estim_multijob.py: main() end of file
+\n'merge' launched with pid20391
+Multijob terminates
