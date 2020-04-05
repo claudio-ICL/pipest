@@ -49,7 +49,10 @@ learning_rate = 0.0001
 maxiter = 10
 num_guesses = 4
 num_processes = 10
+batch_size = 4000
+num_run_per_minibatch = 2
 parallel=False
+type_of_preestim = 'ordinary_hawkes' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 60
 quad_tmax = 1.0
@@ -111,7 +114,7 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=3050, high=4000)
+    max_number_of_events = np.random.randint(low=7050, high=8000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -161,15 +164,13 @@ def nonparam_preestim():
     message='\nNon-parametric pre-estimation terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
     .format(now.year, now.month, now.day, now.hour, now.minute)
     redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
-
-
     
 def estimate():
     try:
         array_index=int(os.environ['PBS_ARRAY_INDEX'])
         switch = (event_type==array_index)
     except:
-        print("switch = True: No PBS_ARRAY_INDEX was found")
+        print("No PBS_ARRAY_INDEX was found; 'switch' set to 'True' ")
         switch = True
     with open(path_saved_tests+'/'+this_test_model_name, 'rb') as source:
         model=pickle.load(source)
@@ -186,8 +187,11 @@ def estimate():
             "Initialise the class"
             model.create_mle_estim(type_of_input='simulated', store_trans_prob=False)
             "Set the estimation"    
-            list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-                num_additional_random_guesses = 2, max_imp_coef=max_imp_coef)    
+            if type_of_preestim == 'nonparam':
+                list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
+                    num_additional_random_guesses = 2, max_imp_coef=max_imp_coef) 
+            else:
+                list_init_guesses = []
             model.mle_estim.set_estimation_of_hawkes_param(
                 time_start, time_end,
                 list_of_init_guesses = list_init_guesses,
@@ -196,10 +200,12 @@ def estimate():
                 maxiter=maxiter,
                 number_of_additional_guesses = num_guesses,
                 parallel=parallel,
-                pre_estim_ord_hawkes=True,
+                pre_estim_ord_hawkes=False,
                 pre_estim_parallel=parallel,
                 number_of_attempts = 3,
-                num_processes = num_processes
+                num_processes = num_processes,
+                batch_size = batch_size,
+                num_run_per_minibatch = num_run_per_minibatch,
             )
             "Launch estimation"
             model.mle_estim.launch_estimation_of_hawkes_param(e=event_type)
@@ -253,7 +259,10 @@ def main():
             this_test_model_name = pickle.load(source)
         print("this_test_model_name: {}".format(this_test_model_name))
         if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
-            nonparam_preestim()
+            if type_of_preestim == 'nonparam':
+                nonparam_preestim()
+            else:
+                print("type_of_preestim: {}. Non-parametric estimation is being skipped".format(type_of_preestim))
         elif action=='e' or (action=='estimate' or action=='mle'):
             estimate()
         elif action=='m' or action=='merge':
@@ -262,7 +271,7 @@ def main():
         else:
             print("action: {}".format(action))
             raise ValueError("action not recognised")
-    print("{}: main() end of file".format(str(sys.argv[0])))    
+    print("{}: main() end of file\n\n".format(str(sys.argv[0])))    
         
         
         

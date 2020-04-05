@@ -86,8 +86,7 @@ class MinimisationProcedure:
         if parallel:            
             results = parallel_minimisation(
                 self.event_type, self.num_event_types, self.num_states,
-                self.labelled_times, self.count,
-                self.arrival_times, self.num_arrival_times, self.len_labelled_times,
+                self.times, self.events, self.states,
                 self.time_start, self.time_end,
                 self.list_init_guesses,
                 self.max_imp_coef,
@@ -100,8 +99,7 @@ class MinimisationProcedure:
             print("I am performing gradient descent serially")    
             solver=map(lambda x: grad_descent_partial(
                                self.event_type, self.num_event_types, self.num_states,
-                               self.labelled_times, self.count,
-                               self.arrival_times, self.num_arrival_times, self.len_labelled_times,
+                               self.times, self.events, self.states,
                                self.time_start, self.time_end,
                                x,
                                self.max_imp_coef,
