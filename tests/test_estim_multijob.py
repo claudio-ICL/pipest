@@ -50,6 +50,7 @@ maxiter = 10
 num_guesses = 4
 num_processes = 10
 parallel=False
+type_of_preestim = 'ordinary_hawkes'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 60
 quad_tmax = 1.0
@@ -185,9 +186,12 @@ def estimate():
             fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
             "Initialise the class"
             model.create_mle_estim(type_of_input='simulated', store_trans_prob=False)
-            "Set the estimation"    
-            list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-                num_additional_random_guesses = 2, max_imp_coef=max_imp_coef)    
+            "Set the estimation"
+            if type_of_preestim == 'nonparam':
+                list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
+                    num_additional_random_guesses = 2, max_imp_coef=max_imp_coef)
+            else:
+                list_init_guesses = []
             model.mle_estim.set_estimation_of_hawkes_param(
                 time_start, time_end,
                 list_of_init_guesses = list_init_guesses,
@@ -253,7 +257,10 @@ def main():
             this_test_model_name = pickle.load(source)
         print("this_test_model_name: {}".format(this_test_model_name))
         if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
-            nonparam_preestim()
+            if type_of_preestim == 'nonparam':
+                nonparam_preestim()
+            else:
+                print("type_of_preestim: {}; I am skipping non-parametric estimation".format(type_of_preestim))
         elif action=='e' or (action=='estimate' or action=='mle'):
             estimate()
         elif action=='m' or action=='merge':
