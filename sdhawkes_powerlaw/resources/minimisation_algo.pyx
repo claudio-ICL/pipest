@@ -232,6 +232,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
     cdef int bid=0 # batch id
     for k in range(max(1,num_run_per_minibatch)):
         for batch in list_of_batches:
+            print("bid: {}".format(bid))
             x, f, grad , res = descend_along_gradient(
                 event_type, num_event_types, num_states,
                 batch.get("lt"), batch.get("count"),batch.get("at"),
@@ -364,7 +365,7 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
             grad = np.array(grad_new,copy=True)
             if (f_min > f[n]):
                 f_min = copy.copy(f[n])
-                x_min = np.arrray(x,copy=True)
+                x_min = np.array(x,copy=True)
                 grad_min = np.array(grad,copy=True)
             norm_grad = np.linalg.norm(grad,2).astype(float)
             if (isnan(f[n])):
