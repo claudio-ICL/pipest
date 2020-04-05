@@ -44,14 +44,14 @@ upto_level = 2
 time_start = 0.0
 time_end = time_start + 1.0*60*60
 #Optional parameters for "estimate"
-max_imp_coef = 15.0
+max_imp_coef = 25.0
 learning_rate = 0.0001
-maxiter = 25
+maxiter = 10
 num_guesses = 4
 num_processes = 10
 parallel=False
 #Optional parameters for "nonparam_estim"
-num_quadpnts = 70
+num_quadpnts = 60
 quad_tmax = 1.0
 quad_tmin = 1.0e-1
 num_gridpnts = 80
@@ -111,7 +111,7 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=18050, high=22000)
+    max_number_of_events = np.random.randint(low=3050, high=4000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -165,13 +165,18 @@ def nonparam_preestim():
 
     
 def estimate():
-    array_index=int(os.environ['PBS_ARRAY_INDEX'])
+    try:
+        array_index=int(os.environ['PBS_ARRAY_INDEX'])
+        switch = (event_type==array_index)
+    except:
+        print("switch = True: No PBS_ARRAY_INDEX was found")
+        switch = True
     with open(path_saved_tests+'/'+this_test_model_name, 'rb') as source:
         model=pickle.load(source)
     time_start = float(model.simulated_times[0])
     time_end = float(model.simulated_times[-1])
     for event_type in range(model.number_of_event_types):
-        if (event_type == array_index):
+        if switch:
             model.set_name_of_model(this_test_model_name+"_partial{}".format(event_type))
             path_readout=path_saved_tests+'/'+this_test_model_name+'_mle_readout_partial{}.txt'.format(event_type)
             now=datetime.datetime.now()
@@ -223,7 +228,7 @@ def merge_from_partial():
                                   dump_after_merging=True,
                                   name_of_model=this_test_model_name, path=path_saved_tests)  
     now=datetime.datetime.now()
-    message='\nMerging has been completed  on {}-{:02d}-{:02d} at {:02d}:{:02d}'\
+    message='\nMerging has been completed  on {}-{:02d}-{:02d} at {:02d}:{:02d}\n'\
     .format(now.year,now.month,now.day,now.hour,now.minute)
     redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout)
         

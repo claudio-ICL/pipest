@@ -566,7 +566,7 @@ class SDHawkes:
     
     def initialise_from_partial(self,list partial_models, 
                                 dump_after_merging=True, str name_of_model='', str path = '',
-                                type_of_input = 'simulated'):
+                                type_of_input = 'simulated', parallel = False):
         """
         It is assumed that all part models have been calibrated on the same sample.
         """
@@ -595,7 +595,7 @@ class SDHawkes:
         self.create_mle_estim(type_of_input=type_of_input,store_trans_prob=True, store_dirichlet_param=True)
         self.mle_estim.store_results_of_estimation(list_of_mle_results)
         self.mle_estim.store_hawkes_parameters()
-        self.mle_estim.create_goodness_of_fit()
+        self.mle_estim.create_goodness_of_fit(parallel = parallel)
         if dump_after_merging:
             if name_of_model == '':
                 name_of_model = self.name_of_model
