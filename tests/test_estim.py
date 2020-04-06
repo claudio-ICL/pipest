@@ -75,13 +75,13 @@ time_end = time_start + 1.0*60*60
 #Optional parameters for "estimate"
 max_imp_coef = 25.0
 learning_rate = 0.0001
-maxiter = 10
-num_guesses = 2
+maxiter = 15
+num_guesses = 4
 num_processes = 10
-batch_size = 2000
+batch_size = 3000
 num_run_per_minibatch = 2
 parallel=False
-type_of_preestim = 'ordinary_hawkes' # 'ordinary_hawkes' or 'nonparam'
+type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 40
 quad_tmax = 1.0
@@ -114,12 +114,6 @@ def redirect_stdout(direction= 'from', # or 'to'
 
         
 def main(model_name= ''):    
-#     n_states=[3,5]
-#     n_events = 4  # number of event types, $d_e$
-#     n_levels = 2
-#     upto_level = 2
-#     time_start=np.random.uniform()
-#     time_end=time_start+1.0*60*60
     global time_start
     global time_end
     model = sd_hawkes_model.SDHawkes(
@@ -140,7 +134,7 @@ def main(model_name= ''):
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-    max_number_of_events = np.random.randint(low=4050, high=5000)
+    max_number_of_events = np.random.randint(low=7050, high=9000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -190,7 +184,7 @@ def main(model_name= ''):
                 maxiter=maxiter,
                 number_of_additional_guesses = num_guesses,
                 parallel=parallel,
-                pre_estim_ord_hawkes=False,
+                pre_estim_ord_hawkes=True,
                 pre_estim_parallel=parallel,
                 number_of_attempts = 3,
                 num_processes = num_processes,
@@ -199,10 +193,10 @@ def main(model_name= ''):
     )
 #     exit()
     "Launch estimation"
-    model.mle_estim.launch_estimation_of_hawkes_param(partial=True)
-#     model.mle_estim.store_hawkes_parameters()
-#     model.mle_estim.create_goodness_of_fit(parallel=False)
-#     model.dump(path=path_saved_tests) 
+    model.mle_estim.launch_estimation_of_hawkes_param(partial=False)
+    model.mle_estim.store_hawkes_parameters()
+    model.mle_estim.create_goodness_of_fit(parallel=False)
+    model.dump(path=path_saved_tests) 
     
 
 
@@ -215,12 +209,13 @@ if __name__=='__main__':
     this_test_model_path=path_saved_tests+this_test_model_name
     message="I am executing {}".format(str(sys.argv[0]))
     message+='\ndate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}\n'.format(now.year,now.month,now.day,now.hour,now.minute)
-#     fout, saveout = redirect_stdout(direction='from', message=message, path=this_test_readout)
-    print(message)
+    fout, saveout = redirect_stdout(direction='from', message=message, path=this_test_readout)
+#     print(message)
     main(model_name = this_test_model_name)
     
     now=datetime.datetime.now()
     message="\nTest terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
         now.year,now.month,now.day,now.hour,now.minute)
     message+="\nEND OF TEST"
+#     print(message)
     redirect_stdout(direction='to',message=message,fout=fout,saveout=saveout)

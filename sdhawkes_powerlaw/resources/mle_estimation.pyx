@@ -194,8 +194,6 @@ class EstimProcedure:
         )
         print("mle_estimation.EstimProcedure.estimate_hawkes_param_partial. Estimation terminates for event_type {}".format(e))
         self.results_of_estimation.append(res)
-        print("sleeping")
-        time.sleep(10)
         
         
     def launch_estimation_of_hawkes_param(self, partial=True, int e=0):
@@ -205,8 +203,7 @@ class EstimProcedure:
         else:
             assert e < self.num_event_types
             self.estimate_hawkes_param_partial(e)
-        print("estimation finished. sleeping")
-        time.sleep(5)
+
             
     def store_results_of_estimation(self, list results_of_estimation):
         self.results_of_estimation = copy.copy(results_of_estimation)

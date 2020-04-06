@@ -46,13 +46,13 @@ time_end = time_start + 1.0*60*60
 #Optional parameters for "estimate"
 max_imp_coef = 25.0
 learning_rate = 0.0001
-maxiter = 10
+maxiter = 15
 num_guesses = 4
 num_processes = 10
-batch_size = 4000
+batch_size = 3000
 num_run_per_minibatch = 2
 parallel=False
-type_of_preestim = 'ordinary_hawkes' # 'ordinary_hawkes' or 'nonparam'
+type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 60
 quad_tmax = 1.0
@@ -114,7 +114,7 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=7050, high=8000)
+    max_number_of_events = np.random.randint(low=5500, high=6050)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
