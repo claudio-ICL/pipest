@@ -166,17 +166,18 @@ def nonparam_preestim():
     redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
     
 def estimate():
-    try:
-        array_index=int(os.environ['PBS_ARRAY_INDEX'])
-        switch = (event_type==array_index)
-    except:
-        print("No PBS_ARRAY_INDEX was found; 'switch' set to 'True' ")
-        switch = True
     with open(path_saved_tests+'/'+this_test_model_name, 'rb') as source:
         model=pickle.load(source)
     time_start = float(model.simulated_times[0])
     time_end = float(model.simulated_times[-1])
     for event_type in range(model.number_of_event_types):
+        try:
+            array_index=int(os.environ['PBS_ARRAY_INDEX'])
+            switch = (event_type==array_index)
+            print("array_index={}; event_type={}; switch={}".format(array_index, event_type,switch))
+        except:
+            print("No PBS_ARRAY_INDEX was found; 'switch' set to 'True'")
+            switch = True
         if switch:
             model.set_name_of_model(this_test_model_name+"_partial{}".format(event_type))
             path_readout=path_saved_tests+'/'+this_test_model_name+'_mle_readout_partial{}.txt'.format(event_type)

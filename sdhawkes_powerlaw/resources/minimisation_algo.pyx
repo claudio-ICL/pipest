@@ -79,16 +79,7 @@ class MinimisationProcedure:
         self.number_of_attempts = number_of_attempts
         self.batch_size =  batch_size 
         self.num_run_per_minibatch =  num_run_per_minibatch
-    def prepare_batches_fake(self):
-        print("I am preparing batches (fake)")
-        cdef list list_of_batches = []
-        times=self.times
-        events=self.events
-        states=self.states
-        self.list_of_batches = list_of_batches
-        print("List of batches has been prepared")
     def prepare_batches(self):
-        print("I am preparing batches")
         cdef list list_of_batches = []
         times=self.times
         events=self.events
@@ -125,7 +116,7 @@ class MinimisationProcedure:
             }
             list_of_batches.append(batch)
         self.list_of_batches = list_of_batches
-        print("List of batches has been prepared")
+        print("MinimisationProcedure.list_of_batches ready")
     def launch_minimisation(self, parallel=False, int num_processes = 0):
         print('I am launching minimisation. Number of initial guesses={}, parallel={}'.format(len(self.list_init_guesses),parallel))
         cdef list results = []
