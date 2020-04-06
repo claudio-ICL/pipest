@@ -52,11 +52,7 @@ num_processes = 10
 batch_size = 3000
 num_run_per_minibatch = 2
 parallel=False
-<<<<<<< HEAD
-type_of_preestim = 'ordinary_hawkes'
-=======
 type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
->>>>>>> minim_batch
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 60
 quad_tmax = 1.0
@@ -190,17 +186,10 @@ def estimate():
             fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
             "Initialise the class"
             model.create_mle_estim(type_of_input='simulated', store_trans_prob=False)
-<<<<<<< HEAD
-            "Set the estimation"
-            if type_of_preestim == 'nonparam':
-                list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-                    num_additional_random_guesses = 2, max_imp_coef=max_imp_coef)
-=======
             "Set the estimation"    
             if type_of_preestim == 'nonparam':
                 list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
                     num_additional_random_guesses = 2, max_imp_coef=max_imp_coef) 
->>>>>>> minim_batch
             else:
                 list_init_guesses = []
             model.mle_estim.set_estimation_of_hawkes_param(
@@ -273,11 +262,7 @@ def main():
             if type_of_preestim == 'nonparam':
                 nonparam_preestim()
             else:
-<<<<<<< HEAD
-                print("type_of_preestim: {}; I am skipping non-parametric estimation".format(type_of_preestim))
-=======
                 print("type_of_preestim: {}. Non-parametric estimation is being skipped".format(type_of_preestim))
->>>>>>> minim_batch
         elif action=='e' or (action=='estimate' or action=='mle'):
             estimate()
         elif action=='m' or action=='merge':
