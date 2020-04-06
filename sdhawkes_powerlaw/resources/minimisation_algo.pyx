@@ -53,7 +53,7 @@ class MinimisationProcedure:
                  DTYPEf_t tol = 1.0e-6,
                  int  number_of_attempts = 3,
                  int batch_size = 5000,
-                 int num_run_per_minibatch = 1,     
+                 int num_run_per_minibatch = 2,     
                 ):
         print("MinimisationProcedure is being initialised: event_type={}, learning_rate={}, maxiter={}".format(event_type,learning_rate,maxiter))
         assert time_start<=time_end
@@ -72,13 +72,52 @@ class MinimisationProcedure:
         self.events=events
         self.states=states
         self.list_init_guesses = copy.copy(list_init_guesses)
-        self.max_imp_coef = copy.copy(max_imp_coef)
+        self.max_imp_coef = max_imp_coef
         self.learning_rate = learning_rate
         self.maxiter = maxiter
         self.tol = tol   
         self.number_of_attempts = number_of_attempts
         self.batch_size =  batch_size 
-        self.num_run_per_minibatch =  num_run_per_minibatch 
+        self.num_run_per_minibatch =  num_run_per_minibatch
+    def prepare_batches(self):
+        print("I am preparing batches")
+        cdef list list_of_batches = []
+        times=self.times
+        events=self.events
+        states=self.states
+        cdef int d_E = self.num_event_types
+        cdef int d_S = self.num_states
+        cdef int num_of_batches = max(1,len(times)//self.batch_size)
+        if (len(times)//self.batch_size>=1) & (len(times)%self.batch_size > 0.75*self.batch_size):
+            num_of_batches += 1
+        cdef DTYPEf_t t_0, t_1    
+        cdef int k=0, idx_0=0, idx_1=1
+        cdef int len_lt=0, num_at=0
+        for k in range(num_of_batches):
+            idx_0 = k*self.batch_size
+            idx_1 = min((k+1)*self.batch_size, len(times)-1)
+            t_0 = copy.copy(times[idx_0])
+            t_1 = copy.copy(times[idx_1])
+            lt, count = computation.distribute_times_per_event_state(
+                            d_E, d_S,
+                            times[idx_0: idx_1],
+                            events[idx_0: idx_1],
+                            states[idx_0: idx_1])
+            len_lt = len(lt)
+            arrival_times = computation.extract_arrival_times_of_event(
+                self.event_type, d_E, d_S,
+                lt, count, len_lt, t_0)
+            num_at = len(arrival_times)
+            batch = {'lt': np.array(lt, copy=True, dtype=DTYPEf),
+                     'count': np.array(count, copy=True, dtype=DTYPEi),
+                     'at': np.array(arrival_times, copy=True, dtype=DTYPEf),
+                     'num_at': num_at,
+                     'len_lt': len_lt,
+                     't_0': t_0, 't_1': t_1
+                    }
+            list_of_batches.append(batch)
+        self.list_of_batches = list_of_batches
+        print("List of batches has been prepared")
     def launch_minimisation(self, parallel=False, int num_processes = 0):
         print('I am launching minimisation. Number of initial guesses={}, parallel={}'.format(len(self.list_init_guesses),parallel))
         cdef list results = []
@@ -86,30 +125,31 @@ class MinimisationProcedure:
         if parallel:            
             results = parallel_minimisation(
                 self.event_type, self.num_event_types, self.num_states,
-                self.times, self.events, self.states,
                 self.time_start, self.time_end,
                 self.list_init_guesses,
                 self.max_imp_coef,
                 self.learning_rate, self.tol, self.maxiter, number_of_attempts = self.number_of_attempts,
-                batch_size =  self.batch_size, 
-                num_run_per_minibatch =  self.num_run_per_minibatch, 
-                num_processes = num_processes
+                num_processes = num_processes,
+                list_of_batches = self.list_of_batches,
+                num_run_per_minibatch =  self.num_run_per_minibatch
             )
         else:        
             print("I am performing gradient descent serially")    
             solver=map(lambda x: grad_descent_partial(
                                self.event_type, self.num_event_types, self.num_states,
-                               self.times, self.events, self.states,
                                self.time_start, self.time_end,
                                x,
                                self.max_imp_coef,
                                self.learning_rate, self.tol, self.maxiter,
                                number_of_attempts = self.number_of_attempts,
-                               batch_size =  self.batch_size,
+                               list_of_batches = self.list_of_batches,
                                num_run_per_minibatch =  self.num_run_per_minibatch),
                        self.list_init_guesses)
             results=list(solver)
         print("MinimisationProcedure: minimisation finished")
+        print("sleeping")
+        time.sleep(5)
+#         print("results to store in MinimisationProcedure: \n{}".format(results))
         self.results=results
         cdef list list_f_min=[]
         for n in range(len(results)):
@@ -117,21 +157,18 @@ class MinimisationProcedure:
         arr_f_min=np.squeeze(np.array(list_f_min))
         index_best=np.argmin(arr_f_min)
         best=results[index_best]
-        self.best_result = best
-        self.minimiser = best.get('x_min')
+        self.best_result = copy.copy(best)
+        self.minimiser = np.array(best.get('x_min'), dtype=DTYPEf, copy=True)
         self.minimum = best.get('f_min')
         self.grad_descent_history = best.get('f')
 
 def parallel_minimisation(int event_type, int num_event_types, int num_states,
-                          np.ndarray[DTYPEf_t, ndim=1] times,
-                          np.ndarray[DTYPEi_t, ndim=1] events,
-                          np.ndarray[DTYPEi_t, ndim=1] states,
                           DTYPEf_t time_start, DTYPEf_t time_end,
                           list list_init_guesses,
                           DTYPEf_t max_imp_coef = 100.0,
                           DTYPEf_t learning_rate = 0.001, DTYPEf_t tol=1.0e-07,
                           int maxiter=100, int number_of_attempts = 3,
-                          int batch_size = 5000, int num_run_per_minibatch = 1,     
+                          list list_of_batches = [], int num_run_per_minibatch = 1,     
                           int num_processes = 0, 
                          ):
     cdef int tot_tasks = len(list_init_guesses)
@@ -161,12 +198,11 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
                     grad_descent_partial,
                     args=(
                            event_type, num_event_types, num_states,
-                           times, events, states,
                            time_start, time_end,
                            x,
                            max_imp_coef,
                            learning_rate, tol, maxiter, number_of_attempts,
-                           batch_size, num_run_per_minibatch     
+                           list_of_batches, num_run_per_minibatch     
                     ),
                     callback=store_res,
                     error_callback=error_handler,
@@ -180,65 +216,37 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
         async_res[i].successful()
     return results     
     
-def grad_descent_partial(int event_type, int num_event_types, int num_states,
-        np.ndarray[DTYPEf_t, ndim=1] times,
-        np.ndarray[DTYPEi_t, ndim=1] events,
-        np.ndarray[DTYPEi_t, ndim=1] states,                 
+def grad_descent_partial(int event_type, int num_event_types, int num_states,                 
         DTYPEf_t time_start,
         DTYPEf_t time_end,
         np.ndarray[DTYPEf_t,ndim=1] initial_guess,
         DTYPEf_t max_imp_coef = 100.0,                 
-        DTYPEf_t learning_rate=0.001,
+        DTYPEf_t learning_rate = 0.001,
         DTYPEf_t tol = 1.0e-7,
         int maxiter = 100,
         int number_of_attempts = 2,
-        int batch_size = 5000,
+        list list_of_batches = [],
         int num_run_per_minibatch = 1,                 
 ):  
-    cdef list list_of_batches = []
+    if list_of_batches==[]:
+        print("ERROR: list_of_batches is empty!")
+        raise ValueError("User needs to call 'prepare_list_of_batches()' before launching minimisation")
     cdef list results_batches = []
-    cdef int num_of_batches = max(1,len(times)//batch_size)
-    if (len(times)//batch_size>=1) & (len(times)%batch_size > 0.75*batch_size):
-        num_of_batches += 1
-    cdef DTYPEf_t t_0 = 0.0, t_1=0.0    
-    cdef int k=0, idx_0=0, idx_1=1
-    cdef int len_lt=0, num_at=0
-    for k in range(num_of_batches):
-        idx_0 = k*batch_size
-        idx_1 = min((k+1)*batch_size, len(times)-1)
-        t_0 = copy.copy(times[idx_0])
-        t_1 = copy.copy(times[idx_1])
-        lt, count = computation.distribute_times_per_event_state(
-                        num_event_types, num_states,
-                        times[idx_0: idx_1],
-                        events[idx_0: idx_1],
-                        states[idx_0: idx_1])
-        len_lt = len(lt)
-        arrival_times = computation.extract_arrival_times_of_event(
-            event_type, num_event_types, num_states,
-            lt, count, len_lt, t_0)
-        num_at = len(arrival_times)
-        batch = {'lt': lt,
-                 'count': count,
-                 'at': arrival_times,
-                 'num_at': num_at,
-                 'len_lt': len_lt,
-                 't_0': t_0, 't_1': t_1
-                }
-        list_of_batches.append(batch)
+    assert len(initial_guess) == 1+2*num_event_types*num_states
     cdef np.ndarray[DTYPEf_t,ndim=1] x = np.array(initial_guess, dtype=DTYPEf, copy=True)
-    cdef np.ndarray[DTYPEf_t, ndim=1] grad = np.zeros_like(x,dtype=DTYPEf)
-    cdef DTYPEf_t f = 0.0 
+#     cdef np.ndarray[DTYPEf_t, ndim=1] grad = np.zeros(len(x),dtype=DTYPEf)
+    cdef DTYPEf_t f
     cdef int bid=0 # batch id
+    cdef int tot_num_of_bid = max(1,num_run_per_minibatch)*len(list_of_batches)
     for k in range(max(1,num_run_per_minibatch)):
         for batch in list_of_batches:
-            print("bid: {}".format(bid))
-            x, f, grad , res = descend_along_gradient(
+            print("bid: {}/{}; t_0={}; t_1={}".format(bid,tot_num_of_bid,batch.get("t_0"),batch.get("t_1")))
+            x, f, res = descend_along_gradient(
                 event_type, num_event_types, num_states,
                 batch.get("lt"), batch.get("count"),batch.get("at"),
                 batch.get("num_at"), batch.get("len_lt"),
                 batch.get("t_0"), batch.get("t_1"),
-                x, f, grad,
+                x,
                 max_imp_coef = max_imp_coef,
                 learning_rate = learning_rate,
                 tol = tol,
@@ -248,11 +256,14 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
             )
             results_batches.append(res)
             bid+=1
+    cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(x,copy=True, dtype=DTYPEf)
+    cdef DTYPEf_t f_min = f
     result = {'x_min': x,
               'f_min': f,
-              'grad_min': grad,
               'results_batches': results_batches
              }
+#     print("grad_descent_partial. result:\n{}".format(result))
+    print("grad_descent_partial: event_type {}  ready to return".format(event_type))
     return result
             
         
@@ -264,11 +275,9 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
         int len_labelled_times,
         DTYPEf_t time_start,
         DTYPEf_t time_end,
-        np.ndarray [DTYPEf_t,ndim=1] initial_guess,
-        DTYPEf_t f_at_initial_guess,
-        np.ndarray [DTYPEf_t, ndim=1] grad_at_initial_guess,                     
+        np.ndarray [DTYPEf_t,ndim=1] initial_guess,                    
         DTYPEf_t max_imp_coef = 100.0,                 
-        DTYPEf_t learning_rate=0.001,
+        DTYPEf_t learning_rate = 0.001,
         DTYPEf_t tol = 1.0e-7,
         int maxiter = 100,
         int number_of_attempts = 2,                   
@@ -297,19 +306,19 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
         return -log_likelihood,-grad_loglikelihood
     cdef int process_id = os.getpid()
     print("Launching descend_along_gradient:\ncomponent_e: {}; process_id: pid{}; minibatch_id: bid{}".format(event_type,process_id,minibatch_id))
+    assert len(initial_guess)==1+2*num_event_types*num_states
     assert learning_rate>0.0
     assert learning_rate<1.0
     assert max_imp_coef>=1.0
     cdef int break_point = 1+num_event_types*num_states
-    if minibatch_id == 0:
-        f_at_initial_guess, grad_at_initial_guess = compute_f_and_grad(initial_guess)
-    cdef int n = 0
-    cdef int m = 0
+    cdef DTYPEf_t f_at_initial_guess
+    cdef np.ndarray[DTYPEf_t, ndim=1] grad_at_initial_guess = np.zeros(len(initial_guess), dtype=DTYPEf)
+    f_at_initial_guess, grad_at_initial_guess = compute_f_and_grad(initial_guess)
+#     print("f_at_initial_guess={}".format(f_at_initial_guess))
+    cdef int m=0, n=0
     cdef np.ndarray[DTYPEf_t,ndim=1] x = np.array(initial_guess,copy=True,dtype=DTYPEf)
-    cdef int d = len(x)
+    cdef int d = 1+2*num_event_types*num_states
     cdef int maxiter_inner=maxiter
-    cdef np.ndarray[DTYPEf_t, ndim = 2] eye_d = np.eye(d)
-    cdef np.ndarray[DTYPEf_t, ndim = 2] cov = np.array(eye_d,copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=1] grad = np.zeros_like(x,dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=1] f = np.zeros(maxiter,dtype=DTYPEf)
     cdef DTYPEf_t norm_grad  = 1.0
@@ -323,32 +332,34 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
     cdef int attempt_num=0
     minimisation_conclusive = False
     while (attempt_num<number_of_attempts) & (not minimisation_conclusive):
-        print("descend_along_gradient pid{}: minibatch_id{}; attempt_num={}".format(process_id,minibatch_id,1+attempt_num))
+        print("descend_along_gradient: pid{}; bid{}; attempt_num: {}".format(process_id,minibatch_id,1+attempt_num))
         n, m = 0, 0
         f = f_at_initial_guess*np.ones(maxiter,dtype=DTYPEf)
         grad = np.array(grad_at_initial_guess, copy=True, dtype=DTYPEf)
         norm_grad = np.linalg.norm(grad,2)
         f_min =  copy.copy(f[0])
+#         print("f_at_initial_guess: {}".format(f_at_initial_guess))
+#         print("f_min at start: {}".format(f_min))
         x = np.array(initial_guess, copy=True,dtype=DTYPEf)
         x_min = np.array(initial_guess, copy=True,dtype=DTYPEf)
-        grad_min = np.array(grad,copy=True,dtype=DTYPEf)
-        while (norm_grad>=tol) & (n<=idx_alt):
-            with nogil:
-                n+=1
-                m = 0
-                f_new = f[n]
+        grad_min = np.array(grad_at_initial_guess, copy=True,dtype=DTYPEf)
+        while (norm_grad>=tol) & (n<=idx_alt):       
+            n+=1
+            m = 0
+            f_new = copy.copy(f[n-1])
+#             print("n={}. Initialisation of f_new: {}".format(n,f_new))
             while (f_min <= f_new) & (m<=maxiter_inner):
+                if m > 0:
+                    learning_rate=max(2*tol,0.9*learning_rate)
                 x_new = x-learning_rate*grad
                 x_new[0] = max(x_new[0], tol)
                 x_new[1:break_point]=np.minimum(max_imp_coef,np.maximum(x_new[1:break_point],tol))
                 x_new[break_point:len(x_new)]=np.maximum(x_new[break_point:len(x_new)],1.0001)
                 f_new, grad_new = compute_f_and_grad(x_new)
-                if m > 0:
-                    learning_rate=max(2*tol,0.9*learning_rate)
                 m+=1   
             with nogil:
                 if (m>=maxiter_inner - 1):
-                    learning_rate/= pow(0.9,max(m-2,1))
+                    learning_rate/= pow(0.9,max(m-3,1))
             """"
             if update along gradient direction did not produce 
             decrease of objective function, use random update near previous evaluation point
@@ -359,14 +370,14 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
                 x_new[1:break_point]=np.minimum(max_imp_coef,np.maximum(x_new[1:break_point],tol))
                 x_new[break_point:len(x_new)]=np.maximum(x_new[break_point:len(x_new)],1.0001)
                 f_new, grad_new = compute_f_and_grad(x_new)
-                   
+#             print("f_new={}".format(f_new))       
             f[n] = copy.copy(f_new)
             x = np.array(x_new,copy=True)
             grad = np.array(grad_new,copy=True)
-            if (f_min > f[n]):
-                f_min = copy.copy(f[n])
-                x_min = np.array(x,copy=True)
-                grad_min = np.array(grad,copy=True)
+            if (f_min > f_new):
+                f_min = f_new
+                x_min = np.array(x, copy=True)
+                grad_min = np.array(grad, copy=True)
             norm_grad = np.linalg.norm(grad,2).astype(float)
             if (isnan(f[n])):
                 print("descend_along_gradient pid{} bid{}: f[{}]=nan".format(process_id,n))
@@ -385,11 +396,12 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
     res={
         'pid': process_id,
         'bid': minibatch_id,
-        'x_min':x_min,
+        'x_min': x_min,
         'f_min': f_min,
         'grad_min': grad_min,
-        'f':f,
+        'f': f,
         'steps':n+1,
         'conclusive': minimisation_conclusive
     }
-    return x_min, f_min, grad_min, res
+#     print("f_min at end: {}".format(f_min))
+    return x_min, f_min, res

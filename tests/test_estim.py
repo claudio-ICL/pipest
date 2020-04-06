@@ -76,17 +76,17 @@ time_end = time_start + 1.0*60*60
 max_imp_coef = 25.0
 learning_rate = 0.0001
 maxiter = 10
-num_guesses = 4
+num_guesses = 2
 num_processes = 10
 batch_size = 2000
-num_run_per_minibatch = 3
+num_run_per_minibatch = 2
 parallel=False
 type_of_preestim = 'ordinary_hawkes' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
-num_quadpnts = 60
+num_quadpnts = 40
 quad_tmax = 1.0
 quad_tmin = 1.0e-1
-num_gridpnts = 80
+num_gridpnts = 50
 grid_tmax = 1.1
 grid_tmin = 1.5e-1
 
@@ -149,36 +149,39 @@ def main(model_name= ''):
     model.create_goodness_of_fit(type_of_input='simulated', parallel=False)
     model.goodness_of_fit.ks_test_on_residuals()
     model.goodness_of_fit.ad_test_on_residuals()
-
-    print("\nNON-PARAMETRIC ESTIMATION\n")
-    run_time = -time.time()
-    model.create_nonparam_estim(type_of_input='simulated',
-                                num_quadpnts = num_quadpnts,
-                                quad_tmax = quad_tmax,
-                                quad_tmin = quad_tmin,
-                                num_gridpnts = num_gridpnts,
-                                grid_tmax = grid_tmax,
-                                grid_tmin = grid_tmin,
-                                two_scales=True,
-                                tol=1.0e-7
-                               )
-    model.nonparam_estim.estimate_hawkes_kernel(store_L1_norm=False,
-                               use_filter=True, enforce_positive_g_hat=True,
-                               filter_cutoff=20.0, filter_scale=30.0, num_addpnts_filter=2000,
-                               parallel=False, parallel_prep=True
-                               )
-    model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-01, tol=1.0e-7)
-    model.nonparam_estim.store_base_rates()
-    run_time+=time.time()
-    model.nonparam_estim.store_runtime(run_time)
-    model.nonparam_estim.create_goodness_of_fit(parallel=False)
+    if type_of_preestim == 'nonparam':
+        print("\nNON-PARAMETRIC ESTIMATION\n")
+        run_time = -time.time()
+        model.create_nonparam_estim(type_of_input='simulated',
+                                    num_quadpnts = num_quadpnts,
+                                    quad_tmax = quad_tmax,
+                                    quad_tmin = quad_tmin,
+                                    num_gridpnts = num_gridpnts,
+                                    grid_tmax = grid_tmax,
+                                    grid_tmin = grid_tmin,
+                                    two_scales=True,
+                                    tol=1.0e-7
+                                   )
+        model.nonparam_estim.estimate_hawkes_kernel(store_L1_norm=False,
+                                   use_filter=True, enforce_positive_g_hat=True,
+                                   filter_cutoff=20.0, filter_scale=30.0, num_addpnts_filter=2000,
+                                   parallel=False, parallel_prep=True
+                                   )
+        model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-01, tol=1.0e-7)
+        model.nonparam_estim.store_base_rates()
+        run_time+=time.time()
+        model.nonparam_estim.store_runtime(run_time)
+        model.nonparam_estim.create_goodness_of_fit(parallel=False)
     
     print("\nMLE ESTIMATION\n")
     "Initialise the class"
     model.create_mle_estim(type_of_input = 'simulated', store_trans_prob = True)
-    "Set the estimation"    
-    list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-        num_additional_random_guesses = 2, max_imp_coef = 50.0)    
+    "Set the estimation"
+    if type_of_preestim == 'nonparam':
+        list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
+            num_additional_random_guesses = 2, max_imp_coef = 50.0)
+    else:
+        list_init_guesses = []
     model.mle_estim.set_estimation_of_hawkes_param(
                 time_start, time_end,
                 list_of_init_guesses = list_init_guesses,
@@ -196,10 +199,10 @@ def main(model_name= ''):
     )
 #     exit()
     "Launch estimation"
-    model.mle_estim.launch_estimation_of_hawkes_param(partial=False)
-    model.mle_estim.store_hawkes_parameters()
-    model.mle_estim.create_goodness_of_fit(parallel=False)
-    model.dump(path=path_saved_tests) 
+    model.mle_estim.launch_estimation_of_hawkes_param(partial=True)
+#     model.mle_estim.store_hawkes_parameters()
+#     model.mle_estim.create_goodness_of_fit(parallel=False)
+#     model.dump(path=path_saved_tests) 
     
 
 

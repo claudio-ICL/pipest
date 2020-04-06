@@ -192,7 +192,11 @@ class EstimProcedure:
             num_run_per_minibatch = self.num_run_per_minibatch,
 
         )
+        print("mle_estimation.EstimProcedure.estimate_hawkes_param_partial. Estimation terminates for event_type {}".format(e))
         self.results_of_estimation.append(res)
+        print("sleeping")
+        time.sleep(10)
+        
         
     def launch_estimation_of_hawkes_param(self, partial=True, int e=0):
         if not partial:
@@ -201,6 +205,8 @@ class EstimProcedure:
         else:
             assert e < self.num_event_types
             self.estimate_hawkes_param_partial(e)
+        print("estimation finished. sleeping")
+        time.sleep(5)
             
     def store_results_of_estimation(self, list results_of_estimation):
         self.results_of_estimation = copy.copy(results_of_estimation)
@@ -482,13 +488,13 @@ def pre_estimate_ordinary_hawkes(
         batch_size = batch_size,
         num_run_per_minibatch = num_run_per_minibatch,  
     )
+    minim.prepare_batches()
     print('pre_estimate_ordinary_hawkes: event_index={} -- initialisation completed.'.format(event_index))
     cdef double run_time = -time.time()
     minim.launch_minimisation(parallel=parallel, num_processes = num_processes)    
     cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(minim.minimiser, copy=True, dtype=DTYPEf)
     base_rate,imp_coef,dec_coef=computation.array_to_parameters_partial(n_event_types, 1, x_min)
     run_time += time.time()
-    del minim
     if not reshape_to_sd:
         n_states = 1
     cdef DTYPEf_t nu = base_rate    
@@ -547,6 +553,7 @@ def estimate_hawkes_param_partial(
         batch_size = batch_size,
         num_run_per_minibatch = num_run_per_minibatch,
     )
+    minim.prepare_batches()
     print('mle_estimation.estimate_hawkes_param_partial: event_type {}: MinimisationProcedure has been initialised'.format(event_index))
     cdef double run_time = -time.time()
     minim.launch_minimisation(parallel=parallel, num_processes = num_processes)
