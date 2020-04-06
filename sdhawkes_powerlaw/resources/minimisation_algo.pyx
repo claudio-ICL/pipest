@@ -160,7 +160,7 @@ class MinimisationProcedure:
         self.best_result = copy.copy(best)
         self.minimiser = np.array(best.get('x_min'), dtype=DTYPEf, copy=True)
         self.minimum = best.get('f_min')
-        self.grad_descent_history = best.get('f')
+        self.grad_descent_history = np.array(best.get('f'), dtype=DTYPEf, copy=True)
 
 def parallel_minimisation(int event_type, int num_event_types, int num_states,
                           DTYPEf_t time_start, DTYPEf_t time_end,
@@ -258,8 +258,8 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
             bid+=1
     cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(x,copy=True, dtype=DTYPEf)
     cdef DTYPEf_t f_min = f
-    result = {'x_min': x,
-              'f_min': f,
+    result = {'x_min': x_min,
+              'f_min': f_min,
               'results_batches': results_batches
              }
 #     print("grad_descent_partial. result:\n{}".format(result))
@@ -306,6 +306,7 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
         return -log_likelihood,-grad_loglikelihood
     cdef int process_id = os.getpid()
     print("Launching descend_along_gradient:\ncomponent_e: {}; process_id: pid{}; minibatch_id: bid{}".format(event_type,process_id,minibatch_id))
+    cdef DTYPEf_t run_time = -time.time()
     assert len(initial_guess)==1+2*num_event_types*num_states
     assert learning_rate>0.0
     assert learning_rate<1.0
@@ -393,6 +394,7 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
             attempt_num+=1
             minimisation_conclusive = True
             print("descend_along_gradient pid{} bid{}: Minimisation conclusive after {} attempts".format(process_id, minibatch_id, attempt_num))   
+    run_time+=time.time()
     res={
         'pid': process_id,
         'bid': minibatch_id,
@@ -401,6 +403,7 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
         'grad_min': grad_min,
         'f': f,
         'steps':n+1,
+        'run_time': run_time,
         'conclusive': minimisation_conclusive
     }
 #     print("f_min at end: {}".format(f_min))
