@@ -81,7 +81,7 @@ def main():
         store_results=True, report_full_volumes=False)
     time_end=float(times[-1])
 
-    sd_model.create_goodness_of_fit(type_of_input='simulated')
+    sd_model.create_goodness_of_fit(type_of_input='simulated', parallel=False)
     sd_model.goodness_of_fit.ks_test_on_residuals()
     sd_model.goodness_of_fit.ad_test_on_residuals()
     
@@ -98,18 +98,25 @@ def main():
             1.0 + np.random.lognormal(size=(1+2*sd_model.number_of_event_types*sd_model.number_of_states,))
         )
     MinimProc = minim_algo.MinimisationProcedure(
-        sd_model.labelled_times, sd_model.count, time_start, time_end,
+        times, events, states, time_start, time_end,
         sd_model.number_of_event_types,sd_model.number_of_states,
         event_type,
         list_init_guesses = list_init_guesses,
         learning_rate = 0.0001,
         maxiter = 6,
         tol = 1.0e-7,
+        number_of_attempts = 2,
+        batch_size = 2000,
+        num_run_per_minibatch = 2,
     )
+#     MinimProc.prepare_batches_fake()
+    MinimProc.prepare_batches()
     run_time = -time.time()
-    MinimProc.launch_minimisation(parallel=True, num_processes = 8)
+    MinimProc.launch_minimisation(parallel=False, num_processes = 8)
     run_time+=time.time()
     print("Minimisation terminates. run_time = {}".format(run_time))
+    time.sleep(2)
+    print("Now exiting")
 
 
     

@@ -850,7 +850,7 @@ def extract_arrival_times_of_event(int event_index,
                                    double time_start
                                   ):
     cdef int e1, x, i
-    cdef np.ndarray[DTYPEf_t, ndim = 2] labelled_times_of_event = labelled_times[event_index,:,:]
+    cdef np.ndarray[DTYPEf_t, ndim = 2] labelled_times_of_event = np.array(labelled_times[event_index,:,:], copy=True)
     cdef double [:,:] times_memview = labelled_times_of_event
     cdef long [:,:] count_memview = count
     cdef np.ndarray[DTYPEf_t, ndim=1] tt = np.zeros(num_states*len_labelled_times,dtype=DTYPEf)

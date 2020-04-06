@@ -673,6 +673,8 @@ class SDHawkes:
                                 parallel=True,
                                 int number_of_attempts = 2,
                                 int num_processes = 0,
+                                int batch_size = 5000,
+                                int num_run_per_minibatch = 1,  
                                 skip_mle_estim=False,
 #                                 skip_estim_of_state_processes=False,
                                 dump_after_calibration=False,
@@ -728,6 +730,8 @@ class SDHawkes:
                 pre_estim_parallel=parallel,
                 number_of_attempts = number_of_attempts,
                 num_processes = num_processes,
+                batch_size = batch_size,
+                num_run_per_minibatch = num_run_per_minibatch,
             )
             self.mle_estim.launch_estimation_of_hawkes_param(partial=partial, e=e)
             self.calibration.store_mle_info(self.mle_estim.results_of_estimation)

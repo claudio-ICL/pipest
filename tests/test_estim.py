@@ -63,6 +63,34 @@ import prepare_from_lobster as from_lobster
 import nonparam_estimation as nonparam_estim
 
 
+
+#parameters of model
+n_states=[3,5]
+number_of_event_types = 4 
+n_events = number_of_event_types  # number of event types, $d_e$
+n_levels = 2
+upto_level = 2
+time_start = 0.0
+time_end = time_start + 1.0*60*60
+#Optional parameters for "estimate"
+max_imp_coef = 25.0
+learning_rate = 0.0001
+maxiter = 15
+num_guesses = 4
+num_processes = 10
+batch_size = 3000
+num_run_per_minibatch = 2
+parallel=False
+type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
+#Optional parameters for "nonparam_estim"
+num_quadpnts = 40
+quad_tmax = 1.0
+quad_tmin = 1.0e-1
+num_gridpnts = 50
+grid_tmax = 1.1
+grid_tmin = 1.5e-1
+
+
 def redirect_stdout(direction= 'from', # or 'to'
                     message= '',
                     path='',
@@ -86,12 +114,8 @@ def redirect_stdout(direction= 'from', # or 'to'
 
         
 def main(model_name= ''):    
-    n_states=[3,5]
-    n_events = 4  # number of event types, $d_e$
-    n_levels = 2
-    upto_level = 2
-    time_start=np.random.uniform()
-    time_end=time_start+1.0*60*60
+    global time_start
+    global time_end
     model = sd_hawkes_model.SDHawkes(
         number_of_event_types=n_events,
         number_of_lob_levels=n_levels,
@@ -110,7 +134,7 @@ def main(model_name= ''):
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-    max_number_of_events = np.random.randint(low=12050, high=15000)
+    max_number_of_events = np.random.randint(low=7050, high=9000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -119,51 +143,53 @@ def main(model_name= ''):
     model.create_goodness_of_fit(type_of_input='simulated', parallel=False)
     model.goodness_of_fit.ks_test_on_residuals()
     model.goodness_of_fit.ad_test_on_residuals()
-
-    print("\nNON-PARAMETRIC ESTIMATION\n")
-    upperbound_of_support_of_kernel=1.0e+00
-    lowerbound_of_support_of_kernel=1.0e-01
-    num_quadpnts = 100
-    num_gridpnts= 90
-    run_time = -time.time()
-    model.create_nonparam_estim(type_of_input='simulated',
-                                num_quadpnts = num_quadpnts,
-                                quad_tmax = upperbound_of_support_of_kernel,
-                                quad_tmin = lowerbound_of_support_of_kernel,
-                                num_gridpnts = num_gridpnts,
-                                grid_tmax = upperbound_of_support_of_kernel,
-                                grid_tmin = lowerbound_of_support_of_kernel,
-                                two_scales=True,
-                                tol=1.0e-6
-                               )
-    model.nonparam_estim.estimate_hawkes_kernel(store_L1_norm=False,
-                               use_filter=True, enforce_positive_g_hat=True,
-                               filter_cutoff=20.0, filter_scale=30.0, num_addpnts_filter=3000,
-                               parallel=False, parallel_prep=True
-                               )
-    model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-01, tol=1.0e-7)
-    model.nonparam_estim.store_base_rates()
-    run_time+=time.time()
-    model.nonparam_estim.store_runtime(run_time)
-    model.nonparam_estim.create_goodness_of_fit(parallel=False)
+    if type_of_preestim == 'nonparam':
+        print("\nNON-PARAMETRIC ESTIMATION\n")
+        run_time = -time.time()
+        model.create_nonparam_estim(type_of_input='simulated',
+                                    num_quadpnts = num_quadpnts,
+                                    quad_tmax = quad_tmax,
+                                    quad_tmin = quad_tmin,
+                                    num_gridpnts = num_gridpnts,
+                                    grid_tmax = grid_tmax,
+                                    grid_tmin = grid_tmin,
+                                    two_scales=True,
+                                    tol=1.0e-7
+                                   )
+        model.nonparam_estim.estimate_hawkes_kernel(store_L1_norm=False,
+                                   use_filter=True, enforce_positive_g_hat=True,
+                                   filter_cutoff=20.0, filter_scale=30.0, num_addpnts_filter=2000,
+                                   parallel=False, parallel_prep=True
+                                   )
+        model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-01, tol=1.0e-7)
+        model.nonparam_estim.store_base_rates()
+        run_time+=time.time()
+        model.nonparam_estim.store_runtime(run_time)
+        model.nonparam_estim.create_goodness_of_fit(parallel=False)
     
     print("\nMLE ESTIMATION\n")
     "Initialise the class"
     model.create_mle_estim(type_of_input = 'simulated', store_trans_prob = True)
-    "Set the estimation"    
-    list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-        num_additional_random_guesses = 2, max_imp_coef = 50.0)    
+    "Set the estimation"
+    if type_of_preestim == 'nonparam':
+        list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
+            num_additional_random_guesses = 2, max_imp_coef = 50.0)
+    else:
+        list_init_guesses = []
     model.mle_estim.set_estimation_of_hawkes_param(
-        time_start, time_end,
-        list_of_init_guesses = list_init_guesses,
-        learning_rate = 0.00001,
-        maxiter=30,
-        number_of_additional_guesses=4,
-        parallel=False,
-        pre_estim_ord_hawkes=False,
-        pre_estim_parallel=False,
-        number_of_attempts = 4,
-        num_processes = 10
+                time_start, time_end,
+                list_of_init_guesses = list_init_guesses,
+                max_imp_coef = max_imp_coef,
+                learning_rate = learning_rate,
+                maxiter=maxiter,
+                number_of_additional_guesses = num_guesses,
+                parallel=parallel,
+                pre_estim_ord_hawkes=True,
+                pre_estim_parallel=parallel,
+                number_of_attempts = 3,
+                num_processes = num_processes,
+                batch_size = batch_size,
+                num_run_per_minibatch = num_run_per_minibatch,
     )
 #     exit()
     "Launch estimation"
@@ -184,11 +210,12 @@ if __name__=='__main__':
     message="I am executing {}".format(str(sys.argv[0]))
     message+='\ndate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}\n'.format(now.year,now.month,now.day,now.hour,now.minute)
     fout, saveout = redirect_stdout(direction='from', message=message, path=this_test_readout)
-    
+#     print(message)
     main(model_name = this_test_model_name)
     
     now=datetime.datetime.now()
     message="\nTest terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}".format(
         now.year,now.month,now.day,now.hour,now.minute)
     message+="\nEND OF TEST"
+#     print(message)
     redirect_stdout(direction='to',message=message,fout=fout,saveout=saveout)
