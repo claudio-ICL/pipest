@@ -49,9 +49,9 @@ learning_rate = 0.0001
 maxiter = 15
 num_guesses = 4
 num_processes = 10
-batch_size = 3000
+batch_size = 4000
 num_run_per_minibatch = 2
-parallel=False
+parallel=True
 type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 60
@@ -60,9 +60,6 @@ quad_tmin = 1.0e-1
 num_gridpnts = 80
 grid_tmax = 1.1
 grid_tmin = 1.5e-1
-
-
-
 
 def redirect_stdout(direction= 'from', # 'from' or 'to'
                     message= '',
@@ -84,9 +81,6 @@ def redirect_stdout(direction= 'from', # 'from' or 'to'
     else:
         print("WARNINNG: redirect_stdout failed! direction={} not recognised".format(direction))
         print(message)
-        
-
-
 
 def instantiate_and_simulate():
     path_readout=path_saved_tests+'/'+this_test_model_name+'_simulation_readout.txt'
@@ -114,7 +108,7 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=5500, high=6050)
+    max_number_of_events = np.random.randint(low=7800, high=8050)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -239,14 +233,10 @@ def merge_from_partial():
     .format(now.year,now.month,now.day,now.hour,now.minute)
     redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout)
         
-
-    
-
-
 def main():  
     global action
     action=str(sys.argv[1])
-    print("\n\n$python {} {}".format(sys.argv[0],action))
+    print("\n$python {} {}".format(sys.argv[0],action))
     global this_test_model_name     
     if action=='s' or action=='simulate':
         now = datetime.datetime.now()
@@ -272,10 +262,7 @@ def main():
         else:
             print("action: {}".format(action))
             raise ValueError("action not recognised")
-    print("{}: main() end of file\n\n".format(str(sys.argv[0])))    
-        
-        
-        
+    print("{}: main() end of file\n\n".format(str(sys.argv[0])))     
 
         
         

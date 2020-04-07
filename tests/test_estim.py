@@ -75,13 +75,13 @@ time_end = time_start + 1.0*60*60
 #Optional parameters for "estimate"
 max_imp_coef = 25.0
 learning_rate = 0.0001
-maxiter = 15
+maxiter = 10
 num_guesses = 4
 num_processes = 10
 batch_size = 3000
 num_run_per_minibatch = 2
-parallel=False
-type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
+parallel=True
+type_of_preestim = 'ordinary_hawkes' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 40
 quad_tmax = 1.0
@@ -134,7 +134,7 @@ def main(model_name= ''):
     model.set_transition_probabilities(phis)
 
     print("\nSIMULATION\n")
-    max_number_of_events = np.random.randint(low=7050, high=9000)
+    max_number_of_events = np.random.randint(low=5850, high=6000)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -193,7 +193,7 @@ def main(model_name= ''):
     )
 #     exit()
     "Launch estimation"
-    model.mle_estim.launch_estimation_of_hawkes_param(partial=False)
+    model.mle_estim.launch_estimation_of_hawkes_param(partial=True)
     model.mle_estim.store_hawkes_parameters()
     model.mle_estim.create_goodness_of_fit(parallel=False)
     model.dump(path=path_saved_tests) 
