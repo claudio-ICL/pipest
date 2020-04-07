@@ -1,7 +1,7 @@
 #cython: boundscheck=False, wraparound=False, nonecheck=False
 from cython.parallel import prange
 """
-This version of the resource "computation.pyx" does not utilise prange in those functions relevant for the mle estimation. The only point where prange is used is in the function "compute_ESSE_partial", which is deployed in particular in the computation of the intensities during simulation of the point process. This should not interfere with the Multiprocessing.Pool procedure utilised in mle_estimation.pyx. (Tests are required to support this claim). 
+This version of the resource "computation.pyx" does not utilise prange in those functions relevant for the mle estimation. The only point where prange is used is in the function "compute_ESSE_partial", which is deployed in particular in the computation of the intensities during simulation of the point process. This should not interfere with the Multiprocessing.Pool procedure utilised in mle_estimation.pyx.
 
 """
 

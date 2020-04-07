@@ -46,9 +46,9 @@ time_end = time_start + 1.0*60*60
 #Optional parameters for "estimate"
 max_imp_coef = 25.0
 learning_rate = 0.0001
-maxiter = 15
+maxiter = 20
 num_guesses = 4
-num_processes = 10
+num_processes = 20
 batch_size = 4000
 num_run_per_minibatch = 2
 parallel=True
@@ -96,7 +96,7 @@ def instantiate_and_simulate():
         name_of_model=this_test_model_name)
     tot_n_states=model.state_enc.tot_n_states
     phis = model.state_enc.generate_random_transition_prob(n_events=n_events).astype(np.float)
-    nus = 0.1*np.random.randint(low=15,high=20,size=n_events)
+    nus = 0.1*np.random.randint(low=15,high=20,size=n_events).astype(np.float)
     alphas = np.power(10,-np.random.uniform(low=1.0, high=1.2))*np.random.randint(low=0,high=4,size=(n_events, tot_n_states, n_events)).astype(np.float)
     betas = np.random.uniform(1.25025,2.1,size=(n_events, tot_n_states, n_events)).astype(np.float)
     gammas = np.random.uniform(low=1.25, high = 5.6,size=(tot_n_states,2*n_levels))
@@ -108,13 +108,13 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=7800, high=8050)
+    max_number_of_events = np.random.randint(low=19900, high=20050)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
         store_results=True, report_full_volumes=False)
     time_end=float(times[-1])
-    model.create_goodness_of_fit(type_of_input='simulated', parallel=False)
+    model.create_goodness_of_fit(type_of_input='simulated', parallel=True)
     model.goodness_of_fit.ks_test_on_residuals()
     model.goodness_of_fit.ad_test_on_residuals()
     model.dump(path=path_saved_tests)
@@ -152,7 +152,7 @@ def nonparam_preestim():
     model.nonparam_estim.store_base_rates()
     run_time+=time.time()
     model.nonparam_estim.store_runtime(run_time)
-    model.nonparam_estim.create_goodness_of_fit(parallel=False)
+    model.nonparam_estim.create_goodness_of_fit(parallel=True)
     model.dump(path=path_saved_tests)
     now=datetime.datetime.now()
     message='\nNon-parametric pre-estimation terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
@@ -173,10 +173,10 @@ def estimate():
             print("No PBS_ARRAY_INDEX was found; 'switch' set to 'True'")
             switch = True
         if switch:
-            model.set_name_of_model(this_test_model_name+"_partial{}".format(event_type))
-            path_readout=path_saved_tests+'/'+this_test_model_name+'_mle_readout_partial{}.txt'.format(event_type)
+            model.set_name_of_model(type_of_paral+this_test_model_name+'_partial{}'.format(event_type))
+            path_readout=path_saved_tests+'/'+type_of_paral+this_test_model_name+'_mle_readout_partial{}.txt'.format(event_type)
             now=datetime.datetime.now()
-            message="I am executing {} --mle_estimation".format(sys.argv[0])
+            message="I am executing {} --mle_estimation --{}".format(sys.argv[0], type_of_paral)
             message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
             fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
             "Initialise the class"
@@ -184,7 +184,7 @@ def estimate():
             "Set the estimation"    
             if type_of_preestim == 'nonparam':
                 list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
-                    num_additional_random_guesses = 2, max_imp_coef=max_imp_coef) 
+                    num_additional_random_guesses = max(1,num_guesses//2), max_imp_coef=max_imp_coef) 
             else:
                 list_init_guesses = []
             model.mle_estim.set_estimation_of_hawkes_param(
@@ -204,23 +204,24 @@ def estimate():
             )
             "Launch estimation"
             model.mle_estim.launch_estimation_of_hawkes_param(e=event_type)
-            model.dump(name=this_test_model_name+'_partial{}'.format(event_type), path=path_saved_tests) 
+            model.dump(path=path_saved_tests) 
             now=datetime.datetime.now()
             message='\nEstimation of component_e {} terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
             .format(event_type, now.year, now.month, now.day, now.hour, now.minute)
             redirect_stdout(direction='to',message=message, fout=fout, saveout=saveout)
             
 def merge_from_partial():
-    path_readout=path_saved_tests+'/'+this_test_model_name+'_merge_readout.txt'
+    path_readout=path_saved_tests+'/'+type_of_paral+this_test_model_name+'_merge_readout.txt'
     now=datetime.datetime.now()
     message="I am executing {} --merge".format(sys.argv[0])
     message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
     fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)    
-    list_of_partial_names=[this_test_model_name+'_partial{}'.format(e) for e in range(number_of_event_types)]
+    list_of_partial_names=[type_of_paral+this_test_model_name+'partial_{}'.format(e) for e in range(number_of_event_types)]
     partial_models=[]
     with open(path_saved_tests+'/'+this_test_model_name,'rb') as source:
         print("I am loading "+path_saved_tests+'/'+this_test_model_name)
-        model=pickle.load(source)    
+        model=pickle.load(source)
+    model.set_name_of_model(type_of_paral+this_test_model_name)    
     for mn in list_of_partial_names:
         with open(path_saved_tests+'/'+mn,'rb') as source:
             partial_model=pickle.load(source)
@@ -240,7 +241,7 @@ def main():
     global this_test_model_name     
     if action=='s' or action=='simulate':
         now = datetime.datetime.now()
-        this_test_model_name = 'test_estim_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
+        this_test_model_name = 'performance_test_{}-{:02d}-{:02d}_{:02d}{:02d}'\
         .format(now.year,now.month,now.day,now.hour,now.minute)
         instantiate_and_simulate()
         with open(path_saved_tests+'/name_test_estim_', 'wb') as outfile:
@@ -249,6 +250,8 @@ def main():
         with open(path_saved_tests+'/name_test_estim_', 'rb') as source:
             this_test_model_name = pickle.load(source)
         print("this_test_model_name: {}".format(this_test_model_name))
+        global type_of_paral
+        type_of_paral = str(sys.argv[2])
         if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
             if type_of_preestim == 'nonparam':
                 nonparam_preestim()
@@ -258,7 +261,7 @@ def main():
             estimate()
         elif action=='m' or action=='merge':
             merge_from_partial()
-            os.remove(path_saved_tests+'/name_test_estim_')
+            #os.remove(path_saved_tests+'/name_test_estim_')
         else:
             print("action: {}".format(action))
             raise ValueError("action not recognised")
