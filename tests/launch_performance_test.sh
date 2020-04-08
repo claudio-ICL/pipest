@@ -1,6 +1,6 @@
 #!/bin/bash
-#a="e"
-p="pool_"
+a="e"
+p="prange_"
 jobid_e=$(qsub -l walltime=08:00:00 -l select=1:ncpus=6:mem=30gb -N "perf_test-e" -J 0-3 -v "a=$a, p=$p" wrapper_submission_performance-test.sh)
 echo "submission of 'mle_estimation' with jobid: $jobid_e"
 a="m"

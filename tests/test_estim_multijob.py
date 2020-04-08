@@ -51,7 +51,7 @@ num_guesses = 4
 num_processes = 20
 batch_size = 4000
 num_run_per_minibatch = 2
-parallel=True
+parallel=False
 type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 60
@@ -216,7 +216,7 @@ def merge_from_partial():
     message="I am executing {} --merge".format(sys.argv[0])
     message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
     fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)    
-    list_of_partial_names=[type_of_paral+this_test_model_name+'partial_{}'.format(e) for e in range(number_of_event_types)]
+    list_of_partial_names=[type_of_paral+this_test_model_name+'_partial{}'.format(e) for e in range(number_of_event_types)]
     partial_models=[]
     with open(path_saved_tests+'/'+this_test_model_name,'rb') as source:
         print("I am loading "+path_saved_tests+'/'+this_test_model_name)
@@ -228,7 +228,7 @@ def merge_from_partial():
             partial_models.append(partial_model)
     model.initialise_from_partial(partial_models,
                                   dump_after_merging=True,
-                                  name_of_model=this_test_model_name, path=path_saved_tests)  
+                                  path=path_saved_tests)  
     now=datetime.datetime.now()
     message='\nMerging has been completed  on {}-{:02d}-{:02d} at {:02d}:{:02d}\n'\
     .format(now.year,now.month,now.day,now.hour,now.minute)
