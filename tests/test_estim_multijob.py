@@ -55,7 +55,7 @@ parallel=False
 use_prange = True
 type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
-num_quadpnts = 60
+num_quadpnts = 85
 quad_tmax = 1.0
 quad_tmin = 1.0e-1
 num_gridpnts = 80
@@ -109,7 +109,7 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=4000, high=5000)
+    max_number_of_events = np.random.randint(low=19900, high=20010)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -255,6 +255,20 @@ def main():
         global type_of_paral
         try:
             type_of_paral = str(sys.argv[2])
+            global parallel
+            global use_prange
+            if type_of_paral =="pool_" or type_of_paral =="pool":
+                parallel = True
+                use_prange = False
+            elif type_of_paral =="prange_" or type_of_paral =="prange":
+                parallel = False
+                use_prange = True
+            elif type_of_paral =="plain_" or type_of_paral =="plain":
+                parallel = False
+                use_prange = False
+            else:
+                print("type_of_paral: {}".format(type_of_paral))
+                raise ValueError("type_of_paral not recognised")
         except:
             if parallel:
                 type_of_paral = "pool_"

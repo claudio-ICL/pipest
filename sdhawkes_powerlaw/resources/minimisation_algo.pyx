@@ -83,7 +83,7 @@ class MinimisationProcedure:
         self.set_max_base_rate = set_max_base_rate
         cdef DTYPEf_t max_base_rate = 1.0
         if set_max_base_rate:
-            t0=times[0]
+            t0=float(times[0])
             idx_e = (events==event_type)
             num_e = np.sum(idx_e)
             max_base_rate = max(10*tol,np.mean(np.arange(1,1+num_e)/np.maximum(tol,times[idx_e]-t0)))
