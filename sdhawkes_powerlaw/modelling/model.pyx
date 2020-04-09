@@ -568,7 +568,7 @@ class SDHawkes:
                                 dump_after_merging=True, str name_of_model='', str path = '',
                                 type_of_input = 'simulated', parallel = False):
         """
-        It is assumed that all part models have been calibrated on the same sample.
+        It is assumed that all part models have been estimated on the same sample.
         """
         cdef int e=0, event_type=0
         cdef list list_of_mle_results = []
@@ -671,6 +671,7 @@ class SDHawkes:
                                 int maxiter = 50,
                                 int num_of_random_guesses=0,
                                 parallel=True,
+                                use_prange=False,
                                 int number_of_attempts = 2,
                                 int num_processes = 0,
                                 int batch_size = 5000,
@@ -728,6 +729,7 @@ class SDHawkes:
                 parallel=parallel,
                 pre_estim_ord_hawkes=pre_estim_ord_hawkes,
                 pre_estim_parallel=parallel,
+                use_prange = use_prange,
                 number_of_attempts = number_of_attempts,
                 num_processes = num_processes,
                 batch_size = batch_size,

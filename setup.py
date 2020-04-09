@@ -11,7 +11,8 @@ path_resources=path_sdhawkes+'/resources'
 path_modelling=path_sdhawkes+'/modelling'
 path_lobster=path_pipest+'/lobster_for_sdhawkes'
 path_lobster_pyscripts=path_lobster+'/py_scripts'
-
+path_tests = path_pipest+'/tests'
+path_perfmeas = path_tests+'/performance_measurements'
 
 from distutils.core import setup
 from distutils.extension import Extension
@@ -195,3 +196,23 @@ setup(name="prepare_from_lobster",
       ext_modules = ext_modules,
       include_dirs=[numpy.get_include()]
       )
+
+#Setup performance_measurements
+os.chdir(path_perfmeas+'/')
+cwd=os.getcwd()
+print('\n\nI am performing setup of performance_measurements.\nCurrent working directory is '+cwd+'\n')
+ext_modules = [
+        Extension(
+            "measure_exectime",
+            sources=["measure_exectime.pyx"],
+            libraries=["m"],
+            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_link_args=['-fopenmp']
+            )
+]
+
+setup(
+  name = "measure_exectime",
+  cmdclass={"build_ext":build_ext},
+  ext_modules = ext_modules,
+  include_dirs=[numpy.get_include()])

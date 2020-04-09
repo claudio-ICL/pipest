@@ -358,7 +358,7 @@ def simulate(int number_of_event_types,
     cdef np.ndarray[DTYPEf_t, ndim=1] intensities = np.ones(number_of_event_types, dtype=DTYPEf)
     cdef DTYPEf_t intensity_overall = 0.0
     if initialise_intensity_on_history:
-        intensities=computation.compute_intensities_given_lt(
+        intensities=computation.fast_compute_intensities_given_lt(
             time_start,labelled_times, count,
             base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
             number_of_event_types, number_of_states,
@@ -399,7 +399,7 @@ def simulate(int number_of_event_types,
         if time <= time_end:  # if we are not out of the considered time window
             
             'Update the intensities of events and compute the total intensity'
-            intensities=computation.compute_intensities_given_lt(
+            intensities=computation.fast_compute_intensities_given_lt(
                 time, labelled_times, count,
                 base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
                 number_of_event_types, number_of_states,           
@@ -639,7 +639,7 @@ def simulate_liquidation(
     cdef np.ndarray[DTYPEf_t, ndim=1] intensities = np.ones(number_of_event_types, dtype=DTYPEf)
     cdef DTYPEf_t intensity_overall = 0.0
     if initialise_intensity_on_history:
-        intensities=computation.compute_intensities_given_lt(
+        intensities=computation.fast_compute_intensities_given_lt(
             time_start, labelled_times, count,
             base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
             number_of_event_types, number_of_states,
@@ -698,13 +698,13 @@ def simulate_liquidation(
             
             'Update the intensities of events and compute the total intensity'
             if is_liquidation_terminated:
-                intensities=computation.compute_intensities_given_lt(
+                intensities=computation.fast_compute_intensities_given_lt(
                     time,labelled_times, count,
                     base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
                     number_of_event_types, number_of_states, first_event_index=1
                 )
             else:
-                intensities=computation.compute_intensities_given_lt(
+                intensities=computation.fast_compute_intensities_given_lt(
                     time, labelled_times, count,
                     base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
                     number_of_event_types, number_of_states, first_event_index=0

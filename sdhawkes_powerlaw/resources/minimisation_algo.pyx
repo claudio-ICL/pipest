@@ -126,8 +126,8 @@ class MinimisationProcedure:
             list_of_batches.append(batch)
         self.list_of_batches = list_of_batches
         print("MinimisationProcedure.list_of_batches ready")
-    def launch_minimisation(self, parallel=False, int num_processes = 0):
-        print('I am launching minimisation. Number of initial guesses={}, parallel={}'.format(len(self.list_init_guesses),parallel))
+    def launch_minimisation(self, use_prange=False, parallel=False, int num_processes = 0):
+        print('I am launching minimisation. Number of initial guesses={}, use_prange={}, parallel={}'.format(len(self.list_init_guesses),use_prange, parallel))
         cdef list results = []
         self.parallel_minimisation = parallel
         if self.set_max_base_rate:
@@ -155,6 +155,7 @@ class MinimisationProcedure:
                                max_base_rate,
                                self.max_imp_coef,
                                self.learning_rate, self.tol, self.maxiter,
+                               use_prange = use_prange,
                                number_of_attempts = self.number_of_attempts,
                                list_of_batches = self.list_of_batches,
                                num_run_per_minibatch =  self.num_run_per_minibatch),
@@ -184,6 +185,7 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
                           list list_of_batches = [], int num_run_per_minibatch = 1,     
                           int num_processes = 0, 
                          ):
+    use_prange = False
     cdef int tot_tasks = len(list_init_guesses)
     if num_processes <= 0:
         num_processes = max(1,min(mp.cpu_count(),tot_tasks))
@@ -215,7 +217,9 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
                            x,
                            max_base_rate,
                            max_imp_coef,
-                           learning_rate, tol, maxiter, number_of_attempts,
+                           learning_rate, tol, maxiter, 
+                           use_prange,
+                           number_of_attempts,
                            list_of_batches, num_run_per_minibatch     
                     ),
                     callback=store_res,
@@ -239,6 +243,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         DTYPEf_t learning_rate = 0.001,
         DTYPEf_t tol = 1.0e-7,
         int maxiter = 100,
+        use_prange = False,                 
         int number_of_attempts = 2,
         list list_of_batches = [],
         int num_run_per_minibatch = 1,                 
@@ -267,6 +272,7 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
                 learning_rate = learning_rate,
                 tol = tol,
                 maxiter = maxiter,
+                use_prange = use_prange,
                 number_of_attempts = number_of_attempts,
                 minibatch_id = bid
             )
@@ -297,6 +303,7 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
         DTYPEf_t learning_rate = 0.001,
         DTYPEf_t tol = 1.0e-7,
         int maxiter = 100,
+        use_prange = False,                   
         int number_of_attempts = 2,                   
         int minibatch_id = 0,                   
 ):
@@ -318,7 +325,9 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
             num_arrival_times,
             len_labelled_times,
             time_start,
-            time_end)
+            time_end,
+            use_prange,
+        )
 #         print("compute_f_and_grad: ready to return")
         return -log_likelihood,-grad_loglikelihood
     cdef int process_id = os.getpid()

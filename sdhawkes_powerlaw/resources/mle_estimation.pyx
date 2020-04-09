@@ -80,8 +80,7 @@ class EstimProcedure:
                 self.store_dirichlet_parameters()
         if store_trans_prob:
             self.store_transition_probabilities()
-        print("EstimProcedure has been successfully initialised")   
-        
+        print("EstimProcedure has been successfully initialised")          
     def store_transition_probabilities(self,verbose=False):
         print('I am storing transition probabilities')
         cdef int v = int(verbose)
@@ -108,6 +107,7 @@ class EstimProcedure:
                                        int number_of_additional_guesses=3,
                                        parallel=False, 
                                        pre_estim_ord_hawkes=False, pre_estim_parallel=False, 
+                                       use_prange = False,
                                        int number_of_attempts = 2, DTYPEf_t tol = 1.0e-07,
                                        int num_processes = 0,
                                        int batch_size = 5000,
@@ -126,6 +126,7 @@ class EstimProcedure:
         self.number_of_additional_guesses=number_of_additional_guesses
         self.parallel, self.pre_estim_ord_hawkes, self.pre_estim_parallel = \
         parallel, pre_estim_ord_hawkes, pre_estim_parallel
+        self.use_prange = use_prange
         self.number_of_attempts = number_of_attempts
         cdef list results_of_estimation = []
         self.results_of_estimation = results_of_estimation
@@ -152,6 +153,7 @@ class EstimProcedure:
                 n_states = self.num_states, #used to reshape the results
                 reshape_to_sd = True,
                 return_as_flat_array = True,
+                use_prange = self.use_prange,
                 number_of_attempts = self.number_of_attempts,
                 num_processes = self.num_processes,
                 batch_size = self.batch_size,
@@ -185,12 +187,12 @@ class EstimProcedure:
             learning_rate=self.learning_rate,
             maxiter = self.maxiter,
             parallel = self.parallel,
+            use_prange = self.use_prange,
             number_of_attempts = self.number_of_attempts,
             tol = self.tol,
             num_processes = self.num_processes,
             batch_size = self.batch_size,
             num_run_per_minibatch = self.num_run_per_minibatch,
-
         )
         print("mle_estimation.EstimProcedure.estimate_hawkes_param_partial. Estimation terminates for event_type {}".format(e))
         self.results_of_estimation.append(res)
@@ -430,6 +432,7 @@ def pre_estimate_ordinary_hawkes(
     int n_states = 15, #used to reshape the results
     reshape_to_sd = False,
     return_as_flat_array = False,
+    use_prange = False,
     int number_of_attempts = 3,
     int num_processes = 0,
     int batch_size = 5000,
@@ -488,7 +491,7 @@ def pre_estimate_ordinary_hawkes(
     minim.prepare_batches()
     print('pre_estimate_ordinary_hawkes: event_index={} -- initialisation completed.'.format(event_index))
     cdef double run_time = -time.time()
-    minim.launch_minimisation(parallel=parallel, num_processes = num_processes)    
+    minim.launch_minimisation(use_prange=use_prange, parallel=parallel, num_processes = num_processes)    
     cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(minim.minimiser, copy=True, dtype=DTYPEf)
     base_rate,imp_coef,dec_coef=computation.array_to_parameters_partial(n_event_types, 1, x_min)
     run_time += time.time()
@@ -524,7 +527,7 @@ def estimate_hawkes_param_partial(
     DTYPEf_t learning_rate = 0.0005,
     int maxiter = 50,
     parallel=False,
-    print_list=False,
+    use_prange = False,
     int number_of_attempts = 3,
     DTYPEf_t tol = 1.0e-7,
     int num_processes = 0,
@@ -533,9 +536,6 @@ def estimate_hawkes_param_partial(
 ):
     assert event_index < n_event_types
     print("I am estimating hawkes parameters for the component e={}".format(event_index))
-    if print_list:
-        print("list_init_guesses:")
-        print(list_init_guesses)
     minim = minim_algo.MinimisationProcedure(
         times, events, states,
         time_start, time_end,
@@ -553,7 +553,7 @@ def estimate_hawkes_param_partial(
     minim.prepare_batches()
     print('mle_estimation.estimate_hawkes_param_partial: event_type {}: MinimisationProcedure has been initialised'.format(event_index))
     cdef double run_time = -time.time()
-    minim.launch_minimisation(parallel=parallel, num_processes = num_processes)
+    minim.launch_minimisation(use_prange, parallel=parallel, num_processes=num_processes)
     run_time+=time.time()
     print('estimate_hawkes_power_partial, event_type={}, run_time = {}'.format(event_index,run_time))
     cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(minim.minimiser,copy=True,dtype=DTYPEf)
@@ -566,4 +566,3 @@ def estimate_hawkes_param_partial(
          'run_time': run_time,
         }
     return res    
-    
