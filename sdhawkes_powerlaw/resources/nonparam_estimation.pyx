@@ -64,10 +64,7 @@ class Filter:
         self.enforce_positivity=enforce_positivity
         self.cutoff=cutoff
         self.scale=scale
-        self.num_addpnts=num_addpnts
-        
-      
-        
+        self.num_addpnts=num_addpnts  
         
 class EstimProcedure:
     def __init__(self, int num_event_types, int num_states,
@@ -452,7 +449,6 @@ class EstimProcedure:
                    )
         run_time+=time.time()
         print("Filtering terminates. run_time={}".format(run_time))
-        
         cdef np.ndarray[DTYPEf_t, ndim=5] filtered_g_hat = np.zeros((d_E,d_S,d_E,Q,Q),dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=5] filtered_g_hat_one = np.zeros((d_E,d_S,d_E,Q,Q),dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=4] filtered_g_hat_at_quadpnts = np.zeros((d_E,d_S,d_E,Q),dtype=DTYPEf)
@@ -545,8 +541,7 @@ class EstimProcedure:
                     filtered_g_hat_at_gridpnts_memview,
                     quadpnts_memview,
                     gridpnts_memview,
-                )
-        print("component_e {}, pid{} terminates.".format(e,process_id))        
+                )        
         return filtered_g_hat, filtered_g_hat_one, filtered_g_hat_at_quadpnts, filtered_g_hat_at_gridpnts        
                 
         

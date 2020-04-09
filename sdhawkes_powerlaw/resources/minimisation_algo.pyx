@@ -53,7 +53,8 @@ class MinimisationProcedure:
                  DTYPEf_t tol = 1.0e-6,
                  int  number_of_attempts = 3,
                  int batch_size = 5000,
-                 int num_run_per_minibatch = 2,     
+                 int num_run_per_minibatch = 2,
+                 set_max_base_rate = True,
                 ):
         print("MinimisationProcedure is being initialised: event_type={}, learning_rate={}, maxiter={}".format(event_type,learning_rate,maxiter))
         assert time_start<=time_end
@@ -79,6 +80,14 @@ class MinimisationProcedure:
         self.number_of_attempts = number_of_attempts
         self.batch_size =  batch_size 
         self.num_run_per_minibatch =  num_run_per_minibatch
+        self.set_max_base_rate = set_max_base_rate
+        cdef DTYPEf_t max_base_rate = 1.0
+        if set_max_base_rate:
+            t0=float(times[0])
+            idx_e = (events==event_type)
+            num_e = np.sum(idx_e)
+            max_base_rate = max(10*tol,np.mean(np.arange(1,1+num_e)/np.maximum(tol,times[idx_e]-t0)))
+            self.max_base_rate = max_base_rate
     def prepare_batches(self):
         cdef list list_of_batches = []
         times=self.times
@@ -117,15 +126,20 @@ class MinimisationProcedure:
             list_of_batches.append(batch)
         self.list_of_batches = list_of_batches
         print("MinimisationProcedure.list_of_batches ready")
-    def launch_minimisation(self, parallel=False, int num_processes = 0):
-        print('I am launching minimisation. Number of initial guesses={}, parallel={}'.format(len(self.list_init_guesses),parallel))
+    def launch_minimisation(self, use_prange=False, parallel=False, int num_processes = 0):
+        print('I am launching minimisation. Number of initial guesses={}, use_prange={}, parallel={}'.format(len(self.list_init_guesses),use_prange, parallel))
         cdef list results = []
         self.parallel_minimisation = parallel
+        if self.set_max_base_rate:
+            max_base_rate = self.max_base_rate
+        else:
+            max_base_rate = 1.0e+03
         if parallel:            
             results = parallel_minimisation(
                 self.event_type, self.num_event_types, self.num_states,
                 self.time_start, self.time_end,
                 self.list_init_guesses,
+                max_base_rate,
                 self.max_imp_coef,
                 self.learning_rate, self.tol, self.maxiter, number_of_attempts = self.number_of_attempts,
                 num_processes = num_processes,
@@ -138,8 +152,10 @@ class MinimisationProcedure:
                                self.event_type, self.num_event_types, self.num_states,
                                self.time_start, self.time_end,
                                x,
+                               max_base_rate,
                                self.max_imp_coef,
                                self.learning_rate, self.tol, self.maxiter,
+                               use_prange = use_prange,
                                number_of_attempts = self.number_of_attempts,
                                list_of_batches = self.list_of_batches,
                                num_run_per_minibatch =  self.num_run_per_minibatch),
@@ -162,12 +178,14 @@ class MinimisationProcedure:
 def parallel_minimisation(int event_type, int num_event_types, int num_states,
                           DTYPEf_t time_start, DTYPEf_t time_end,
                           list list_init_guesses,
+                          DTYPEf_t max_base_rate = 1000.0,
                           DTYPEf_t max_imp_coef = 100.0,
                           DTYPEf_t learning_rate = 0.001, DTYPEf_t tol=1.0e-07,
                           int maxiter=100, int number_of_attempts = 3,
                           list list_of_batches = [], int num_run_per_minibatch = 1,     
                           int num_processes = 0, 
                          ):
+    use_prange = False
     cdef int tot_tasks = len(list_init_guesses)
     if num_processes <= 0:
         num_processes = max(1,min(mp.cpu_count(),tot_tasks))
@@ -197,8 +215,11 @@ def parallel_minimisation(int event_type, int num_event_types, int num_states,
                            event_type, num_event_types, num_states,
                            time_start, time_end,
                            x,
+                           max_base_rate,
                            max_imp_coef,
-                           learning_rate, tol, maxiter, number_of_attempts,
+                           learning_rate, tol, maxiter, 
+                           use_prange,
+                           number_of_attempts,
                            list_of_batches, num_run_per_minibatch     
                     ),
                     callback=store_res,
@@ -217,10 +238,12 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
         DTYPEf_t time_start,
         DTYPEf_t time_end,
         np.ndarray[DTYPEf_t,ndim=1] initial_guess,
+        DTYPEf_t max_base_rate = 100.0,                 
         DTYPEf_t max_imp_coef = 100.0,                 
         DTYPEf_t learning_rate = 0.001,
         DTYPEf_t tol = 1.0e-7,
         int maxiter = 100,
+        use_prange = False,                 
         int number_of_attempts = 2,
         list list_of_batches = [],
         int num_run_per_minibatch = 1,                 
@@ -244,10 +267,12 @@ def grad_descent_partial(int event_type, int num_event_types, int num_states,
                 batch.get("num_at"), batch.get("len_lt"),
                 batch.get("t_0"), batch.get("t_1"),
                 x,
+                max_base_rate = max_base_rate,
                 max_imp_coef = max_imp_coef,
                 learning_rate = learning_rate,
                 tol = tol,
                 maxiter = maxiter,
+                use_prange = use_prange,
                 number_of_attempts = number_of_attempts,
                 minibatch_id = bid
             )
@@ -272,11 +297,13 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
         int len_labelled_times,
         DTYPEf_t time_start,
         DTYPEf_t time_end,
-        np.ndarray [DTYPEf_t,ndim=1] initial_guess,                    
+        np.ndarray [DTYPEf_t,ndim=1] initial_guess,
+        DTYPEf_t max_base_rate = 100.0,                   
         DTYPEf_t max_imp_coef = 100.0,                 
         DTYPEf_t learning_rate = 0.001,
         DTYPEf_t tol = 1.0e-7,
         int maxiter = 100,
+        use_prange = False,                   
         int number_of_attempts = 2,                   
         int minibatch_id = 0,                   
 ):
@@ -298,7 +325,9 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
             num_arrival_times,
             len_labelled_times,
             time_start,
-            time_end)
+            time_end,
+            use_prange,
+        )
 #         print("compute_f_and_grad: ready to return")
         return -log_likelihood,-grad_loglikelihood
     cdef int process_id = os.getpid()
@@ -350,7 +379,7 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
                 if m > 0:
                     learning_rate=max(2*tol,0.9*learning_rate)
                 x_new = x-learning_rate*grad
-                x_new[0] = max(x_new[0], tol)
+                x_new[0] = min(max_base_rate, max(x_new[0], tol))
                 x_new[1:break_point]=np.minimum(max_imp_coef,np.maximum(x_new[1:break_point],tol))
                 x_new[break_point:len(x_new)]=np.maximum(x_new[break_point:len(x_new)],1.0001)
                 f_new, grad_new = compute_f_and_grad(x_new)
@@ -385,6 +414,7 @@ def descend_along_gradient(int event_type, int num_event_types, int num_states,
         if f_min>=f[0]:
             attempt_num+=1
             learning_rate = max(2*tol,learning_rate*rand()/float(RAND_MAX))
+            max_base_rate *= 1.1
             if attempt_num<=number_of_attempts:
                 print('descend_along_gradient pid{} bid{}: attempt_num {}/{} has failed'.format(process_id,minibatch_id,attempt_num,number_of_attempts))
         else:

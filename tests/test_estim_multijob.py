@@ -52,9 +52,10 @@ num_processes = 20
 batch_size = 4000
 num_run_per_minibatch = 2
 parallel=False
+use_prange = True
 type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
-num_quadpnts = 60
+num_quadpnts = 85
 quad_tmax = 1.0
 quad_tmin = 1.0e-1
 num_gridpnts = 80
@@ -108,7 +109,7 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=19900, high=20050)
+    max_number_of_events = np.random.randint(low=19900, high=20010)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -197,6 +198,7 @@ def estimate():
                 parallel=parallel,
                 pre_estim_ord_hawkes=False,
                 pre_estim_parallel=parallel,
+                use_prange = use_prange,
                 number_of_attempts = 3,
                 num_processes = num_processes,
                 batch_size = batch_size,
@@ -239,9 +241,9 @@ def main():
     action=str(sys.argv[1])
     print("\n$python {} {}".format(sys.argv[0],action))
     global this_test_model_name     
-    if action=='s' or action=='simulate':
+    if action=='s' or action=='--simulate':
         now = datetime.datetime.now()
-        this_test_model_name = 'performance_test_{}-{:02d}-{:02d}_{:02d}{:02d}'\
+        this_test_model_name = 'test_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
         .format(now.year,now.month,now.day,now.hour,now.minute)
         instantiate_and_simulate()
         with open(path_saved_tests+'/name_test_estim_', 'wb') as outfile:
@@ -251,7 +253,29 @@ def main():
             this_test_model_name = pickle.load(source)
         print("this_test_model_name: {}".format(this_test_model_name))
         global type_of_paral
-        type_of_paral = str(sys.argv[2])
+        try:
+            type_of_paral = str(sys.argv[2])
+            global parallel
+            global use_prange
+            if type_of_paral =="pool_" or type_of_paral =="pool":
+                parallel = True
+                use_prange = False
+            elif type_of_paral =="prange_" or type_of_paral =="prange":
+                parallel = False
+                use_prange = True
+            elif type_of_paral =="plain_" or type_of_paral =="plain":
+                parallel = False
+                use_prange = False
+            else:
+                print("type_of_paral: {}".format(type_of_paral))
+                raise ValueError("type_of_paral not recognised")
+        except:
+            if parallel:
+                type_of_paral = "pool_"
+            elif use_prange:
+                type_of_paral = "prange_"
+            else:
+                type_of_paral = "plain_"
         if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
             if type_of_preestim == 'nonparam':
                 nonparam_preestim()
