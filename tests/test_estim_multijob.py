@@ -52,7 +52,7 @@ num_processes = 20
 batch_size = 4000
 num_run_per_minibatch = 2
 parallel=False
-use_prange = True
+use_prange = False
 type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 85
@@ -276,6 +276,7 @@ def main():
                 type_of_paral = "prange_"
             else:
                 type_of_paral = "plain_"
+        print("type_of_paral: {}".format(type_of_paral))
         if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
             if type_of_preestim == 'nonparam':
                 nonparam_preestim()
