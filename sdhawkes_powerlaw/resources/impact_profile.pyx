@@ -16,10 +16,11 @@ sys.path.append(path_sdhawkes+'/resources/')
 sys.path.append(path_sdhawkes+'/modelling/')
 sys.path.append(path_lobster_pyscripts+'/')
 
-
 from cython.parallel import prange
+cimport openmp
+openmp.omp_set_num_threads(os.cpu_count())
+print("openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
 import time
-
 import numpy as np
 cimport numpy as np
 import pandas as pd

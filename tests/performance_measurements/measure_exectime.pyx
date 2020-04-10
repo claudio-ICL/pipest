@@ -44,6 +44,7 @@ ctypedef np.int_t DTYPEi_t
 class PerformanceMeasure:
     def __init__(self, model, type_of_input='simulated'):
         print("PerformanceMeasure is being initialised on model.name_of_model={}".format(model.name_of_model))
+        print(os.uname())
         self.model = model
         self.type_of_input = type_of_input
         cdef int d_E = model.number_of_event_types
@@ -67,7 +68,7 @@ class PerformanceMeasure:
             d_E,d_S, self.times, self.events, self.states)
         self.labelled_times = labelled_times
         self.count = count
-    def target_intensities(self, use_fast = False, print_res = False):
+    def target_intensities(self, use_fast = True, print_res = False):
         cdef DTYPEf_t t = np.amax(self.labelled_times)
         cdef np.ndarray[DTYPEf_t, ndim=1] base_rates = self.model.base_rates
         cdef np.ndarray[DTYPEf_t, ndim=3] imp_coef = self.model.impact_coefficients

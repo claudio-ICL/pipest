@@ -1,13 +1,15 @@
 #cython: boundscheck=False, wraparound=False, nonecheck=False
+import os
 from cython.parallel import prange
+cimport openmp
+openmp.omp_set_num_threads(os.cpu_count())
+print("openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
 """
 This version of the resource "computation.pyx" contains functions called by oher resources. Some of these functions have multiple implementations. This was done to test performances, and choose the best possible implementation in different cases.
 """
-
 import numpy as np
 cimport numpy as np
 from scipy.stats import dirichlet as scipy_dirichlet
-
 import bisect
 import copy
 from libc.math cimport pow
@@ -93,7 +95,7 @@ def compute_ESSE_partial(double t, double s,
     cdef double [:,:] ESSE_memview = ESSE
     cdef int e1, x, i
     cdef double eval_time,power_comp
-    for e1 in prange(num_event_types, nogil=True):
+    for e1 in prange(num_event_types, nogil=True,  ):
         for x in range(num_states):
             for i in range(count[e1,x]):
                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
@@ -172,7 +174,7 @@ def fast_compute_intensities_given_lt(
     cdef double [:,:,:] ESSE_memview = ESSE
     cdef int e, e1, x, i
     cdef double eval_time,power_comp 
-    for e in prange(first_event_index, num_event_types, nogil=True):
+    for e in prange(first_event_index, num_event_types, nogil=True,):
         for e1 in range(num_event_types):
             for x in range(num_states):
                 for i in range(count_memview[e1,x]):
@@ -463,7 +465,7 @@ def prange_compute_ESSE_two_partial(double t, double s,
     cdef double  eval_time = 1.0
     cdef double  power_comp = 1.0
     cdef double  log_comp = 0.0
-    for e1 in prange(num_event_types, nogil=True):
+    for e1 in prange(num_event_types, nogil=True,  ):
         for x in range(num_states):
             for i in range(count[e1,x]):
                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
@@ -504,7 +506,7 @@ def prange_compute_ESSE_three_partial(double u, double t, double s,
     cdef int e1, x, i
     cdef double eval_time = 0.0
     cdef double  power_comp = 0.0
-    for e1 in prange(num_event_types, nogil=True):
+    for e1 in prange(num_event_types, nogil=True,  ):
         for x in range(num_states):
             for i in range(count[e1,x]):
                 if ((labelled_times[e1,x,i]>=s) & (labelled_times[e1,x,i]<t)):
@@ -740,7 +742,7 @@ def prange_compute_sum_of_S2(
     cdef double  eval_time = 1.0
     cdef double  power_comp = 1.0
     cdef double  log_comp = 0.0
-    for e1 in prange(num_event_types, nogil=True):
+    for e1 in prange(num_event_types, nogil=True,  ):
         for x in range(num_states):
             for i in range(count[e1,x]):
                 if (labelled_times[e1,x,i]<time_end): #add ESSE_two(T)
@@ -790,7 +792,7 @@ def prange_compute_sum_of_S3(
     cdef int e1, x, i
     cdef double eval_time = 0.0
     cdef double  power_comp = 0.0
-    for e1 in prange(num_event_types, nogil=True):
+    for e1 in prange(num_event_types, nogil=True,  ):
         for x in range(num_states):
             for i in range(count[e1,x]):
                 if (labelled_times[e1,x,i]<time_start): #compute ESSE_three(t_0,t_0) - ESSE_three(t_0,T)
