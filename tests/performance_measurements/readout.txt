@@ -1,0 +1,49 @@
+The following are the readouts of the execution of the python script test_perf.py, used to test the execution times of a function that I wrote. The function name is 'compute_event_loglikelihood_partial_and_gradient_partial' and it is within the class 'computation'. The function can either use 'plain' for-loops, or call 'prange' from the module 'cython.parallel' in order to parallelise the execution.
+As expected, on my laptop with 4 cpus the execution times when using 'prange' are roughly one-fourth of the execution times when using 'plain' for-loops. However, when testing the same program on the hpc cluster, there is no difference between the execution times with 'prange' and those with 'plain'. This suggests that the parallellisation attempted by 'cython.parallel' fails on the hpc cluster and (without any warning) it falls back to serial execution. 
+
+
++++ON MY LAPTOP+++
+
+I am executing test_perf.py --loglikelihood
+Date of run: 2020-04-10 at 11:54
+PerformanceMeasure is being initialised on model.name_of_model=test_model_2020-04-09_1842
+posix.uname_result(sysname='Linux', nodename='claudio-HP-EliteBook-850-G3', release='5.3.0-46-generic', version='#38~18.04.1-Ubuntu SMP Tue Mar 31 04:17:56 UTC 2020', machine='x86_64')
+Number of cpus: 4
+
+Model's key features:
+d_E=4; d_S=15
+Number of simulated LOB events: 19975
+
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'plain' for-loops (no prange):
+[3.622592528999995, 3.589736778999992, 4.293921776000005, 4.073215835999989]
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'prange' in outermost for-loop:
+[1.390963020000001, 1.4464708449999932, 1.623486353000004, 1.5441853049999992]
+
+Summary of measurements:
+{'e=1': {'plain': 3.622592528999995, 'prange': 1.390963020000001}, 'e=2': {'plain': 3.589736778999992, 'prange': 1.4464708449999932}, 'e=3': {'plain': 4.293921776000005, 'prange': 1.623486353000004}, 'e=4': {'plain': 4.073215835999989, 'prange': 1.5441853049999992}}
+
+measure_loglikelihood() terminates on 2020-04-10 at 11:55
+
+
++++ON HPC CLUSTER+++
+
+I am executing test_perf.py --loglikelihood
+Date of run: 2020-04-10 at 11:50
+PerformanceMeasure is being initialised on model.name_of_model=test_model_2020-04-09_1842
+posix.uname_result(sysname='Linux', nodename='cx3-1-12.cx3.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+Number of cpus: 256
+
+Model's key features:
+d_E=4; d_S=15
+Number of simulated LOB events: 19975
+
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'plain' for-loops (no prange):
+[3.1187025397084653, 2.9472896372899413, 3.6055423952639103, 3.4378843577578664]
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'prange' in outermost for-loop:
+[3.0693066851235926, 3.0728776920586824, 3.638480991125107, 3.466395647265017]
+
+Summary of measurements:
+{'e=1': {'plain': 3.1187025397084653, 'prange': 3.0693066851235926}, 'e=2': {'plain': 2.9472896372899413, 'prange': 3.0728776920586824}, 'e=3': {'plain': 3.6055423952639103, 'prange': 3.638480991125107}, 'e=4': {'plain': 3.4378843577578664, 'prange': 3.466395647265017}}
+
+measure_loglikelihood() terminates on 2020-04-10 at 11:55
+

@@ -20,3 +20,7 @@ tests/saved_tests/*
 calibration/calibr_main-?.?1*
 cython_setup.?1*
 lobster_for_sdhawkes/read_lobsterdata.?1*
+tests/performance_measurements/build/
+tests/performance_measurements/*.so
+sdhawkes_powerlaw/test_notebook.ipynb
+tests/explore_saved_test_estim.ipynb
