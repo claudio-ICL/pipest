@@ -44,6 +44,7 @@ ctypedef np.int_t DTYPEi_t
 class PerformanceMeasure:
     def __init__(self, model, type_of_input='simulated'):
         print("PerformanceMeasure is being initialised on model.name_of_model={}".format(model.name_of_model))
+        print(os.uname())
         self.model = model
         self.type_of_input = type_of_input
         cdef int d_E = model.number_of_event_types

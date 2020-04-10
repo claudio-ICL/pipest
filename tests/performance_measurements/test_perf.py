@@ -46,6 +46,8 @@ n_levels = 2
 upto_level = 2
 time_start = 0.0
 time_end = time_start + 1.0*60*60
+#parameters of measurement
+num_meas = 5
 
 def redirect_stdout(direction= 'from', # 'from' or 'to'
                     message= '',
@@ -109,61 +111,51 @@ def instantiate_and_simulate():
     message='\nSimulation terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}\n'\
     .format(now.year, now.month, now.day, now.hour, now.minute)
     redirect_stdout(direction="to", message=message, fout=fout, saveout=saveout) 
-
-def measure_ESSE(timeit_number = 100):
-    timeit_number = max(1,int(timeit_number)) 
-    path_readout=path_perf+'/'+this_test_model_name+'_ESSE_readout.txt'
-    now=datetime.datetime.now()
-    message="I am executing {} --ESSE".format(sys.argv[0])
-    message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-#     fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
-    print(message)
-    with open(path_saved_tests+'/'+this_test_model_name, 'rb') as source:
-        model = pickle.load(source)
-    global meas    
-    meas = measure_exectime.PerformanceMeasure(model)
-    exectimes_prange = []
-    exectimes_plain = []
-    for e in range(model.number_of_event_types):
-        exectime_prange = timeit.timeit('meas.target_ESSE({})'.format(e), globals=globals(), number = timeit_number)
-        exectimes_prange.append(exectime_prange)
-        exectime_plain = timeit.timeit('meas.target_plain_ESSE({})'.format(e), globals=globals(), number = timeit_number)
-        exectimes_plain.append(exectime_plain)
-    print("exectimes_plain (no prange):\n{}".format(exectimes_plain))    
-    print("exectimes_prange:\n{}".format(exectimes_prange))
-    now=datetime.datetime.now()
-    message='\nmeasure_ESSE() terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}\n'\
-    .format(now.year, now.month, now.day, now.hour, now.minute)
-    print(message)
-#     redirect_stdout(direction="to", message=message, fout=fout, saveout=saveout)    
+  
     
-def measure_loglikelihood(timeit_number = 20):
-    path_readout=path_perf+'/'+this_test_model_name+'_loglikelihood_readout.txt'
+def measure_loglikelihood(num_meas = 5, first_event_index = 1):
+    nodename=os.uname().nodename
+    path_readout=path_perf+'/'+nodename+'_loglikelihood_readout_'+date_time+'.txt'
     now=datetime.datetime.now()
     message="I am executing {} --loglikelihood".format(sys.argv[0])
     message+="\nDate of run: {}-{:02d}-{:02d} at {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-#     fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
-    print(message)
-    with open(path_saved_tests+'/'+this_test_model_name, 'rb') as source:
-        model = pickle.load(source)
+    fout,saveout=redirect_stdout(direction="from", message=message, path=path_readout)
+#     print(message)
+    try:
+        with open(path_saved_tests+'/'+this_test_model_name, 'rb') as source:
+            model = pickle.load(source)
+    except:
+        with open(path_saved_tests+'/performance-test_'+date_time+'/'+this_test_model_name, 'rb') as source:
+            model = pickle.load(source)
     global meas    
     meas = measure_exectime.PerformanceMeasure(model)
+    print("Number of cpus: {}".format(os.cpu_count()))
+    print("\nModel's key features:")
+    print("d_E={}; d_S={}".format(meas.model.number_of_event_types, meas.model.number_of_states))
+    print("Number of simulated LOB events: {}\n".format(len(meas.model.simulated_events)))
+    measurement = {}
     exectimes_prange = []
     exectimes_plain = []
     for e in range(model.number_of_event_types):
-        exectime_plain = timeit.timeit("meas.target_loglikelihood({},False)".format(e),
-                                       globals = globals(), number = timeit_number)
+        exectime_plain = min(
+            timeit.repeat("meas.target_loglikelihood({},use_prange=False)".format(e),
+            globals = globals(), number = 1, repeat = num_meas)
+        )
         exectimes_plain.append(exectime_plain)
-        exectime_prange = timeit.timeit("meas.target_loglikelihood({},True)".format(e),
-                                        globals=globals(), number = timeit_number)
+        exectime_prange = min(
+            timeit.repeat("meas.target_loglikelihood({},use_prange=True)".format(e),
+            globals=globals(), number = 1, repeat = num_meas)
+        )
         exectimes_prange.append(exectime_prange)
-    print("exectimes_plain (no prange):\n{}".format(exectimes_plain))    
-    print("exectimes_prange:\n{}".format(exectimes_prange))
+        measurement.update({'e={}'.format(e+first_event_index): {'plain':exectime_plain, 'prange':exectime_prange}})
+    print("Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'plain' for-loops (no prange):\n{}".format(exectimes_plain))    
+    print("Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'prange' in outermost for-loop:\n{}".format(exectimes_prange))
+    print("\nSummary of measurements:\n{}".format(measurement))
     now=datetime.datetime.now()
     message='\nmeasure_loglikelihood() terminates on {}-{:02d}-{:02d} at {:02d}:{:02d}\n'\
     .format(now.year, now.month, now.day, now.hour, now.minute)
-    print(message)
-#     redirect_stdout(direction="to", message=message, fout=fout, saveout=saveout)     
+#     print(message)
+    redirect_stdout(direction="to", message=message, fout=fout, saveout=saveout)     
     
 def main():  
     global action
@@ -178,13 +170,19 @@ def main():
         with open(path_saved_tests+'/name_test_perf_', 'wb') as outfile:
             pickle.dump(this_test_model_name, outfile)
     else:
-        with open(path_saved_tests+'/name_test_perf_', 'rb') as source:
+        with open(path_saved_tests+'/name_test_estim_', 'rb') as source:
             this_test_model_name = pickle.load(source)
+        global date_time
+        date_time = this_test_model_name[-15:]
         print("this_test_model_name: {}".format(this_test_model_name))
+        print("date_time: {}".format(date_time))
         if action == '--loglikelihood':
-            measure_loglikelihood()
-        elif action=='--ESSE':
-            measure_ESSE()
+            global num_meas
+            try:
+                num_meas = int(sys.argv[2])
+            except:
+                pass
+            measure_loglikelihood(num_meas=num_meas)
         else:
             print("action: {}".format(action))
             raise ValueError("action not recognised")
