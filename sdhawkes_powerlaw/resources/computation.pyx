@@ -2,6 +2,13 @@
 import os
 from cython.parallel import prange
 cimport openmp
+<<<<<<< HEAD
+openmp.omp_set_num_threads(os.cpu_count())
+print("openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
+"""
+This version of the resource "computation.pyx" contains functions called by oher resources. Some of these functions have multiple implementations. This was done to test performances, and choose the best possible implementation in different cases.
+"""
+=======
 print("Before manual setting: openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
 openmp.omp_set_num_threads(os.cpu_count())
 print("After manual setting: openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
@@ -11,10 +18,10 @@ This version of the resource "computation.pyx" contains functions called by oher
 """
 
 
+>>>>>>> b6951bd51e9ec92a8b7c8ee9c2f12bd1f700a263
 import numpy as np
 cimport numpy as np
 from scipy.stats import dirichlet as scipy_dirichlet
-
 import bisect
 import copy
 from libc.math cimport pow
