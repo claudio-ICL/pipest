@@ -46,11 +46,11 @@ time_end = time_start + 1.0*60*60
 #Optional parameters for "estimate"
 max_imp_coef = 25.0
 learning_rate = 0.0001
-maxiter = 20
-num_guesses = 4
+maxiter = 120
+num_guesses = 6
 num_processes = 20
 batch_size = 4000
-num_run_per_minibatch = 2
+num_run_per_minibatch = 4
 parallel=False
 use_prange = False
 type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'

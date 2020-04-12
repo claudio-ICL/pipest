@@ -2,23 +2,11 @@
 import os
 from cython.parallel import prange
 cimport openmp
-<<<<<<< HEAD
-openmp.omp_set_num_threads(os.cpu_count())
+openmp.omp_set_num_threads(min(16,os.cpu_count()))
 print("openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
 """
 This version of the resource "computation.pyx" contains functions called by oher resources. Some of these functions have multiple implementations. This was done to test performances, and choose the best possible implementation in different cases.
 """
-=======
-print("Before manual setting: openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
-openmp.omp_set_num_threads(os.cpu_count())
-print("After manual setting: openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
-
-"""
-This version of the resource "computation.pyx" contains functions called by oher resources. Some of these functions have multiple implementations. This was done to test performances, and choose the best possible implementation in different cases.
-"""
-
-
->>>>>>> b6951bd51e9ec92a8b7c8ee9c2f12bd1f700a263
 import numpy as np
 cimport numpy as np
 from scipy.stats import dirichlet as scipy_dirichlet
@@ -658,8 +646,6 @@ def compute_l_plus_partial_and_gradient_partial(
     cdef DTYPEf_t [:,:,:] ESSE_one = ESSE_one_at_arrival_times
     cdef double l_plus, grad_base_rate
     if use_prange:
-        print("openmp.omp_get_num_threads(): {}".format(openmp.omp_get_num_threads()))
-        print("openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
         l_plus,grad_base_rate = prange_compute_partial_at_arrival_times(
                         lambda_memview, 
                         lambda_inverse_memview,
