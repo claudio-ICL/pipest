@@ -1,0 +1,25 @@
+openmp.omp_get_max_threads(): 16
+openmp.omp_get_max_threads(): 16
+
+$python test_perf.py --loglikelihood
+this_test_model_name: test_model_2020-04-12_0738
+date_time: 2020-04-12_0738
+I am executing test_perf.py --loglikelihood
+Date of run: 2020-04-12 at 10:37
+stdout is being redirected to /rdsgpfs/general/user/cb115/home/pipest/tests/performance_measurements/r5i3n2_loglikelihood_readout_2020-04-12_0738.txt
+
+measure_loglikelihood() terminates on 2020-04-12 at 10:40
+
+test_perf.py: main() end of file
+
+
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :        10             8
+ Used       :         2 (peak)   1.09 (ave)
+
+============================================

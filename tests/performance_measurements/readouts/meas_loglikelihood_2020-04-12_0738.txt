@@ -1,0 +1,29 @@
+$python test_perf.py --loglikelihood
+this_test_model_name: test_model_2020-04-12_0738
+date_time of model: 2020-04-12_0738
+I am executing test_perf.py --loglikelihood
+Date of run: 2020-04-12 at 11:50
+
+PerformanceMeasure is being initialised on model.name_of_model=test_model_2020-04-12_0738
+posix.uname_result(sysname='Linux', nodename='r5i2n0', release='3.10.0-514.26.2.el7.x86_64', version='#1 SMP Tue Jul 4 15:04:05 UTC 2017', machine='x86_64')
+Number of cpus: 56
+
+Model's key features:
+d_E=4; d_S=15
+Number of simulated LOB events: 19958
+
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'plain' for-loops (no prange):
+[3.7853622250258923, 4.9914959750603884, 4.556901058880612, 4.488794992910698]
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'prange' in outermost for-loop:
+[0.25286552612669766, 0.33203633199445903, 0.30347337294369936, 0.2986017200164497]
+
+Summary of measurements:
+{'e=1': {'plain': 3.7853622250258923, 'prange': 0.25286552612669766}, 'e=2': {'plain': 4.9914959750603884, 'prange': 0.33203633199445903}, 'e=3': {'plain': 4.556901058880612, 'prange': 0.30347337294369936}, 'e=4': {'plain': 4.488794992910698, 'prange': 0.2986017200164497}}
+
+measure_loglikelihood() terminates on 2020-04-12 at 11:53
+============================================
+        Job resource usage summary 
+                 Memory (GB)    NCPUs
+ Requested  :        10             8
+ Used       :         2 (peak)   1.16 (ave)
+============================================

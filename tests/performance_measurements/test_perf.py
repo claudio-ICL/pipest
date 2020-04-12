@@ -164,7 +164,7 @@ def main():
     global this_test_model_name     
     if action=='s' or action=='--simulate':
         now = datetime.datetime.now()
-        this_test_model_name = 'performance_test_{}-{:02d}-{:02d}_{:02d}{:02d}'\
+        this_test_model_name = 'test_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
         .format(now.year,now.month,now.day,now.hour,now.minute)
         instantiate_and_simulate()
         with open(path_saved_tests+'/name_test_perf_', 'wb') as outfile:
