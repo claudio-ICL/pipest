@@ -41,11 +41,15 @@ dump_after_reading=False
 add_level_to_messagefile=True
 #Optional parameters for "calibrate"
 type_of_preestim='nonparam' #'ordinary_hawkes' or 'nonparam'
-max_imp_coef = 15.0
+max_imp_coef = 20.0
 learning_rate = 0.0001
-maxiter = 15
-num_guesses = 4
+maxiter = 8
+num_guesses = 6
+parallel=False
+use_prange=True
 num_processes = 8
+batch_size = 5000
+num_run_per_minibatch = 3  
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 80
 quad_tmax = 1.0
@@ -54,8 +58,7 @@ num_gridpnts = 100
 grid_tmax = 1.1
 grid_tmin = 1.5e-1
 
-
-def redirect_stdout(direction= 'from', # 'from' or 'to'
+def redirect_stdout(direction= 'from', # or 'to'
                     message= '',
                     path='',
                     fout=None,saveout=None):
@@ -74,18 +77,14 @@ def redirect_stdout(direction= 'from', # 'from' or 'to'
         print(message)
     else:
         print("WARNINNG: redirect_stdout failed! direction={} not recognised".format(direction))
-        print(message)
-        
-
-
-
+        print(message)        
 
 def read_lobster():
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
     message+='I am reading from lobster\n'
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
-    path_readout=path_mdata+'_readout'
+    path_readout=path_mdata+'_readout.txt'
     fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)  
 
     if (first_read_fromLOBSTER):
@@ -146,20 +145,15 @@ def read_lobster():
          num_iter=num_iter
     )
 
-
-
     man_ob=from_lobster.ManipulateOrderBook(
         man_mf.LOB_sdhawkes,symbol=symbol,date=date,
         ticksize=man_mf.ticksize,n_levels=man_mf.n_levels,volume_imbalance_upto_level=2)
 
-
     data=from_lobster.DataToStore(man_ob,man_mf,time_origin=initial_time)
-
     sym = data.symbol
     d = data.date
     t_0 = data.initial_time
     t_1 = data.final_time
-
     assert sym==symbol
     assert date==d
     assert number_of_event_types==data.number_of_event_types
@@ -185,7 +179,7 @@ def nonparam_preestim():
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
     name_of_model_nonp=name_of_model+'_nonp'
     path_mnonp=path_mmodel+'_nonp'
-    path_readout=path_mnonp+'_readout'
+    path_readout=path_mnonp+'_readout.txt'
     fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)    
     with open(path_mdata,'rb') as source:
         data=pickle.load(source)
@@ -210,9 +204,9 @@ def nonparam_preestim():
                                 tol=1.0e-7
                                ) 
     run_time = -time.time()
-    model.nonparam_estim.estimate_hawkes_kernel(store_L1_norm=False,
-                               use_filter=True, enforce_positive_g_hat=True,
-                               filter_cutoff=50.0, filter_scale=30.0, num_addpnts_filter=3000)
+    model.nonparam_estim.estimate_hawkes_kernel(
+        store_L1_norm=False, use_filter=True, enforce_positive_g_hat=True,
+        filter_cutoff=50.0, filter_scale=30.0, num_addpnts_filter=3000)
     model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-02, tol=1.0e-7)
     model.nonparam_estim.store_base_rates()
     run_time+=time.time()
@@ -226,8 +220,7 @@ def nonparam_preestim():
 
 
     
-def calibrate(num_guesses=4, maxiter=50):
-    array_index=int(os.environ['PBS_ARRAY_INDEX'])
+def calibrate(event_type = 0):
     if type_of_preestim == 'nonparam':
         with open(path_mmodel+'_nonp', 'rb') as source:
             model=pickle.load(source)
@@ -247,32 +240,32 @@ def calibrate(num_guesses=4, maxiter=50):
         print("type_of_preestim={}".format(type_of_preestim))
         raise ValueError("type_of_preestim not recognised")
 
-    for event_type in range(model.number_of_event_types):
-        if (event_type == array_index):
-            now=datetime.datetime.now()
-            message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
-            message+='I am calibrating on lobster\n'
-            message+='symbol={}, date={}, time_window={}\n'.format(symbol,date,time_window)
-            message+='event type: {}'.format(event_type)
-            name_of_model_partial=name_of_model+'_partial{}'.format(event_type)
-            path_mpartial=path_mmodel+'_partial{}'.format(event_type)
-            path_readout=path_mpartial+'_readout'
-            fout,saveout=redirect_stdout(direction='from',message=message,path=path_readout)
-            print('\n\nINSTANTIATE SD_HAWKES MODEL AND CALIBRATE\n')
-            model.calibrate_on_input_data(
-                partial=True, e=event_type, name_of_model=name_of_model_partial,
-                type_of_preestim=type_of_preestim,
-                max_imp_coef = max_imp_coef,
-                learning_rate = learning_rate, maxiter = maxiter, num_of_random_guesses=num_guesses,
-                parallel=True,
-                number_of_attempts = 2, num_processes = num_processes,
-                skip_estim_of_state_processes=True,
-                dump_after_calibration=True
-            )
-            n=datetime.datetime.now()
-            message='\nCalibration of event_type {} terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
-            .format(event_type, n.year, n.month, n.day, n.hour, n.minute)
-            redirect_stdout(direction='to',message=message, fout=fout, saveout=saveout)
+    now=datetime.datetime.now()
+    message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
+    message+='I am calibrating on lobster\n'
+    message+='symbol={}, date={}, time_window={}\n'.format(symbol,date,time_window)
+    message+='event type: {}'.format(event_type)
+    name_of_model_partial=name_of_model+'_partial{}'.format(event_type)
+    path_mpartial=path_mmodel+'_partial{}'.format(event_type)
+    path_readout=path_mpartial+'_readout.txt'
+    fout,saveout=redirect_stdout(direction='from',message=message,path=path_readout)
+    model.calibrate_on_input_data(
+        e=event_type,
+        name_of_model=name_of_model_partial,
+        type_of_preestim=type_of_preestim,
+        max_imp_coef = max_imp_coef,
+        learning_rate = learning_rate, maxiter = maxiter, num_of_random_guesses=num_guesses,
+        parallel=parallel,
+        use_prange=use_prange,
+        number_of_attempts = 2, num_processes = num_processes,
+        batch_size = batch_size, num_run_per_minibatch = num_run_per_minibatch,
+        store_trans_prob=False, store_dirichlet_param=False,
+        dump_after_calibration=True
+    )
+    n=datetime.datetime.now()
+    message='\nCalibration of event_type {} terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
+    .format(event_type, n.year, n.month, n.day, n.hour, n.minute)
+    redirect_stdout(direction='to',message=message, fout=fout, saveout=saveout)
             
 def merge_from_partial():
     now=datetime.datetime.now()
@@ -307,10 +300,7 @@ def merge_from_partial():
     MODEL.initialise_from_partial_calibration(partial_models, dump_after_merging=True, name_of_model=name_of_model)  
     n=datetime.datetime.now()
     message='\nMerging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute)
-    redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout)
-        
-
-    
+    redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout) 
 
 
 def main():  
@@ -326,31 +316,29 @@ def main():
     action=str(sys.argv[5])
     global time_window
     time_window=str('{}-{}'.format(int(initial_time),int(final_time)))
-    print("\n\n$python {} {} {} {} {} {}".format(sys.argv[0],symbol,date,initial_time,final_time,action))
+    print("{} {} {} {} {} {}".format(sys.argv[0],symbol,date,initial_time,final_time,action))
     global path_mdata
     path_mdata=path_lobster_data+'/{}/{}_{}_{}'.format(symbol,symbol,date,time_window)
     global name_of_model
     name_of_model=symbol+'_'+date+'_'+time_window
     global path_mmodel
     path_mmodel=path_models+'/'+symbol+'/'+name_of_model        
-    if action=='r' or action=='read':
+    if action=='-r' or action=='--read':
         read_lobster()
-    elif action=='p' or (action=='preestim' or action=='nonparam_preestim'):
+    elif action=='-p' or (action=='--preestim' or action=='--nonparam_preestim'):
         if type_of_preestim=='nonparam':
             nonparam_preestim()
-    elif action=='c' or action=='calibrate':
-        calibrate(num_guesses, maxiter)
-    elif action=='m' or action=='merge':
+    elif action=='-c' or action=='--calibrate':
+        if not str(sys.argv[6])=='-e':
+            print("Example of usage for event_type 0:\n  {} {} {} {} {} {} -e 0".format(sys.argv[0],symbol,date,initial_time,final_time,action))
+            raise ValueError("User need to specify the event type for partial calibration")
+        event_type = int(sys.argv[7])    
+        calibrate(event_type)
+    elif action=='-m' or action=='--merge':
         merge_from_partial()
     else:
         print("action: {}".format(action))
         raise ValueError("action not recognised")
-    print("main.py end of file")    
-        
-        
-        
-
-        
-        
+    
 if __name__=='__main__':
     main()              

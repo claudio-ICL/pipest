@@ -626,7 +626,10 @@ class SDHawkes:
             print("len(mle_estim.results_of_estimation) = {}".format(len(model.mle_estim.results_of_estimation)))
             for res in model.mle_estim.results_of_estimation:
                 list_of_mle_results.append(res)
-        self.get_input_data(model.data, copy=True) #copy from last model in the list partial models
+        model=partial_models[0]        
+        print("model.data.symbol: {}".format(model.data.symbol)) 
+        time.sleep(2)
+        self.get_input_data(model.data, copy=True) #copy from first model in the list partial models
         print("{} mle results have been loaded".format(len(list_of_mle_results)))
         if len(list_of_mle_results)!= self.number_of_event_types:
             warning_message="WARNING: It was expected that len(list_of_mle_results) == self.number_of_event_types"
@@ -658,10 +661,11 @@ class SDHawkes:
         assert np.all(data.state_enc.list_of_n_states == self.state_enc.list_of_n_states)
         assert data.number_of_event_types == self.number_of_event_types
         assert data.number_of_states == self.number_of_states
-        if copy:
-            self.data = copy.copy(data)
-        else:
-            self.data = data    
+        self.data = data
+        #if copy:
+        #    self.data = copy.copy(data)
+        #else:
+        #    self.data = data    
                 
     def calibrate_on_input_data(self, partial=True, int e=0,
                                 str name_of_model='',
@@ -677,7 +681,7 @@ class SDHawkes:
                                 int batch_size = 5000,
                                 int num_run_per_minibatch = 1,  
                                 skip_mle_estim=False,
-#                                 skip_estim_of_state_processes=False,
+                                store_trans_prob=True, store_dirichlet_param=False,
                                 dump_after_calibration=False,
                                 verbose=False,
                                 DTYPEf_t tol = 1.0e-7,
@@ -718,7 +722,9 @@ class SDHawkes:
                     num_additional_random_guesses = max(1,num_of_random_guesses//2),
                     max_imp_coef = max_imp_coef
                 )    
-            self.create_mle_estim(type_of_input = 'empirical')
+            self.create_mle_estim(type_of_input='empirical',
+                                  store_trans_prob=store_trans_prob,
+                                  store_dirichlet_param=store_dirichlet_param)
             self.mle_estim.set_estimation_of_hawkes_param(
                 time_start, time_end,
                 list_of_init_guesses = list_init_guesses,
@@ -737,14 +743,6 @@ class SDHawkes:
             )
             self.mle_estim.launch_estimation_of_hawkes_param(partial=partial, e=e)
             self.calibration.store_mle_info(self.mle_estim.results_of_estimation)
-#         if not skip_estim_of_state_processes:
-#             run_time=-time.time()
-#             phi = self.estimate_transition_probabilities(events,states,verbose=verbose)
-#             gamma = self.estimate_dirichlet_parameters(volumes,states,tolerance=tol,verbose=verbose)
-#             self.set_transition_probabilities(phi)
-#             self.set_dirichlet_parameters(gamma, N_samples_for_prob_constraints = 15000)
-#             run_time+=time.time()
-#             self.calibration.store_runtime_for_state_processes(run_time)
         if dump_after_calibration:
             name=name_of_model
             path=self.path_models+'/'+self.data.symbol
@@ -752,7 +750,7 @@ class SDHawkes:
             
     
     "Functions to estimate model's parameters"
-       
+    
     def estimate_dirichlet_parameters(self,np.ndarray[DTYPEf_t, ndim=2] volumes,
                                       np.ndarray[DTYPEi_t, ndim=1] states,
                                       tolerance=1e-7,verbose=False):
@@ -760,7 +758,10 @@ class SDHawkes:
         return mle_estim.estimate_dirichlet_parameters(self.number_of_states,
                     self.n_levels,states,volumes,tolerance,verbose)
 
-    def estimate_transition_probabilities(self, np.ndarray[DTYPEi_t, ndim=1] events, np.ndarray[DTYPEi_t, ndim=1] states,verbose=True):
+    def estimate_transition_probabilities(self,
+                                          np.ndarray[DTYPEi_t, ndim=1] events,
+                                          np.ndarray[DTYPEi_t, ndim=1] states,
+                                          verbose=True):
         r"""
         Estimates the transition probabilities :math:`\phi` of the state process from the data.
         This method returns the maximum likelihood estimate.
@@ -1104,7 +1105,7 @@ class SDHawkes:
         )
     def store_nonparam_estim_class(self,nonparam_estim):
         self.nonparam_estim = copy.copy(nonparam_estim)
-    def create_mle_estim(self, str type_of_input = 'simulated', store_trans_prob=True, store_dirichlet_param = False):
+    def create_mle_estim(self, str type_of_input = 'simulated', store_trans_prob=True, store_dirichlet_param=False):
         if type_of_input == 'simulated':
             times=self.simulated_times
             events=self.simulated_events
