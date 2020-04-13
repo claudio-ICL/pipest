@@ -74,7 +74,7 @@ class EstimProcedure:
         self.events=np.array(events,copy=True,dtype=DTYPEi)
         self.states=np.array(states,copy=True,dtype=DTYPEi)
         self.hawkes_kernel=model.HawkesKernel(num_event_types, num_states)
-        if not volumes==None:
+        if not (volumes is None):
             self.volumes = np.array(volumes, copy=True, dtype=DTYPEf)
             if store_dirichlet_param:
                 self.store_dirichlet_parameters()

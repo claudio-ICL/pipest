@@ -1,12 +1,12 @@
 #!/bin/bash
-
-echo "wrapper_submission" $symbol $date $t_0 $t_1 $a 
-
 module load anaconda3/personal
 source activate h_impact_env
-
 cd $PBS_O_WORKDIR
-python main.py $symbol $date $t_0 $t_1 $a  
-
+if [ "$a" = "-c" ] || [ "$a" = "--calibrate" ]
+then 
+  python main.py $symbol $date $t_0 $t_1 $a "-e" "$e"
+else
+  python main.py $symbol $date $t_0 $t_1 $a
+fi    
 conda deactivate
 
