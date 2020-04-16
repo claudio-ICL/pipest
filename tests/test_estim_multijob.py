@@ -49,11 +49,11 @@ learning_rate = 0.0001
 maxiter = 120
 num_guesses = 6
 num_processes = 20
-batch_size = 4000
+batch_size = 5000
 num_run_per_minibatch = 4
 parallel=False
-use_prange = False
-type_of_preestim = 'nonparam' # 'ordinary_hawkes' or 'nonparam'
+use_prange = True
+type_of_preestim = 'ordinary_hawkes' # 'ordinary_hawkes' or 'nonparam'
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 85
 quad_tmax = 1.0
@@ -109,7 +109,7 @@ def instantiate_and_simulate():
     print("\nSIMULATION\n")
     global time_start
     global time_end
-    max_number_of_events = np.random.randint(low=19900, high=20010)
+    max_number_of_events = np.random.randint(low=7900, high=8010)
     times, events, states, volumes = model.simulate(
         time_start, time_end, max_number_of_events=max_number_of_events,
         add_initial_cond=True,
@@ -153,7 +153,7 @@ def nonparam_preestim():
     model.nonparam_estim.store_base_rates()
     run_time+=time.time()
     model.nonparam_estim.store_runtime(run_time)
-    model.nonparam_estim.create_goodness_of_fit(parallel=True)
+    model.nonparam_estim.create_goodness_of_fit(parallel=False)
     model.dump(path=path_saved_tests)
     now=datetime.datetime.now()
     message='\nNon-parametric pre-estimation terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
@@ -186,8 +186,12 @@ def estimate():
             if type_of_preestim == 'nonparam':
                 list_init_guesses = model.nonparam_estim.produce_list_init_guesses_for_mle_estimation(
                     num_additional_random_guesses = max(1,num_guesses//2), max_imp_coef=max_imp_coef) 
+                pre_estim_ord_hawkes = False
             else:
                 list_init_guesses = []
+                pre_estim_ord_hawkes = False
+                if type_of_preestim == 'ordinary_hawkes':
+                    pre_estim_ord_hawkes = True
             model.mle_estim.set_estimation_of_hawkes_param(
                 time_start, time_end,
                 list_of_init_guesses = list_init_guesses,
@@ -196,7 +200,7 @@ def estimate():
                 maxiter=maxiter,
                 number_of_additional_guesses = num_guesses,
                 parallel=parallel,
-                pre_estim_ord_hawkes=False,
+                pre_estim_ord_hawkes=pre_estim_ord_hawkes,
                 pre_estim_parallel=parallel,
                 use_prange = use_prange,
                 number_of_attempts = 3,
@@ -241,7 +245,7 @@ def main():
     action=str(sys.argv[1])
     print("\n$python {} {}".format(sys.argv[0],action))
     global this_test_model_name     
-    if action=='s' or action=='--simulate':
+    if action=='-s' or action=='--simulate':
         now = datetime.datetime.now()
         this_test_model_name = 'test_model_{}-{:02d}-{:02d}_{:02d}{:02d}'\
         .format(now.year,now.month,now.day,now.hour,now.minute)
@@ -277,14 +281,14 @@ def main():
             else:
                 type_of_paral = "plain_"
         print("type_of_paral: {}".format(type_of_paral))
-        if action=='p' or (action=='preestim' or action=='nonparam_preestim'):
+        if action=='-p' or (action=='--preestim' or action=='--nonparam_preestim'):
             if type_of_preestim == 'nonparam':
                 nonparam_preestim()
             else:
                 print("type_of_preestim: {}. Non-parametric estimation is being skipped".format(type_of_preestim))
-        elif action=='e' or (action=='estimate' or action=='mle'):
+        elif action=='-e' or (action=='--estimate' or action=='--mle'):
             estimate()
-        elif action=='m' or action=='merge':
+        elif action=='-m' or action=='--merge':
             merge_from_partial()
             #os.remove(path_saved_tests+'/name_test_estim_')
         else:
