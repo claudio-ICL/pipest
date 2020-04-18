@@ -43,12 +43,12 @@ add_level_to_messagefile=True
 type_of_preestim='nonparam' #'ordinary_hawkes' or 'nonparam'
 max_imp_coef = 20.0
 learning_rate = 0.0001
-maxiter = 8
-num_guesses = 6
+maxiter = 40
+num_guesses = 8
 parallel=False
 use_prange=True
 num_processes = 8
-batch_size = 5000
+batch_size = 15000
 num_run_per_minibatch = 3  
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 80
@@ -205,6 +205,7 @@ def nonparam_preestim():
                                ) 
     run_time = -time.time()
     model.nonparam_estim.estimate_hawkes_kernel(
+        parallel=True,
         store_L1_norm=False, use_filter=True, enforce_positive_g_hat=True,
         filter_cutoff=50.0, filter_scale=30.0, num_addpnts_filter=3000)
     model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-02, tol=1.0e-7)
@@ -297,7 +298,7 @@ def merge_from_partial():
             partial_models.append(model)
     if type_of_preestim == 'nonparam':
         MODEL.store_nonparam_estim_class(model.nonparam_estim)
-    MODEL.initialise_from_partial_calibration(partial_models, dump_after_merging=True, name_of_model=name_of_model)  
+    MODEL.initialise_from_partial_calibration(partial_models, set_parameters=True, dump_after_merging=True, name_of_model=name_of_model)  
     n=datetime.datetime.now()
     message='\nMerging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute)
     redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout) 

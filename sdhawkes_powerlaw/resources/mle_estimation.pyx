@@ -170,9 +170,15 @@ class EstimProcedure:
             new_guess[0:break_point] = np.maximum(0.0,new_guess[0:break_point])
             new_guess[break_point:] = np.maximum(1.01,new_guess[break_point:])
             list_init_guesses.append(np.array(new_guess,copy=True))
+        t0=float(self.times[0])
+        idx_e = (self.events==e)
+        num_e = np.sum(idx_e)
+        max_base_rate = max(0.001,np.mean(np.arange(1,1+num_e)/np.maximum(0.0001,self.times[idx_e]-t0)))
         for j in range(max(1,self.number_of_additional_guesses//2)):
             new_guess[0:break_point] = np.random.uniform(low=0.0, high = 5.0, size=(break_point,))
             new_guess[break_point:] = np.random.uniform(low=1.5, high = 2.5, size=(len(new_guess)-break_point,))
+            convex_coef = max(0.001,float(rand())/float(RAND_MAX))
+            new_guess[0] = convex_coef*new_guess[0] + (1.0-convex_coef)*max_base_rate
             list_init_guesses.append(np.array(new_guess,copy=True))
         return list_init_guesses    
             
