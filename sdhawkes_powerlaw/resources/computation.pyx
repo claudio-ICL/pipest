@@ -2,7 +2,7 @@
 import os
 from cython.parallel import prange
 cimport openmp
-openmp.omp_set_num_threads(min(16,os.cpu_count()))
+#openmp.omp_set_num_threads(min(16,os.cpu_count()))
 print("openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
 """
 This version of the resource "computation.pyx" contains functions called by oher resources. Some of these functions have multiple implementations. This was done to test performances, and choose the best possible implementation in different cases.

@@ -30,7 +30,7 @@ ext_modules=[
         Extension("computation",
             ["computation.pyx"],
             libraries=["m"],
-            extra_compile_args = ["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_compile_args = ["-O3","-ffast-math","-fopenmp"],
             extra_link_args=['-fopenmp']
             )
 ]
@@ -46,7 +46,7 @@ ext_modules=[
             "simulation",
             sources=["simulation.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_compile_args=["-O3","-ffast-math","-fopenmp"],
             extra_link_args=["-fopenmp"]
             )
 ]
@@ -62,7 +62,7 @@ ext_mod_mle=[
             "mle_estimation",
             sources=["mle_estimation.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_compile_args=["-O3","-ffast-math","-fopenmp"],
             extra_link_args=['-fopenmp']
     )
 ]
@@ -79,7 +79,7 @@ ext_mod_mle=[
             "nonparam_estimation",
             sources=["nonparam_estimation.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_compile_args=["-O3","-ffast-math","-fopenmp"],
             extra_link_args=['-fopenmp']
     )
 ]
@@ -98,7 +98,7 @@ ext_modules=[
             "goodness_of_fit",
             ["goodness_of_fit.pyx"],
            libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_compile_args=["-O3","-ffast-math","-fopenmp"],
             extra_link_args=['-fopenmp']
     )
 ]
@@ -116,7 +116,7 @@ ext_modules = [
             "impact_profile",
             sources=["impact_profile.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3", "-ffast-math", "-march=native","-fopenmp"],
+            extra_compile_args=["-O3", "-ffast-math", "-fopenmp"],
             extra_link_args=['-fopenmp']
             )
 ]
@@ -133,7 +133,7 @@ ext_modules = [
             "minimisation_algo",
             sources=["minimisation_algo.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_compile_args=["-O3","-ffast-math","-fopenmp"],
             extra_link_args=['-fopenmp']
             )
 ]
@@ -155,7 +155,7 @@ ext_modules = [
             "model",
             sources=["model.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native"]
+            extra_compile_args=["-O3","-ffast-math"]
             )
 ]
 
@@ -169,7 +169,7 @@ ext_modules = [
             "lob_model",
             sources=["lob_model.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native"]
+            extra_compile_args=["-O3","-ffast-math"]
             )
 ]
 
@@ -206,7 +206,7 @@ ext_modules = [
             "measure_exectime",
             sources=["measure_exectime.pyx"],
             libraries=["m"],
-            extra_compile_args=["-O3","-ffast-math","-march=native","-fopenmp"],
+            extra_compile_args=["-O3","-ffast-math","-fopenmp"],
             extra_link_args=['-fopenmp']
             )
 ]
