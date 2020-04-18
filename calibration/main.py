@@ -84,7 +84,7 @@ def read_lobster():
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
     message+='I am reading from lobster\n'
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
-    path_readout=path_mdata+'_readout'
+    path_readout=path_mdata+'_readout.txt'
     fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)  
 
     if (first_read_fromLOBSTER):
@@ -179,7 +179,7 @@ def nonparam_preestim():
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
     name_of_model_nonp=name_of_model+'_nonp'
     path_mnonp=path_mmodel+'_nonp'
-    path_readout=path_mnonp+'_readout'
+    path_readout=path_mnonp+'_readout.txt'
     fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)    
     with open(path_mdata,'rb') as source:
         data=pickle.load(source)
@@ -247,7 +247,7 @@ def calibrate(event_type = 0):
     message+='event type: {}'.format(event_type)
     name_of_model_partial=name_of_model+'_partial{}'.format(event_type)
     path_mpartial=path_mmodel+'_partial{}'.format(event_type)
-    path_readout=path_mpartial+'_readout'
+    path_readout=path_mpartial+'_readout.txt'
     fout,saveout=redirect_stdout(direction='from',message=message,path=path_readout)
     model.calibrate_on_input_data(
         e=event_type,

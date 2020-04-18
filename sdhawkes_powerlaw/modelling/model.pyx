@@ -627,7 +627,7 @@ class SDHawkes:
             for res in model.mle_estim.results_of_estimation:
                 list_of_mle_results.append(res)
         model=partial_models[0]        
-        print("model.data.symbol: ".format(model.data.symbol)) 
+        print("model.data.symbol: {}".format(model.data.symbol)) 
         time.sleep(2)
         self.get_input_data(model.data, copy=True) #copy from first model in the list partial models
         print("{} mle results have been loaded".format(len(list_of_mle_results)))
@@ -661,10 +661,11 @@ class SDHawkes:
         assert np.all(data.state_enc.list_of_n_states == self.state_enc.list_of_n_states)
         assert data.number_of_event_types == self.number_of_event_types
         assert data.number_of_states == self.number_of_states
-        if copy:
-            self.data = copy.copy(data)
-        else:
-            self.data = data    
+        self.data = data
+        #if copy:
+        #    self.data = copy.copy(data)
+        #else:
+        #    self.data = data    
                 
     def calibrate_on_input_data(self, partial=True, int e=0,
                                 str name_of_model='',
