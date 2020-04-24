@@ -96,7 +96,7 @@ class good_fit:
         return new_pp
     
 
-    def ks_test_on_residuals(self):
+    def ks_test_on_residuals(self, int index_of_first_event_type=0):
         print('Kolmogorov-Smirnov test to check that the residuals are iid with distribution Exp(1)')
         ks_ans=list(map(lambda x: stats.kstest(x,'expon'),self.residuals))
         kstest_residuals=[]
@@ -104,7 +104,7 @@ class good_fit:
             ks_stat = ks_ans[e][0]
             p_val = ks_ans[e][1]
             kstest_residuals.append([e,ks_stat,p_val])
-            print('event type={}, ks_answer: {}'.format(e,ks_ans[e]))
+            print('event type={}, ks_answer: {}'.format(e+index_of_first_event_type,ks_ans[e]))
         df=pd.DataFrame(kstest_residuals)
         df.columns=['event','ks_stat','p_val']    
         self.kstest_residuals=df    
@@ -121,7 +121,7 @@ class good_fit:
         df.columns=['event','state','ks_stat','p_val']    
         self.kstest_total_residuals=df
         
-    def ad_test_on_residuals(self,distr='expon'):
+    def ad_test_on_residuals(self,str distr='expon', int index_of_first_event_type=0):
         print('Anderson-Darling test to check distribution of residuals')
         print('Null hypothesis is "{}" '.format(distr))
         if distr=='expon':
@@ -139,7 +139,7 @@ class good_fit:
             signif_lev_noReject = ad_ans[e][2][idx]
             critical_val = ad_ans[e][1]
             adtest_residuals.append([e,ad_stat,critical_val,signif_lev_noReject])
-            print('event type={}, ad_stat: {}'.format(e,ad_stat))
+            print('event type={}, ad_stat: {}'.format(e+index_of_first_event_type, ad_stat))
         if (distr=='expon'):    
             df=pd.DataFrame(adtest_residuals)
             df.columns=['event','ad_stat','critical_val','signif_lev_noReject']    

@@ -200,7 +200,7 @@ class EstimProcedure:
             batch_size = self.batch_size,
             num_run_per_minibatch = self.num_run_per_minibatch,
         )
-        print("mle_estimation.EstimProcedure.estimate_hawkes_param_partial. Estimation terminates for event_type {}".format(e))
+        print("mle_estimation.EstimProcedure.estimate_hawkes_param_partial. Estimation terminates for event_type {}.".format(e))
         self.results_of_estimation.append(res)
         
         
@@ -231,7 +231,7 @@ class EstimProcedure:
             dec_coef[:,:,e]=res.get('dec_coef')
         self.base_rates=base_rates
         self.hawkes_kernel.store_parameters(imp_coef,dec_coef)
-        self.hawkes_kernel.compute_L1_norm_param()
+        self.hawkes_kernel.compute_L1_norm()
     def create_goodness_of_fit(self, parallel=True):
         "type_of_input can either be 'simulated' or 'empirical'"
         self.goodness_of_fit=goodness_of_fit.good_fit(
@@ -495,7 +495,7 @@ def pre_estimate_ordinary_hawkes(
         num_run_per_minibatch = num_run_per_minibatch,  
     )
     minim.prepare_batches()
-    print('pre_estimate_ordinary_hawkes: event_index={} -- initialisation completed.'.format(event_index))
+    print('pre_estimate_ordinary_hawkes: initialisation completed.'.format(event_index))
     cdef double run_time = -time.time()
     minim.launch_minimisation(use_prange=use_prange, parallel=parallel, num_processes = num_processes)    
     cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(minim.minimiser, copy=True, dtype=DTYPEf)
@@ -516,7 +516,7 @@ def pre_estimate_ordinary_hawkes(
         result = computation.parameters_to_array_partial(nu,alphas,betas)
     else:
         result = {'base_rate': nu, 'imp_coef': alphas, 'dec_coef': betas}
-    print('pre_estimate_ordinary_hawkes: event type={}, run_time={}'.format(event_index,run_time))
+    print('pre_estimate_ordinary_hawkes: run_time={}'.format(run_time))
     return result
     
     
@@ -557,11 +557,11 @@ def estimate_hawkes_param_partial(
         num_run_per_minibatch = num_run_per_minibatch,
     )
     minim.prepare_batches()
-    print('mle_estimation.estimate_hawkes_param_partial: event_type {}: MinimisationProcedure has been initialised'.format(event_index))
+    print('estimate_hawkes_param_partial: MinimisationProcedure has been initialised'.format(event_index))
     cdef double run_time = -time.time()
     minim.launch_minimisation(use_prange, parallel=parallel, num_processes=num_processes)
     run_time+=time.time()
-    print('estimate_hawkes_power_partial, event_type={}, run_time = {}'.format(event_index,run_time))
+    print('estimate_hawkes_power_partial: run_time={}'.format(run_time))
     cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(minim.minimiser,copy=True,dtype=DTYPEf)
     base_rate,imp_coef,dec_coef=computation.array_to_parameters_partial(n_event_types, n_states, x_min)
     res={'component_e':event_index,

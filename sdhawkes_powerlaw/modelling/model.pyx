@@ -50,6 +50,7 @@ ctypedef np.int64_t DTYPEil_t
 import mle_estimation as mle_estim
 import nonparam_estimation as nonparam_estim
 import goodness_of_fit
+import uncertainty_quant
 import computation
 import simulation
 import impact_profile
@@ -89,39 +90,26 @@ class HawkesKernel:
             self.values_at_quadpnts_param = values
         else:
             self.values_at_quadpnts = values
-    def compute_L1_norm_numintegr(self):
-        print("I am storing L1_norms of hawkes kernel")
+    def compute_L1_norm(self):
         cdef int d_E = self.num_event_types
-        cdef np.ndarray[DTYPEf_t, ndim=2] L1_norm = np.zeros((d_E, d_E), dtype=DTYPEf)
-        cdef DTYPEf_t [:,:] L1norm_memview = L1_norm
-        kappa=self.values_at_quadpnts
-        cdef DTYPEf_t [:,:,:,:] kappa_memview = kappa
-        cdef DTYPEf_t [:] quadpnts_memview = self.quadrature.partition
-        cdef int num_quadpnts = self.quadrature.num_pnts
-        cdef int num_states = self.num_states
-        cdef int e=0, e1=0
-        for e in prange(d_E, nogil=True):
-            for e1 in range(d_E):
-                compute_L1_norm_of_hawkes_kernel(
-                    e1, e, num_states, num_quadpnts,
-                    kappa_memview,
-                    L1norm_memview,
-                    quadpnts_memview
-                )
+        cdef int d_S = self.num_states
+        cdef np.ndarray[DTYPEf_t, ndim=3] L1_norm = np.zeros((d_E, d_S, d_E), dtype=DTYPEf)
+        L1_norm = self.alphas/(self.betas - 1.0)
         return L1_norm
-    def compute_L1_norm_param(self):
+    def store_L1_norm(self):
+        self.L1_norm=self.compute_L1_norm()
+    def store_spectral_radius(self,):
         cdef int d_E = self.num_event_types
-        cdef np.ndarray[DTYPEf_t, ndim=2] L1_norm = np.zeros((d_E, d_E), dtype=DTYPEf)
-        L1_norm = np.sum(self.alphas/(self.betas - 1.0), axis=1)
-        return L1_norm
-    def store_L1_norm(self,from_param=False):
-        if from_param:
-            self.L1_norm=self.compute_L1_norm_param()
-        else:
-            self.L1_norm=self.compute_L1_norm_numintegr()
-        eigenvalues=linalg.eigvals(self.L1_norm)
-        self.spectral_radius = np.amax(np.abs(eigenvalues))
-        print("L1_norms have been stored. spectral_radius={}".format(self.spectral_radius))
+        cdef int d_S = self.num_states
+        cdef np.ndarray[DTYPEf_t, ndim=2] eigenvalues = np.zeros((d_S,d_E), dtype=DTYPEf)
+        for x in range(d_S):
+            eigenvalues[x,:]=linalg.eigvals(self.L1_norm[:,x,:])
+        cdef np.ndarray[DTYPEf_t, ndim=1] radii = np.amax(eigenvalues, axis=1)
+        cdef DTYPEf_t max_radius = np.amax(radii)
+        self.spectral_radii = radii
+        self.max_spectral_radius = max_radius
+        
+        
 
 class Calibration:
     def __init__(self, data, str name_of_model='sdhawkes_model', 
@@ -149,7 +137,7 @@ class Calibration:
             del info_e["base_rate"]
             del info_e["imp_coef"]
             del info_e["dec_coef"]
-            self.mle_info.append(info_e)
+            self.mle_info.append(info_e)    
 
 class Liquidator:
     def __init__(self,
@@ -232,7 +220,7 @@ class SDHawkes:
         :type states_labels: list of strings
         :param states_labels: names of the possible states.
         """
-        print("Initialising an instance of SDHawkes")
+        #print("Initialising an instance of SDHawkes")
         cdef str path_pipest = os.path.abspath('./')
         cdef int n=0
         while (not os.path.basename(path_pipest)=='pipest') and (n<6):
@@ -287,7 +275,7 @@ class SDHawkes:
         cdef np.ndarray[DTYPEf_t, ndim=3] impact_decay_ratios = \
         np.zeros((number_of_event_types, number_of_states, number_of_event_types),dtype=DTYPEf)
         self.impact_decay_ratios = impact_decay_ratios
-        cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.zeros((number_of_states,2*number_of_lob_levels),dtype=DTYPEf)
+        cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.ones((number_of_states,2*number_of_lob_levels),dtype=DTYPEf)
         self.dirichlet_param = dirichlet_param
         self.hawkes_kernel=HawkesKernel(self.number_of_event_types, self.number_of_states)
     def set_name_of_model(self,str name):
@@ -456,8 +444,24 @@ class SDHawkes:
         if np.shape(transition_probabilities) != (self.number_of_states, self.number_of_event_types,
                                                   self.number_of_states):
             raise ValueError('given transition probabilities have incorrect shape')
-            
+        assert np.all(transition_probabilities>=0.0)
+        assert np.all(transition_probabilities<=1.0)    
         cdef np.ndarray[DTYPEf_t, ndim=3] phi = np.array(transition_probabilities,copy=True,dtype=DTYPEf)
+        cdef np.ndarray[DTYPEf_t, ndim=2] masses = np.ones((self.number_of_states, self.number_of_event_types), dtype=DTYPEf)
+        cdef np.ndarray[DTYPEf_t, ndim=3] normalisation = np.ones((self.number_of_states, self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
+        masses = np.sum(phi, axis=2)
+        tol=1.0e-10
+        normalisation=(1.0+tol)*np.repeat(np.expand_dims(masses,axis=2),self.number_of_states,axis=2)
+        idx_zero_mass = (normalisation<=0.0)
+        phi[idx_zero_mass]=tol/float(self.number_of_states)
+        normalisation=np.maximum(tol,normalisation)
+        phi/=normalisation
+        if not np.all(np.sum(phi,axis=2)<=1.0):
+            print(np.sum(phi,axis=2))
+        assert np.all(np.sum(phi,axis=2)<=1.0)
+        if np.any(np.isnan(phi)):
+            print(phi)
+        assert not np.any(np.isnan(phi))
         self.transition_probabilities = phi
         self.inflationary_pressure, self.deflationary_pressure, asymmetry = computation.assess_symmetry(
             self.number_of_states,
@@ -526,7 +530,7 @@ class SDHawkes:
         cdef np.ndarray[DTYPEf_t, ndim=3] ratios = np.divide(self.impact_coefficients, self.decay_coefficients-1)
         self.impact_decay_ratios = ratios
         self.hawkes_kernel.store_parameters(alphas,betas)
-        self.hawkes_kernel.compute_L1_norm_param()
+        self.hawkes_kernel.compute_L1_norm()
         print('Hawkes parameters have been set')
         
         
@@ -606,6 +610,7 @@ class SDHawkes:
     
     def initialise_from_partial_calibration(self,list partial_models,
                                             set_parameters = False,
+                                            adjust_base_rates = False, DTYPEf_t leading_coef=0.66,
                                             dump_after_merging=True, str name_of_model='',
                                            ):
         """
@@ -627,9 +632,8 @@ class SDHawkes:
             for res in model.mle_estim.results_of_estimation:
                 list_of_mle_results.append(res)
         model=partial_models[0]        
-        print("model.data.symbol: {}".format(model.data.symbol)) 
-        time.sleep(2)
         self.get_input_data(model.data, copy=True) #copy from first model in the list partial models
+        type_of_preestim=model.calibration.type_of_preestim
         print("{} mle results have been loaded".format(len(list_of_mle_results)))
         if len(list_of_mle_results)!= self.number_of_event_types:
             warning_message="WARNING: It was expected that len(list_of_mle_results) == self.number_of_event_types"
@@ -641,19 +645,29 @@ class SDHawkes:
         self.create_mle_estim(type_of_input='empirical',store_trans_prob=True, store_dirichlet_param=True)
         self.mle_estim.store_results_of_estimation(list_of_mle_results)
         self.mle_estim.store_hawkes_parameters()
+        self.mle_estim.create_goodness_of_fit()
         if set_parameters:
-            self.set_hawkes_parameters(self.mle_estim.base_rates,
+            if adjust_base_rates:
+                d_E = self.number_of_event_types
+                A=leading_coef*np.eye(d_E, dtype=np.float)
+                antidiag = ~np.eye(d_E//2, dtype=np.bool)
+                A[:d_E//2,:d_E//2][antidiag] = (1.0-leading_coef)/max(1,d_E//2-1)
+                antidiag = ~np.eye(d_E - d_E//2, dtype=np.bool)
+                A[d_E//2:,d_E//2:][antidiag] = (1.0-leading_coef)/max(1,d_E-d_E//2 -1)
+                base_rates=np.matmul(A,self.mle_estim.base_rates)
+            else:
+                base_rates=self.mle_estim.base_rates
+            self.set_hawkes_parameters(base_rates,
                                        self.mle_estim.hawkes_kernel.alphas,
                                        self.mle_estim.hawkes_kernel.betas)
             self.set_transition_probabilities(self.mle_estim.transition_probabilities)
             self.set_dirichlet_parameters(self.mle_estim.dirichlet_param, N_samples_for_prob_constraints = 15000)
-        self.mle_estim.create_goodness_of_fit()
-        type_of_preestim = model.calibration.type_of_preestim #copy from last model in the list partial models
+            self.create_goodness_of_fit(type_of_input='empirical')
+        
         self.calibrate_on_input_data(partial=False,
-                                     type_of_preestim = model.calibration.type_of_preestim,
+                                     type_of_preestim = type_of_preestim,
                                      skip_mle_estim=True,
-#                                      skip_estim_of_state_processes=False,
-                                     dump_after_calibration=True,
+                                     dump_after_calibration=dump_after_merging,
                                      verbose=True,
                                      )        
     def get_input_data(self, data, copy=False):
@@ -745,9 +759,12 @@ class SDHawkes:
             self.calibration.store_mle_info(self.mle_estim.results_of_estimation)
         if dump_after_calibration:
             name=name_of_model
-            path=self.path_models+'/'+self.data.symbol
-            self.dump(name=name,path=path)      
-            
+            try:
+                path=self.path_models+'/{}_{}'.format(self.data.symbol, self.data.date)
+                self.dump(name=name,path=path)      
+            except:
+                path=self.path_models+'/{}'.format(self.data.symbol)
+                self.dump(name=name,path=path)    
     
     "Functions to estimate model's parameters"
     
@@ -1060,7 +1077,8 @@ class SDHawkes:
         except:
             pass
         self.liquidator.time_start = 0.0 
-        
+    def store_calibration(self,calibration):
+        self.calibration=calibration    
     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
         "type_of_input can either be 'simulated' or 'empirical'"
         if type_of_input == 'simulated':
@@ -1078,6 +1096,16 @@ class SDHawkes:
             self.number_of_event_types,self.number_of_states,
             self.base_rates,self.impact_coefficients,self.decay_coefficients,self.transition_probabilities,
             times,events,states,type_of_input=type_of_input, parallel = parallel
+        )
+    def create_uq(self,):
+        self.uncertainty_quantification=uncertainty_quant.UncertQuant(
+            self.number_of_event_types, self.number_of_states,
+            self.n_levels, self.state_enc, self.volume_enc,
+            self.base_rates,
+            self.impact_coefficients,
+            self.decay_coefficients,
+            self.transition_probabilities,
+            self.dirichlet_param,
         )
     def create_nonparam_estim(self, str type_of_input = 'simulated',
                               int num_quadpnts = 100, DTYPEf_t quad_tmax=1.0, DTYPEf_t quad_tmin=1.0e-04,

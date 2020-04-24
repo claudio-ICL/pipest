@@ -228,6 +228,10 @@ def launch_simulation(num_event_types,
         impact_coefficients.reshape(-1,number_of_event_types), copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=3] decay_coefficients = np.array(betas,copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=3] transition_probabilities = np.array(phis,copy=True)
+    assert not np.any(np.isnan(transition_probabilities))
+    assert not np.any(np.isinf(transition_probabilities))
+    assert np.all(np.sum(transition_probabilities,axis=2)<=1.0)
+    assert np.all(transition_probabilities>=0.0)
     cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.array(kappas,copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=1] initial_condition_times 
     cdef np.ndarray[DTYPEi_t, ndim=1] initial_condition_events
@@ -413,10 +417,10 @@ def simulate(int number_of_event_types,
                 event = random_choice(intensities)
                 'Determine the new state of the system'
                 previous_state=copy.copy(state)
-                probabilities_state = copy.copy(transition_probabilities[previous_state, event, :])
+                probabilities_state = transition_probabilities[previous_state, event, :]
                 state = random_choice(probabilities_state)
                 'Store volume parameter for dirichlet sampling'
-                history_of_dirichlet_param[n,:]=copy.copy(dirichlet_param[state,:])
+                history_of_dirichlet_param[n,:] = dirichlet_param[state,:]
                 'Update the result'
                 result_times[n] = copy.copy(time)  # add the event time to the result
                 result_events[n] = copy.copy(event)  # add the new event to the result
@@ -426,7 +430,7 @@ def simulate(int number_of_event_types,
                 labelled_times[event,state,count[event,state]] = copy.copy(time)
                 count[event,state]+=1
                 'update intensities, and intensity_total'
-                imp_coeff=copy.copy(impact_coefficients[event,state,:])
+                imp_coeff=impact_coefficients[event,state,:]
                 intensities+=imp_coeff
                 intensity_total+=np.sum(imp_coeff)
             intensity_overall = intensity_total  # the maximum total intensity until the next event

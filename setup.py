@@ -13,19 +13,15 @@ path_lobster=path_pipest+'/lobster_for_sdhawkes'
 path_lobster_pyscripts=path_lobster+'/py_scripts'
 path_tests = path_pipest+'/tests'
 path_perfmeas = path_tests+'/performance_measurements'
-
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 import numpy
-
-
 #Setup resources
 os.chdir(path_resources+'/')
 cwd=os.getcwd()
 print('\n\nI am performing setup of resources.\nCurrent working directory is '+cwd+'\n')
-
 ext_modules=[
         Extension("computation",
             ["computation.pyx"],
@@ -34,13 +30,11 @@ ext_modules=[
             extra_link_args=['-fopenmp']
             )
 ]
-
 setup(
   name = "computation",
   cmdclass ={"build_ext": build_ext},
   ext_modules = ext_modules,
   include_dirs=[numpy.get_include()])
-
 ext_modules=[
         Extension(
             "simulation",
@@ -50,13 +44,11 @@ ext_modules=[
             extra_link_args=["-fopenmp"]
             )
 ]
-
 setup(
   name = "simulation",
   cmdclass={"build_ext":build_ext},
   ext_modules = ext_modules,
   include_dirs=[numpy.get_include()])
-
 ext_mod_mle=[
         Extension(
             "mle_estimation",
@@ -66,14 +58,11 @@ ext_mod_mle=[
             extra_link_args=['-fopenmp']
     )
 ]
-
 setup(
   name = "mle_estimation",
   cmdclass={"build_ext":build_ext},
   ext_modules = ext_mod_mle,
   include_dirs=[numpy.get_include()])
-
-
 ext_mod_mle=[
         Extension(
             "nonparam_estimation",
@@ -83,16 +72,11 @@ ext_mod_mle=[
             extra_link_args=['-fopenmp']
     )
 ]
-
 setup(
   name = "nonparam_estimation",
   cmdclass={"build_ext":build_ext},
   ext_modules = ext_mod_mle,
   include_dirs=[numpy.get_include()])
-
-
-
-
 ext_modules=[
         Extension(
             "goodness_of_fit",
@@ -102,15 +86,25 @@ ext_modules=[
             extra_link_args=['-fopenmp']
     )
 ]
-
-
 setup(
   name = "goodness_of_fit",
   cmdclass={"build_ext":build_ext},
   ext_modules = ext_modules,
   include_dirs=[numpy.get_include()])
-
-
+ext_modules=[
+        Extension(
+            "uncertainty_quant",
+            ["uncertainty_quant.pyx"],
+           libraries=["m"],
+            extra_compile_args=["-O3","-ffast-math","-fopenmp"],
+            extra_link_args=['-fopenmp']
+    )
+]
+setup(
+  name = "uncertainty_quant",
+  cmdclass={"build_ext":build_ext},
+  ext_modules = ext_modules,
+  include_dirs=[numpy.get_include()])
 ext_modules = [
         Extension(
             "impact_profile",
@@ -120,14 +114,12 @@ ext_modules = [
             extra_link_args=['-fopenmp']
             )
 ]
-
 setup(
   name = "impact_profile",
   cmdclass ={"build_ext": build_ext},
   ext_modules = ext_modules,
   include_dirs=[numpy.get_include()]
   )
-
 ext_modules = [
         Extension(
             "minimisation_algo",
@@ -137,19 +129,15 @@ ext_modules = [
             extra_link_args=['-fopenmp']
             )
 ]
-
 setup(
   name = "minimisation_algo",
   cmdclass={"build_ext":build_ext},
   ext_modules = ext_modules,
   include_dirs=[numpy.get_include()])
-
-
 #Setup modelling
 os.chdir(path_modelling+'/')
 cwd=os.getcwd()
 print('\n\nI am performing setup of modelling.\nCurrent working directory is '+cwd+'\n')
-
 ext_modules = [ 
         Extension( 
             "model",
@@ -158,12 +146,10 @@ ext_modules = [
             extra_compile_args=["-O3","-ffast-math"]
             )
 ]
-
 setup(name="model",
     cmdclass={"build_ext":build_ext},    
     ext_modules=ext_modules,
     include_dirs=[numpy.get_include()])
-
 ext_modules = [ 
         Extension( 
             "lob_model",
@@ -172,31 +158,25 @@ ext_modules = [
             extra_compile_args=["-O3","-ffast-math"]
             )
 ]
-
 setup(name="lob_model",
     cmdclass={"build_ext":build_ext},
     ext_modules=ext_modules,
     include_dirs=[numpy.get_include()])
-
-
 #Setup lobster
 os.chdir(path_lobster_pyscripts+'/')
 cwd=os.getcwd()
 print('\n\nI am performing setup of lobster.\nCurrent working directory is '+cwd+'\n')
-
 ext_modules=[Extension(
     "prepare_from_lobster",
     sources=["prepare_from_lobster.pyx"],
     libraries=["m"]
     )
     ]
-
 setup(name="prepare_from_lobster",
       cmdclass={"build_ext":build_ext},
       ext_modules = ext_modules,
       include_dirs=[numpy.get_include()]
       )
-
 #Setup performance_measurements
 os.chdir(path_perfmeas+'/')
 cwd=os.getcwd()
@@ -210,7 +190,6 @@ ext_modules = [
             extra_link_args=['-fopenmp']
             )
 ]
-
 setup(
   name = "measure_exectime",
   cmdclass={"build_ext":build_ext},

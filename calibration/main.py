@@ -40,16 +40,17 @@ first_read_fromLOBSTER=True
 dump_after_reading=False
 add_level_to_messagefile=True
 #Optional parameters for "calibrate"
-type_of_preestim='nonparam' #'ordinary_hawkes' or 'nonparam'
+type_of_preestim='ordinary_hawkes' #'ordinary_hawkes' or 'nonparam'
 max_imp_coef = 20.0
 learning_rate = 0.0001
-maxiter = 40
+maxiter = 50
 num_guesses = 8
 parallel=False
 use_prange=True
 num_processes = 8
-batch_size = 15000
-num_run_per_minibatch = 3  
+batch_size = 40000
+num_run_per_minibatch = 4
+number_of_attempts = 2  
 #Optional parameters for "nonparam_estim"
 num_quadpnts = 80
 quad_tmax = 1.0
@@ -268,12 +269,12 @@ def calibrate(event_type = 0):
     .format(event_type, n.year, n.month, n.day, n.hour, n.minute)
     redirect_stdout(direction='to',message=message, fout=fout, saveout=saveout)
             
-def merge_from_partial():
+def merge_from_partial(adjust_base_rates = False, leading_coef = 0.66):
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
     message+='I am merging from partial models\n'
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
-    path_readout=path_mmodel+'_readout'
+    path_readout=path_mmodel+'_merge_readout.txt'
     fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)    
     list_of_partial_names=[name_of_model+'_partial{}'.format(e) for e in range(number_of_event_types)]
     partial_models=[]
@@ -290,20 +291,85 @@ def merge_from_partial():
     )
     MODEL.get_input_data(data)    
     for mn in list_of_partial_names:
-        with open(path_models+'/{}/'.format(symbol)+mn,'rb') as source:
-            model=pickle.load(source)
+        try:
+            with open(path_models+'/{}/{}_{}/'.format(symbol,symbol,date)+mn,'rb') as source:
+                model=pickle.load(source)
+        except:
+            with open(path_models+'/{}/'.format(symbol,)+mn,'rb') as source:
+                model=pickle.load(source)
             assert model.data.symbol == symbol
             assert model.data.date == date
             assert model.calibration.type_of_preestim == type_of_preestim
             partial_models.append(model)
     if type_of_preestim == 'nonparam':
         MODEL.store_nonparam_estim_class(model.nonparam_estim)
-    MODEL.initialise_from_partial_calibration(partial_models, set_parameters=True, dump_after_merging=True, name_of_model=name_of_model)  
+    MODEL.initialise_from_partial_calibration(partial_models, set_parameters=True, adjust_base_rates = True, dump_after_merging=True, name_of_model=name_of_model)       
     n=datetime.datetime.now()
     message='\nMerging has been completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute)
     redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout) 
+def uncertainty_quantification(input_model_name=''):
+    now=datetime.datetime.now()
+    message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
+    message+='I am performing uncertainty quantification\n'
+    message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
+    path_readout=path_mmodel+'_uq_readout.txt'
+    fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)    
+    if input_model_name=='':
+        input_model_name='{}_sdhawkes_{}_{}'.format(symbol, date, time_window)
+    try:
+        with open(path_models+'/{}/{}_{}/'.format(symbol,symbol,date)+input_model_name,'rb') as source:
+            input_model=pickle.load(source)
+    except:
+        with open(path_models+'/{}/'.format(symbol,)+input_model_name,'rb') as source:
+            input_model=pickle.load(source)
+    assert input_model.data.symbol == symbol
+    assert input_model.data.date == date
 
-
+    model=sd_hawkes_model.SDHawkes(
+        name_of_model = input_model_name+'_uq',
+        number_of_event_types=input_model.number_of_event_types,
+        number_of_states=input_model.number_of_states,
+        number_of_lob_levels=input_model.n_levels,
+        volume_imbalance_upto_level = input_model.volume_enc.volume_imbalance_upto_level,
+        list_of_n_states=input_model.state_enc.list_of_n_states,
+        st1_deflationary=input_model.state_enc.st1_deflationary,
+        st1_inflationary=input_model.state_enc.st1_inflationary,
+        st1_stationary=input_model.state_enc.st1_stationary
+    )
+    model.get_input_data(input_model.data)
+    try:
+        model.store_nonparam_estim_class(input_model.nonparam_estim)
+    except:
+        pass
+    model.store_calibration(input_model.calibration)
+    model.set_hawkes_parameters(input_model.base_rates,
+                                input_model.impact_coefficients,
+                                input_model.decay_coefficients)
+    model.set_transition_probabilities(input_model.transition_probabilities)
+    model.set_dirichlet_parameters(input_model.dirichlet_param)
+    model.create_uq()
+    time_start=0.0
+    time_end=3600.0
+    max_events=20000
+    model.uncertainty_quantification.simulate(
+            time_start, time_end, max_number_of_events=max_events)
+    model.uncertainty_quantification.create_goodness_of_fit()
+    model.uncertainty_quantification.calibrate_on_simulated_data(
+        type_of_preestim = type_of_preestim,
+        max_imp_coef = max_imp_coef,
+        learning_rate = learning_rate,
+        maxiter = maxiter,
+        num_of_random_guesses = num_guesses,
+        parallel=parallel, use_prange = use_prange,
+        number_of_attempts = number_of_attempts,
+        num_processes = num_processes,
+        batch_size = batch_size,
+        num_run_per_minibatch = num_run_per_minibatch,
+    )
+    model.dump(path=path_models+'/{}'.format(symbol))  
+    n=datetime.datetime.now()
+    message='\nUncertainty quantification completed  on {}-{:02d}-{:02d} at {}:{:02d}'.format(n.year,n.month,n.day,n.hour,n.minute)
+    redirect_stdout(direction='to',message=message,fout=fout, saveout=saveout) 
 def main():  
     global symbol
     symbol=str(sys.argv[1])
@@ -317,13 +383,13 @@ def main():
     action=str(sys.argv[5])
     global time_window
     time_window=str('{}-{}'.format(int(initial_time),int(final_time)))
-    print("{} {} {} {} {} {}".format(sys.argv[0],symbol,date,initial_time,final_time,action))
+    print("$python {} {} {} {} {} {}".format(sys.argv[0],symbol,date,int(initial_time),int(final_time),action))
     global path_mdata
     path_mdata=path_lobster_data+'/{}/{}_{}_{}'.format(symbol,symbol,date,time_window)
     global name_of_model
     name_of_model=symbol+'_'+date+'_'+time_window
     global path_mmodel
-    path_mmodel=path_models+'/'+symbol+'/'+name_of_model        
+    path_mmodel=path_models+'/'+symbol+'/'+symbol+'_'+date+'/'+name_of_model        
     if action=='-r' or action=='--read':
         read_lobster()
     elif action=='-p' or (action=='--preestim' or action=='--nonparam_preestim'):
@@ -337,6 +403,9 @@ def main():
         calibrate(event_type)
     elif action=='-m' or action=='--merge':
         merge_from_partial()
+    elif action=='-uq' or action=='--uncertainty_quant':
+        input_model_name="{}_sdhawkes_{}_{}".format(symbol,date,time_window)
+        uncertainty_quantification(input_model_name)
     else:
         print("action: {}".format(action))
         raise ValueError("action not recognised")

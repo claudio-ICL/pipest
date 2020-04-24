@@ -56,7 +56,7 @@ class MinimisationProcedure:
                  int num_run_per_minibatch = 2,
                  set_max_base_rate = True,
                 ):
-        print("MinimisationProcedure is being initialised: event_type={}, learning_rate={}, maxiter={}".format(event_type,learning_rate,maxiter))
+        print("MinimisationProcedure is being initialised: batch_size={}, num_run_per_minibatch={},  learning_rate={}, maxiter={}".format(batch_size,num_run_per_minibatch,learning_rate,maxiter))
         assert time_start<=time_end
         assert len(times)==len(events)
         assert len(times)==len(states)
@@ -125,7 +125,7 @@ class MinimisationProcedure:
             }
             list_of_batches.append(batch)
         self.list_of_batches = list_of_batches
-        print("MinimisationProcedure.list_of_batches ready")
+        #print("MinimisationProcedure.list_of_batches ready")
     def launch_minimisation(self, use_prange=False, parallel=False, int num_processes = 0):
         print('I am launching minimisation. Number of initial guesses={}, use_prange={}, parallel={}'.format(len(self.list_init_guesses),use_prange, parallel))
         cdef list results = []

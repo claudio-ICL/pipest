@@ -200,12 +200,15 @@ class EstimProcedure:
                                  
     def store_base_rates(self):
         cdef np.ndarray[DTYPEf_t, ndim=1] base_rates = self.tol*np.ones(self.num_event_types,dtype=DTYPEf)
-        if self.hawkes_kernel.spectral_radius>=1:
+        if self.hawkes_kernel.max_spectral_radius>=1.0:
             print("Spectral radius of L1 norm of hawkes kernel is greater or equal 1.0: I am setting base rates to the default value of 0.0.")
         else:
-            base_rates = np.dot(
-                (np.eye(self.num_event_types, dtype=DTYPEf)-self.hawkes_kernel.L1_norm),
-                self.expected_intensities)
+            try:
+                base_rates = np.dot(
+                    (np.eye(self.num_event_types, dtype=DTYPEf)-self.hawkes_kernel.L1_norm),
+                    self.expected_intensities)
+            except:
+                pass
         self.base_rates = base_rates    
         
     def store_distribution_of_marks(self):
