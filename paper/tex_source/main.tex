@@ -1,0 +1,848 @@
+\documentclass[10pt]{article}
+
+    \usepackage[breakable]{tcolorbox}
+%     \usepackage{parskip} % Stop auto-indenting (to mimic markdown behaviour)
+    \usepackage[title]{appendix}
+    \usepackage{iftex}
+    \ifPDFTeX
+    	\usepackage[T1]{fontenc}
+    	\usepackage{mathpazo}
+    \else
+    	\usepackage{fontspec}
+    \fi
+
+    % Basic figure setup, for now with no caption control since it's done
+    % automatically by Pandoc (which extracts ![](path) syntax from Markdown).
+    \usepackage{graphicx}
+    \graphicspath{{./figures/}}
+    % Maintain compatibility with old templates. Remove in nbconvert 6.0
+    \let\Oldincludegraphics\includegraphics
+    % Ensure that by default, figures have no caption (until we provide a
+    % proper Figure object with a Caption API and a way to capture that
+    % in the conversion process - todo).
+    \usepackage{caption}
+    \DeclareCaptionFormat{nocaption}{}
+    \captionsetup{format=nocaption,aboveskip=0pt,belowskip=0pt}
+
+    \usepackage[Export]{adjustbox} % Used to constrain images to a maximum size
+    \adjustboxset{max size={0.9\linewidth}{0.9\paperheight}}
+    \usepackage{float}
+    \floatplacement{figure}{H} % forces figures to be placed at the correct location
+    \usepackage{xcolor} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage{textcomp} % defines textquotesingle
+    % Hack from http://tex.stackexchange.com/a/47451/13684:
+    \AtBeginDocument{%
+        \def\PYZsq{\textquotesingle}% Upright quotes in Pygmentized code
+    }
+    \usepackage{upquote} % Upright quotes for verbatim code
+    \usepackage{eurosym} % defines \euro
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics 
+                         % to support a larger range
+    \makeatletter % fix for grffile with XeLaTeX
+    \def\Gread@@xetex#1{%
+      \IfFileExists{"\Gin@base".bb}%
+      {\Gread@eps{\Gin@base.bb}}%
+      {\Gread@@xetex@aux#1}%
+    }
+    \makeatother
+
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    % The default LaTeX title has an obnoxious amount of whitespace. By default,
+    % titling removes some of it. It also provides customization options.
+    \usepackage{titling}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+    \usepackage[inline]{enumitem} % IRkernel/repr support (it uses the enumerate* environment)
+    \usepackage[normalem]{ulem} % ulem is needed to support strikethroughs (\sout)
+                                % normalem makes italics be italics, not underlines
+    \usepackage{mathrsfs}
+    
+    % Colors for the hyperref package
+    \definecolor{urlcolor}{rgb}{0,.145,.698}
+    \definecolor{linkcolor}{rgb}{.71,0.21,0.01}
+    \definecolor{citecolor}{rgb}{.12,.54,.11}
+
+    % ANSI colors
+    \definecolor{ansi-black}{HTML}{3E424D}
+    \definecolor{ansi-black-intense}{HTML}{282C36}
+    \definecolor{ansi-red}{HTML}{E75C58}
+    \definecolor{ansi-red-intense}{HTML}{B22B31}
+    \definecolor{ansi-green}{HTML}{00A250}
+    \definecolor{ansi-green-intense}{HTML}{007427}
+    \definecolor{ansi-yellow}{HTML}{DDB62B}
+    \definecolor{ansi-yellow-intense}{HTML}{B27D12}
+    \definecolor{ansi-blue}{HTML}{208FFB}
+    \definecolor{ansi-blue-intense}{HTML}{0065CA}
+    \definecolor{ansi-magenta}{HTML}{D160C4}
+    \definecolor{ansi-magenta-intense}{HTML}{A03196}
+    \definecolor{ansi-cyan}{HTML}{60C6C8}
+    \definecolor{ansi-cyan-intense}{HTML}{258F8F}
+    \definecolor{ansi-white}{HTML}{C5C1B4}
+    \definecolor{ansi-white-intense}{HTML}{A1A6B2}
+    \definecolor{ansi-default-inverse-fg}{HTML}{FFFFFF}
+    \definecolor{ansi-default-inverse-bg}{HTML}{000000}
+
+    % commands and environments needed by pandoc snippets
+    % extracted from the output of `pandoc -s`
+    \providecommand{\tightlist}{%
+      \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}, fontsize=\small}
+    % Add ',fontsize=\small' for more characters per line
+    \newenvironment{Shaded}{}{}
+    \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{{#1}}}
+    \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{{#1}}}}
+    \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{{#1}}}
+    \newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{{#1}}}
+    \newcommand{\RegionMarkerTok}[1]{{#1}}
+    \newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\NormalTok}[1]{{#1}}
+    
+    % Additional commands for more recent versions of Pandoc
+    \newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{{#1}}}
+    \newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{{#1}}}
+    \newcommand{\ImportTok}[1]{{#1}}
+    \newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{{#1}}}}
+    \newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{{#1}}}
+    \newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{{#1}}}
+    \newcommand{\BuiltInTok}[1]{{#1}}
+    \newcommand{\ExtensionTok}[1]{{#1}}
+    \newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{{#1}}}
+    \newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{{#1}}}
+    \newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    
+    
+    % Define a nice break command that doesn't care if a line doesn't already
+    % exist.
+    \def\br{\hspace*{\fill} \\* }
+    % Math Jax compatibility definitions
+    \def\gt{>}
+    \def\lt{<}
+    \let\Oldtex\TeX
+    \let\Oldlatex\LaTeX
+    \renewcommand{\TeX}{\textrm{\Oldtex}}
+    \renewcommand{\LaTeX}{\textrm{\Oldlatex}}
+    % Document parameters
+    % Document title
+    \title{Price impact profiles emerging from state trajectories in Hawkes-modelled event-driven high-frequency markets}
+    \author{Claudio Bellani}
+    
+    
+    
+    
+    
+% Pygments definitions
+\makeatletter
+\def\PY@reset{\let\PY@it=\relax \let\PY@bf=\relax%
+    \let\PY@ul=\relax \let\PY@tc=\relax%
+    \let\PY@bc=\relax \let\PY@ff=\relax}
+\def\PY@tok#1{\csname PY@tok@#1\endcsname}
+\def\PY@toks#1+{\ifx\relax#1\empty\else%
+    \PY@tok{#1}\expandafter\PY@toks\fi}
+\def\PY@do#1{\PY@bc{\PY@tc{\PY@ul{%
+    \PY@it{\PY@bf{\PY@ff{#1}}}}}}}
+\def\PY#1#2{\PY@reset\PY@toks#1+\relax+\PY@do{#2}}
+
+\expandafter\def\csname PY@tok@w\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.73,0.73}{##1}}}
+\expandafter\def\csname PY@tok@c\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.74,0.48,0.00}{##1}}}
+\expandafter\def\csname PY@tok@k\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.69,0.00,0.25}{##1}}}
+\expandafter\def\csname PY@tok@o\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ow\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@ne\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.82,0.25,0.23}{##1}}}
+\expandafter\def\csname PY@tok@nv\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@no\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ni\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.60,0.60,0.60}{##1}}}
+\expandafter\def\csname PY@tok@na\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.49,0.56,0.16}{##1}}}
+\expandafter\def\csname PY@tok@nt\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@s\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sd\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@si\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@se\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sr\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@ss\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sx\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@m\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@gh\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gu\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.50,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gr\endcsname{\def\PY@tc##1{\textcolor[rgb]{1.00,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ge\endcsname{\let\PY@it=\textit}
+\expandafter\def\csname PY@tok@gs\endcsname{\let\PY@bf=\textbf}
+\expandafter\def\csname PY@tok@gp\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@go\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.53,0.53}{##1}}}
+\expandafter\def\csname PY@tok@gt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.27,0.87}{##1}}}
+\expandafter\def\csname PY@tok@err\endcsname{\def\PY@bc##1{\setlength{\fboxsep}{0pt}\fcolorbox[rgb]{1.00,0.00,0.00}{1,1,1}{\strut ##1}}}
+\expandafter\def\csname PY@tok@kc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kd\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kr\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@bp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@fm\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@vc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vg\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vm\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sa\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@dl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@s2\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@s1\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@mb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@il\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mo\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ch\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cm\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cpf\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@c1\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cs\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+
+\def\PYZbs{\char`\\}
+\def\PYZus{\char`\_}
+\def\PYZob{\char`\{}
+\def\PYZcb{\char`\}}
+\def\PYZca{\char`\^}
+\def\PYZam{\char`\&}
+\def\PYZlt{\char`\<}
+\def\PYZgt{\char`\>}
+\def\PYZsh{\char`\#}
+\def\PYZpc{\char`\%}
+\def\PYZdl{\char`\$}
+\def\PYZhy{\char`\-}
+\def\PYZsq{\char`\'}
+\def\PYZdq{\char`\"}
+\def\PYZti{\char`\~}
+% for compatibility with earlier versions
+\def\PYZat{@}
+\def\PYZlb{[}
+\def\PYZrb{]}
+\makeatother
+
+
+    % For linebreaks inside Verbatim environment from package fancyvrb. 
+    \makeatletter
+        \newbox\Wrappedcontinuationbox 
+        \newbox\Wrappedvisiblespacebox 
+        \newcommand*\Wrappedvisiblespace {\textcolor{red}{\textvisiblespace}} 
+        \newcommand*\Wrappedcontinuationsymbol {\textcolor{red}{\llap{\tiny$\m@th\hookrightarrow$}}} 
+        \newcommand*\Wrappedcontinuationindent {3ex } 
+        \newcommand*\Wrappedafterbreak {\kern\Wrappedcontinuationindent\copy\Wrappedcontinuationbox} 
+        % Take advantage of the already applied Pygments mark-up to insert 
+        % potential linebreaks for TeX processing. 
+        %        {, <, #, %, $, ' and ": go to next line. 
+        %        _, }, ^, &, >, - and ~: stay at end of broken line. 
+        % Use of \textquotesingle for straight quote. 
+        \newcommand*\Wrappedbreaksatspecials {% 
+            \def\PYGZus{\discretionary{\char`\_}{\Wrappedafterbreak}{\char`\_}}% 
+            \def\PYGZob{\discretionary{}{\Wrappedafterbreak\char`\{}{\char`\{}}% 
+            \def\PYGZcb{\discretionary{\char`\}}{\Wrappedafterbreak}{\char`\}}}% 
+            \def\PYGZca{\discretionary{\char`\^}{\Wrappedafterbreak}{\char`\^}}% 
+            \def\PYGZam{\discretionary{\char`\&}{\Wrappedafterbreak}{\char`\&}}% 
+            \def\PYGZlt{\discretionary{}{\Wrappedafterbreak\char`\<}{\char`\<}}% 
+            \def\PYGZgt{\discretionary{\char`\>}{\Wrappedafterbreak}{\char`\>}}% 
+            \def\PYGZsh{\discretionary{}{\Wrappedafterbreak\char`\#}{\char`\#}}% 
+            \def\PYGZpc{\discretionary{}{\Wrappedafterbreak\char`\%}{\char`\%}}% 
+            \def\PYGZdl{\discretionary{}{\Wrappedafterbreak\char`\$}{\char`\$}}% 
+            \def\PYGZhy{\discretionary{\char`\-}{\Wrappedafterbreak}{\char`\-}}% 
+            \def\PYGZsq{\discretionary{}{\Wrappedafterbreak\textquotesingle}{\textquotesingle}}% 
+            \def\PYGZdq{\discretionary{}{\Wrappedafterbreak\char`\"}{\char`\"}}% 
+            \def\PYGZti{\discretionary{\char`\~}{\Wrappedafterbreak}{\char`\~}}% 
+        } 
+        % Some characters . , ; ? ! / are not pygmentized. 
+        % This macro makes them "active" and they will insert potential linebreaks 
+        \newcommand*\Wrappedbreaksatpunct {% 
+            \lccode`\~`\.\lowercase{\def~}{\discretionary{\hbox{\char`\.}}{\Wrappedafterbreak}{\hbox{\char`\.}}}% 
+            \lccode`\~`\,\lowercase{\def~}{\discretionary{\hbox{\char`\,}}{\Wrappedafterbreak}{\hbox{\char`\,}}}% 
+            \lccode`\~`\;\lowercase{\def~}{\discretionary{\hbox{\char`\;}}{\Wrappedafterbreak}{\hbox{\char`\;}}}% 
+            \lccode`\~`\:\lowercase{\def~}{\discretionary{\hbox{\char`\:}}{\Wrappedafterbreak}{\hbox{\char`\:}}}% 
+            \lccode`\~`\?\lowercase{\def~}{\discretionary{\hbox{\char`\?}}{\Wrappedafterbreak}{\hbox{\char`\?}}}% 
+            \lccode`\~`\!\lowercase{\def~}{\discretionary{\hbox{\char`\!}}{\Wrappedafterbreak}{\hbox{\char`\!}}}% 
+            \lccode`\~`\/\lowercase{\def~}{\discretionary{\hbox{\char`\/}}{\Wrappedafterbreak}{\hbox{\char`\/}}}% 
+            \catcode`\.\active
+            \catcode`\,\active 
+            \catcode`\;\active
+            \catcode`\:\active
+            \catcode`\?\active
+            \catcode`\!\active
+            \catcode`\/\active 
+            \lccode`\~`\~ 	
+        }
+    \makeatother
+
+    \let\OriginalVerbatim=\Verbatim
+    \makeatletter
+    \renewcommand{\Verbatim}[1][1]{%
+        %\parskip\z@skip
+        \sbox\Wrappedcontinuationbox {\Wrappedcontinuationsymbol}%
+        \sbox\Wrappedvisiblespacebox {\FV@SetupFont\Wrappedvisiblespace}%
+        \def\FancyVerbFormatLine ##1{\hsize\linewidth
+            \vtop{\raggedright\hyphenpenalty\z@\exhyphenpenalty\z@
+                \doublehyphendemerits\z@\finalhyphendemerits\z@
+                \strut ##1\strut}%
+        }%
+        % If the linebreak is at a space, the latter will be displayed as visible
+        % space at end of first line, and a continuation symbol starts next line.
+        % Stretch/shrink are however usually zero for typewriter font.
+        \def\FV@Space {%
+            \nobreak\hskip\z@ plus\fontdimen3\font minus\fontdimen4\font
+            \discretionary{\copy\Wrappedvisiblespacebox}{\Wrappedafterbreak}
+            {\kern\fontdimen2\font}%
+        }%
+        
+        % Allow breaks at special characters using \PYG... macros.
+        \Wrappedbreaksatspecials
+        % Breaks at punctuation characters . , ; ? ! and / need catcode=\active 	
+        \OriginalVerbatim[#1,codes*=\Wrappedbreaksatpunct]%
+    }
+    \makeatother
+
+    % Exact colors from NB
+    \definecolor{incolor}{HTML}{303F9F}
+    \definecolor{outcolor}{HTML}{D84315}
+    \definecolor{cellborder}{HTML}{CFCFCF}
+    \definecolor{cellbackground}{HTML}{F7F7F7}
+    
+    % prompt
+    \makeatletter
+    \newcommand{\boxspacing}{\kern\kvtcb@left@rule\kern\kvtcb@boxsep}
+    \makeatother
+    \newcommand{\prompt}[4]{
+        \ttfamily\llap{{\color{#2}[#3]:\hspace{3pt}#4}}\vspace{-\baselineskip}
+    }
+    
+
+    
+    % Prevent overflowing lines due to hard-to-break entities
+    \sloppy 
+    % Setup hyperref package
+    \hypersetup{
+      breaklinks=true,  % so long urls are correctly broken across lines
+      colorlinks=true,
+      urlcolor=urlcolor,
+      linkcolor=linkcolor,
+      citecolor=citecolor,
+      }
+    % Slightly bigger margins than the latex defaults
+    
+    \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\usepackage{amsthm}
+ %\theoremstyle{definition}
+{\newtheorem{thm}{Theorem}[section]
+\newtheorem{defi}[thm]{Definition}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{corol}[thm]{Corollary}
+{\theoremstyle{definition}{
+	\newtheorem{remark}[thm]{Remark} 
+	\newtheorem{example}[thm]{Example} 
+	\newtheorem{exercise}[thm]{Exercise} 
+}}}
+
+\include{notation}   
+
+\begin{document} 
+\numberwithin{equation}{section}
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+Include brief discussion on LOB inspired by \cite[Chapter 6]{FPR13mar}.
+\section{Preliminaries on the theory of counting processes} 
+In this section we introduce the adopted notation by reviewing basic concepts from the theory of counting processes. Our main reference is \cite[Chapter 14]{DVJ08int}.
+
+Let $\numEventTypes$ be a positive integer. For each $e$ ranging from $1$ to $\numEventTypes$, let $\arrivalTimes_{j}$, $j=1, 2, \dots$, be a strictly increasing sequence of positive random times, and assume that $\arrivalTimes_{j}\neq\arrivalTimes[e\derivative]_{j\derivative}$ if $(e,j)\neq (e\derivative,j\derivative)$. Then, 
+\begin{equation*}
+ \countingProc(t):= \sum_{j} \one\left\lbrace\arrivalTimes_{j}\leq t \right\rbrace, \qquad t\geq 0,
+\end{equation*}
+is a non-decreasing right-continuous process; we call $\countingProc$ the counting process associated with the sequence $(\arrivalTimes_{j})_j$. Notice that $(\arrivalTimes_{j})_j$ can be retrieved from $\countingProc$ by 
+\begin{equation*}
+ \arrivalTimes_{j} = \inf \left\lbrace t>0: \, \countingProc(t)\geq j\right\rbrace;
+\end{equation*}
+hence, there is a one-to-one correspondence between $\countingProc$ and $(\arrivalTimes_{j})_j$. 
+
+Fot $t>0$ we define 
+\begin{equation*}
+ \Delta\countingProc(t):= \lim_{h\downarrow 0} \Big( \countingProc(t) - \countingProc(t-h) \Big),
+\end{equation*}
+and we notice that $\Delta \countingProc(t) = 1$ if and only if $t=\arrivalTimes_{j}$ for some $j$, otherwise $\Delta \countingProc(t) = 0$.
+
+The $\numEventTypes$-dimensional vector $\multiCountingProc(t) = (\countingProc[1](t), \dots , \countingProc[\numEventTypes](t))$ is referred to as multivariate counting process associated with the $\numEventTypes$ sequences $(\arrivalTimes_{j})_j$, $e=1,\dots, \numEventTypes$. Let $\groundProc(t) := \countingProc[1](t)+ \dots + \countingProc[\numEventTypes](t)$ be the ground process of $\multiCountingProc$, and let 
+\begin{equation*}
+ \arrivalTimes[ ]_{n} := \inf \left\lbrace t>0: \, \groundProc(t) \geq n\right\rbrace, \qquad n=1,2,\dots, 
+\end{equation*}
+be the ordered sequence of random times stemming from the union $\lbrace \arrivalTimes_{j}: \, j=1,2,\dots; \,\, e=1,\dots,\numEventTypes\rbrace$. By defining for $n=1,2, \dots$, 
+\begin{equation*}
+ \event := \sum_{e=1}^{\numEventTypes} e \, \one\left\lbrace \Delta \groundProc(\arrivalTimes[ ]_{n}) = \Delta\countingProc(\arrivalTimes[ ]_{n}) \right\rbrace,
+\end{equation*}
+we have that the pair $(\arrivalTimes[ ]_{n}, \event[n])$ equivalently characterises the multivariate counting process, because 
+\begin{equation}\label{eq.NTE_counting_proc}
+ \countingProc(t) = \sum_{n} \one \left\lbrace \arrivalTimes[ ]_{n}\leq t, \, \event[n] = e\right\rbrace,
+\end{equation}
+for all $t>0$ and all $e=1,\dots, \numEventTypes$.
+
+We can interpret this construction by saying that the index $e$ labels $\numEventTypes$ types of events that occur in time, and $\countingProc(t)$ counts the number of events of type $e$ that have occurred by time $t$. 
+
+\begin{example}[``Poisson process'']
+ Let $\tau_e^j$, $j=1,2,\dots$, $\, \, e=1,\dots, \numEventTypes$ be independent random variables such that $\tau_e^j$ is exponentially distributed with parameter $\intensity>0$, $\, e=1,\dots, \numEventTypes$. Let $\arrivalTimes_{j} := \sum_{k\leq j} \tau_e^{k}$, and notice that $\arrivalTimes_{j}$ has probability density function 
+ \begin{equation*}
+  f_{e,j}(t) = \frac{\intensity^j}{(j-1)!}t^{j-1} e^{-\intensity t} \one\lbrace t>0\rbrace.
+ \end{equation*}
+ Then, the multivariate counting process $\multiCountingProc$ associated with the arrival times $\arrivalTimes_{j}$ is called $\numEventTypes$-dimensional Poisson process of rates $\intensity[1], \dots \intensity[\numEventTypes]$. This name is justified as follows. 
+ Since $\lbrace \countingProc(t)\geq j\rbrace = \lbrace \arrivalTimes_{j} \leq t\rbrace$, we have that $\frac{d}{dt} \Prob(\countingProc(t) \geq j) = f_{e,j} (t)$. On the other hand, if we define 
+ \begin{equation*}
+  S_{e,j}(t) := \sum_{k\geq j} \frac{(\intensity t)^k}{k!}e^{-\intensity t},
+ \end{equation*}
+we also have that $\frac{d}{dt} S_{e,j}(t) = f_{e,j}(t)$, by telescopic sum. Since $S_{e,j}(0) = \Prob (\countingProc(t)\geq 0)$, we deduce that $\Prob(\countingProc(t) \geq j) = S_{e,j}(t)$, and that
+\begin{equation*}
+ \Prob\left( \countingProc(t) = j\right) = 
+ \frac{(\intensity t)^j}{j!} \exp\left( -\intensity t\right).
+\end{equation*}
+Therefore for every $t$, $\countingProc(t)$ is a Poisson random variable of parameter $\intensity t$, and the ground process $\groundProc$ of $\multiCountingProc$ is such that for every $t$, $\groundProc(t) \sim \text{Pois}(\intensity[1]t + \dots + \intensity[\numEventTypes]t)$.
+\end{example}
+
+The minimal filtration to which a multivariate counting process $\multiCountingProc$ is adapted -- and such that it satisfies the usual conditions of completeness and right-continuity -- is called the internal history of $\multiCountingProc$. Any other filtration to which $\multiCountingProc$ is adapted is called a history of $\multiCountingProc$, and it must be a superset of the internal history. 
+
+\begin{defi}\label{def.compensator}
+ Let $\stochasticBase$ be a filtered probability space where the multivariate counting process $\multiCountingProc$ is defined, and assume that $\filtrationF$ is a history of $\multiCountingProc$. We say that the $\numEventTypes$-dimensional stochastic process $\compensator = (\compensator_1, \dots , \compensator_{\numEventTypes})$ is an $\filtrationF$-compensator for $\multiCountingProc$ if: (o) $\compensator(0)=0$ and $\compensator$ is of finite variation; (i) $\compensator$ is $\filtrationF$-predictable; (ii) $\compensator$ is right-continuous; (iii) $\multiCountingProc - \compensator$ is a local martingale. 
+\end{defi}
+
+Since a counting process $\multiCountingProc$ is non-decreasing, as soon as an $\filtrationF$-compensator $\compensator$ for $\multiCountingProc$ exists, not only it is of finite variation as required by Definition \ref{def.compensator}, but in fact it must be non-decreasing too. Furthermore, because of requirements (i) and (ii), the discontinuities of $\compensator$ -- if any -- are typically associated with the occurrence of deterministic events, such as fixed atoms in the distribution of $\multiCountingProc$. In the following, our concern will be on continuous compensators.
+
+Given the counting process $\multiCountingProc$ and a history $\filtrationF$, the $\filtrationF$-compensator is unique upto an evanescent set, and it is equivalently characterised as the $\filtrationF$-predictable projection of $\multiCountingProc$, namely as the $\filtrationF$-predictable non-decreasing process $\compensator$ such that 
+\begin{equation}\label{eq.compensators_and_predict_projections}
+ \Expectation \left[ \int_{\R_+} Y d\multiCountingProc\right]
+ = 
+ \Expectation \left[ \int_{\R_+} Y d\compensator\right]
+\end{equation}
+for all non-negative $\filtrationF$-predictable processes $Y$ (see \cite[Proposition 14.2.II]{DVJ08int}). 
+
+Because of requirement \textit{(o)} in Definition \ref{def.compensator}, as soon as a compensator exists and is continuous, it can be written as 
+\begin{equation*}
+ \compensator (t) = \intzerot \intensity[ ](s)ds,
+\end{equation*}
+for some $\filtrationF$-predictable process $\intensity[ ]=(\intensity[1],\dots,\intensity[\numEventTypes])$, which is called intensity of the counting process $\multiCountingProc$. Combining this with equation \eqref{eq.compensators_and_predict_projections}, one obtains the formula 
+\begin{equation*}
+ \Expectation\left[ \countingProc(t)-\countingProc(s) \vert \filtrationF_s \right]
+ =
+ \Expectation\left[ \int_{s}^{t} \intensity(u) du
+  \vert \filtrationF_s \right],
+  \qquad  s\leq t,
+\end{equation*}
+which allows to interpret $\intensity(t)$ as a measure of the ``instantaneous risk'' of a jump at time $t$ in the $e$-th component of the counting process $\multiCountingProc$. Notice that this ``risk'' evolves in time and it varies depending on the information available upto time $s$. 
+
+Compensators are crucial in the following time-change result, whcih will be used to perform goodness-of-fit diagnostics.
+
+\begin{thm}[Meyer 1971]\label{thm.meyer1971}
+Let $\multiCountingProc$ be a $\numEventTypes$-dimensional counting process with arrival times $\arrivalTimes$. Assume that $\multiCountingProc$ has conitnuous compensator $\compensator$ such that $\compensator_{e}(t) \rightarrow \infty$ as $t\rightarrow \infty$ for all $e=1, \dots, \numEventTypes$. Then, the random sequences $\lbrace \compensator(\arrivalTimes_{j}): \, j=1,2,\dots \rbrace$, $e=1,\dots, \numEventTypes$ are the arrival times of a $\numEventTypes$-dimensional unit-rate Poisson process, namely the time-changed interarrival times
+\begin{equation}\label{eq.time-changed_intertimes}
+ \tau_e^j := \compensator(\arrivalTimes_{j}) - \compensator(\arrivalTimes_{j-1})
+\end{equation}
+are all independent exponentially distributed random variables for $j=1,2,\dots$ and $e=1,\dots,\numEventTypes$.  
+\end{thm}
+For a proof of Theorem \ref{thm.meyer1971}, see \cite{BN88sim}. 
+
+Testing the distribution of a multivariate counting process satisfying the assumptions of Theorem \ref{thm.meyer1971} can therefore be reduced to testing that the variables in equation \eqref{eq.time-changed_intertimes} are i.i.d samples from a unit rate exponential distribution. The latter can be based on EDF statistics (see e.g. \cite[Chapter 4]{DS86goo}, as explained in the rest of the section. 
+
+Given $\numEventTypes$ samples, each of $n_e$ data points $\arrivalTimes_{j}$, $j=1,\dots,n_e$, make the null hypothesis that they are generated by a multivariate counting process satisfying the assumptions of Theorem \ref{thm.meyer1971}. Define $\tau_e^j$ as in equation \eqref{eq.time-changed_intertimes}, and let $\EDFfun$ be the empirical distribution function associated with the sample $(\tau_e^j)_j$, namely 
+\begin{equation*}
+ \EDFfun(t) = \frac{1}{n_e}\sum_{j=1}^{n_e} \one \left\lbrace \tau_e^j \leq t \right\rbrace.
+\end{equation*}
+If $(\tau_e^j)_j$ are independent samples from a unit-rate exponential distribution and if $n_e$ is sufficiently large, then $\EDFfun$ is expected to be close to $F(t)=1-e^{-t}$. 
+Let $d$ be a distance between cumulative distribution functions. We call $c_e:=d(\EDFfun, F)$ the critical value associated with the sample. 
+
+On a probability space $\probabilitySpace$, let $\sigma_i$ be $n_e$ i.i.d. random variables $\sim \text{Exp}(1)$, $i=1,\dots, n_e$, and define the random EDF 
+\begin{equation*}
+ F^{\sigma}(t) = \frac{1}{n_e}\sum_{i=1}^{n_e} \one \left\lbrace \sigma_i \leq t\right\rbrace.
+\end{equation*}
+
+We say that the null hypothesis that $\arrivalTimes_{j}$, $j=1, \dots, n_e$, are generated by the $e$-th component $\countingProc$ of $\multiCountingProc$ cannot be rejected with confidence greater than $100\text{x}(1-\alpha)\text{\%}$ if 
+\begin{equation*}
+ \Prob\left( d(F^\sigma, F) \geq c_e \right) \leq \alpha.
+\end{equation*}
+Since the function $c \mapsto \Prob\left( d(F^\sigma, F) \geq c \right)$ is non-decreasing, the smaller $d(\EDFfun, F)$ is, the less confidently the null hypothesis can be rejected. Therefore, given the test statistics $c_e:=d(\EDFfun, F)$, its associated p-value $\alpha(d(\EDFfun,F)) := \Prob(d(F^\sigma, F) \geq d(\EDFfun,F))$ is such that $100\text{x}(1-\text{p-value})\text{\%}$ is the highest level of confidence with which the null hypothesis can be rejected.
+
+Furthermore, the independence among the components $e=1,\dots, \numEventTypes$ can be assessed by drawing correlograms, and by testing that the time-changed interarrival times of the ground process are i.i.d. with $\sim \text{Exp}(\numEventTypes)$.
+
+\section{State-dependent Hawkes processes}
+% Start with a presentation of state-dependent Hawkes processes following \cite{MP18sta}. Explain the computational advantages of exponential kernels; specialise the formulae for the power-law kernel which will be adopted in the rest of the paper.
+
+A $\numEventTypes$-dimensional counting process $\multiCountingProc$ is called Hawkes process if it admits a continuous compensator $\compensator$ with intensities 
+\begin{equation}
+ \intensity(t) = \baseRate_e + \sum_{\eone=1}^{\numEventTypes}\intzerot \hawkesKernel\subscriptee(t-s)d\countingProc(s), \qquad e=1,\dots,\numEventTypes,
+\end{equation}
+for some non-negative base rates $\baseRate_e \geq 0$, and some non-negative locally integrable functions $\hawkesKernel\subscriptee \geq 0$ that are supported on the non-negative half line.
+
+The matrix-valued function $t\mapsto [\hawkesKernel\subscriptee(t)]_{e,\eone = 1, \dots, \numEventTypes}$ is referred to as the kernel of the Hawkes process $\multiCountingProc$.  If all the kernel functions are integrable, the spectral radius $\rho$ of the $\numEventTypes\times\numEventTypes$-matrix of $\Lone$ norms $\Vert \hawkesKernel\subscriptee \Vert_{1}$ is called radius of the Hawkes kernel; if some of the kernel functions are not integrable, the spectral radius is set to $+\infty$.  
+
+A $\numEventTypes$-dimensional Hawkes process is asymptotically stationary if the radius of its kernel is smaller than $1$; in this case the the intensity process $\intensity[ ]$ is asymptotically stationary.  
+
+
+The study of state-dependent Hawkes processes was initiated by \cite{MP20hyb} and \cite{MP18sta}. Following these works, we introduce state-dependent Hawkes  processes, and we then focus our attention to the case of power-law kernels.
+
+The rationale for introducing state-dependent Hawkes processes is that, to better describe a phenomenon under consideration, one would like not only to record the events' arrival times, but also the state of the system every time such events occurred. The construction hence proceeds as follows.
+
+Let $\stateSpace$ be a state space. We will always assume $\stateSpace$ to be finite, so that we can label its elements as $x=1, \dots, \numStates$, where $\numStates$ is the number of possible states of the system. A state-dependent counting process will be a pair $(\multiCountingProc, \stateVariable)$, where for all $t$, $\multiCountingProc(t)$ records the number of events occurred by time $t$ as per formula \eqref{eq.NTE_counting_proc}, and $\stateVariable(t)$ records the state of the system at time $t$. More specifically, we have
+\begin{defi}[{\cite[Definition 2.1]{MP18sta}}]\label{def.sdHawkes}
+ Let $\multiCountingProc$ be a $\numEventTypes$-dimensional counting process. Let $\stateVariable$ be a continuous-time picewise-constant process in the finite state space $\stateSpace$ of cardinality $\numStates$. Let $\filtrationF$ be the minimal complete right-continuous filtration generated by the pair $(\multiCountingProc, \stateVariable)$. Then, we say that $(\multiCountingProc, \stateVariable)$ is a state-dependent Hawkes process if 
+ \begin{enumerate}
+  \item $\multiCountingProc$ admits a $\filtrationF$-continuous compensator with intensities
+  \begin{equation}\label{eq.intensity_of_sdHawkes}
+   \intensity(t) = \baseRate_e + \sum_{\eone=1}^{\numEventTypes}\intzerot \hawkesKernel\subscriptee(t-s, \stateVariable(s))d\countingProc(s), \qquad e=1,\dots,\numEventTypes,
+  \end{equation}
+  for some $\numEventTypes$ non-negative base rates $\baseRate_e\geq 0$, $\, e=1, \dots, \numEventTypes$, and some measurable functions $\hawkesKernel: \R_+ \times \stateSpace \rightarrow \R_+$ such that $\hawkesKernel(\cdot, x)$ is locally integrable for all $x$ in $\stateSpace$;
+  \item $\stateVariable$ jumps only at arrival times $\arrivalTimes[ ]_{n}$ of $\multiCountingProc$, and there exist $\numEventTypes$ transition matrices $\transProb_e(\cdot,\cdot)$, $e=1,\dots, \numEventTypes$, defined on $\stateSpace$ such that for all $n$
+  \begin{equation}
+   \Prob\left( \stateVariable(\arrivalTimes[ ]_{n})=x \,  \vert \,  E_n, \, \filtrationF_{\arrivalTimes[ ]_{n}-} \right)
+   =
+   \transProb_{E_n}\left(\stateVariable(\arrivalTimes[ ]_{n}-),x\right),
+   \qquad
+   x=1, \dots, \numStates,
+  \end{equation}
+  where $\stateVariable(\arrivalTimes[ ]_{n}- ) = \lim_{t\uparrow \arrivalTimes[ ]_{n}} \stateVariable(t)$ is the state of the system immediately before the $n$-th event $E_n$, and $\filtrationF_{\arrivalTimes[ ]_{n}-} = \bigvee_{\epsilon>0} \filtrationF_{\arrivalTimes[ ]_{n} - \epsilon}$ represents the information available immediately before this event.
+ \end{enumerate}
+\end{defi}
+
+Given a $\numEventTypes$-dimensional vector $\baseRate$ with non-negative components, given a $\numEventTypes\times\numEventTypes$-dimensional matrix valued function $\hawkesKernel$ defined on $\R_{+} \times \stateSpace$, and given $\numEventTypes$ transition matrices $\transProb_e$, $e=1,\dots,\numEventTypes$, defined on $\stateSpace$, conditions for the existence of a pair $(\multiCountingProc,\stateVariable)$ that satisfies the requirements of Definition \ref{def.sdHawkes} with $\baseRate$ as vector of base rates, $\hawkesKernel$ as matrix of Hawkes kernels and $\transProb$ as transition probabilities are obtained by relying on existence results for the more general class of hybrid marked point processes introduced in \cite{MP20hyb} -- see \cite[Theorem 2.3]{MP18sta}. We will use the following sufficient condition for existence, uniqueness and non-explosiveness.
+\begin{prop}[{\cite[Theorem 2.3]{MP18sta}}]\label{prop.existence_sdHawkes}
+ Let $\baseRate$ be a $\numEventTypes$-dimensional vector with non-negative components; let $\hawkesKernel\subscriptee$ be non-negative functions defined on $\R_{+} \times \stateSpace$, where the indexes $e$ and $\eone$ range from $1$ to $\numEventTypes$; let $\transProb_e$ be transition matrices defined on the state space $\stateSpace$, for $e=1,\dots,\numEventTypes$. If the functions $\hawkesKernel\subscriptee$ are bounded for all $e,\eone=1,\dots,\numEventTypes$, then a state-dependent Hawkes process $(\multiCountingProc, \stateVariable)$ with base rates $\baseRate_e$, kernels $\hawkesKernel\subscriptee$ and transition probabilities $\transProb_e$ exists, and such state-dependent Hawkes process is unique and non-explosive. 
+\end{prop}
+
+The mentioned link with the general class of hybrid marked point processes is obtained by the introduction of the following $\numEventTypes\numStates$-dimensional counting process $\hybridHawkes$. It gives a complementary point of view on state-dependent Hawkes processes, to which we will refer in the following. We define it here and we set the notation for later use.
+
+Given a state-dependent Hawkes process $(\multiCountingProc, \stateVariable)$ as in Definition \ref{def.sdHawkes}, let $\arrivalTimes[]_n$ and $\event[n]$ be the sequences of arrival times and events that equivalently describe the counting process component $\multiCountingProc$ of the pair $(\multiCountingProc, \stateVariable)$, as per equation \eqref{eq.NTE_counting_proc}. Let $\stateVariable_n$ be the sequence of states $X(\arrivalTimes[]_n)$. Then, the 
+$\numEventTypes\numStates$-dimensional counting process
+\begin{equation}\label{eq.hybridHawkes}
+ \hybridHawkes_{e,x}(t) := 
+ \sum_{n} \one \left\lbrace \arrivalTimes[]_n \leq t, \, \event[n] = e, \, 
+ \stateVariable_n = x \right\rbrace
+\end{equation}
+is called the hybrid-MPP counterpart of  $(\multiCountingProc, \stateVariable)$.
+We have that the $j$-th jump time $\arrivalTimes[e]_j$ of the $e$-th component of $\multiCountingProc$ is the $j$-th order statistic of $\lbrace \arrivalTimes[e,x]_k: \, k=1,2,\dots, \, \, x=1,\dots,\numStates \rbrace$, where $(\arrivalTimes[e,x]_k)_k$ are the jump times of the $(e,x)$-th component of $\hybridHawkes$. Similarly, $\arrivalTimes[]_n$ is the $n$-th order statistics of $\lbrace \arrivalTimes[e,x]_k: \, k=1,2,\dots, \, \, e=1,\dots, \numEventTypes, \, \,  x=1,\dots,\numStates \rbrace$.
+
+Because of our standing assumption of a finite state space $\stateSpace$, if we restrict our attention to a parametric class of Hawkes kernels $\lbrace\hawkesKernel^\theta : \, \theta \in \Theta \rbrace$, we can talk about a log-likelihood function associated with this class. Explicit expressions for log-likelihood functions of state-dependent Hawkes processes are derived from the abstract characterisation of likelihoods in terms of Janossy densities of point processes -- see \cite[Chapters 7 and 14]{DVJ08int}.
+\begin{prop}[{\cite[Theorem 3.1]{MP18sta}}]
+ Let $\lbrace\hawkesKernel^\theta : \, \theta \in \Theta \rbrace$ be a parametric family of bounded Hawkes kernels and let $\intensity^{\baseRate,\theta}=\intensity^{\baseRate,\theta}(t)$, for $e=1,\dots, \numEventTypes$, be the intensities obtained from equation \eqref{eq.intensity_of_sdHawkes} in dependence of the base rates $\baseRate_e$ and the parameter $\theta$ of the Hawkes kernel.  Given a realisation of the state-dependent Hawkes process $(\multiCountingProc, \stateVariable)$ consisting of arrival times $t_n$, events $e_n$ and states $x_n$, the log-likelihood function associated with this realisation is 
+ \begin{equation}\label{eq.loglikelihood_general}
+  \log \likelihood (\nu,\theta) 
+  =
+  \sum_{n=1}^{\groundProc} \transProb_{e_n}(x_{n-1},x_{n})
+  +\sum_{n=1}^{\groundProc} \intensity[e_{n}]^{\baseRate,\theta}(t_n)
+  -\sum_{e=1}^{\numEventTypes} \int_{0}^{\timeHorizon} \intensity^{\baseRate,\theta}(t)dt, 
+ \end{equation}
+where $\transProb$ are the transition probabilities of $(\multiCountingProc, \stateVariable)$, $\timeHorizon$ is the time horizon of the realisation, and $\groundProc$ is the total number of events in the realisation, i.e. the value $\groundProc(\timeHorizon)$ that the ground process of  $(\multiCountingProc, \stateVariable)$ takes at time $\timeHorizon$. 
+\end{prop}
+
+Let $\impCoef_{\eone,\xone, e}$ and $\decCoef_{\eone,\xone, e}$ be non-negative real numbers, with the indexes $\eone$ and $e$ ranging from $1$ to $\numEventTypes$, and the index $\xone$ ranging from $1$ to $\numStates$. Think of $\impCoef: \xone \mapsto [\impCoef_{\eone,\xone,e}]_{\eone,e}$ and of $\decCoef: \xone \mapsto [\decCoef_{\eone,\xone,e}]_{\eone,e}$ as matrix-valued functions defined on the state space $\stateSpace$. Since $\stateSpace$ is finite, the pair $(\impCoef,\decCoef)$ can in fact represent the parameter $\theta = (\impCoef,\decCoef)$ of a parametric family of Hawkes kernels; indeed we can set
+\begin{equation}\label{eq.parametric_hawkes_kernel_general}
+ \hawkesKernel^{\theta}\subscriptee(t,\xone)
+ = \parametricHawkesKernel(t,\, \impCoef_{\eone,\xone,e},\, \decCoef_{\eone,\xone,e}),
+\end{equation}
+for some fixed function $\parametricHawkesKernel$.
+A remarkable choice for a parametric family $\lbrace \hawkesKernel^{\impCoef,\decCoef}: \, \impCoef, \, \decCoef\rbrace$ of this form is 
+\begin{equation}
+ \hawkesKernel^{\alpha,\beta}\subscriptee(t,\xone) = \impCoef_{\eone,\xone,e} \, \exp\left( -\decCoef_{\eone,\xone,e} \, t \right),
+\end{equation}
+where the fixed function $\parametricHawkesKernel$ is $\parametricHawkesKernel(t,a,b)=a\exp(-bt)$.
+This choice is remarkable because (i) it guarantees the boundedness required in Proposition \ref{prop.existence_sdHawkes}; (ii) it offers computational advantages for the evaluation of the log-likelihood in equation \eqref{eq.loglikelihood_general} and more generally for the evaluation of the intensities of the Hawkes process. 
+Point (i) guarantees the existence uniqueness and non-explosiveness of a state-dependent Hawkes process for any choice of non-negative parameters $\baseRate_e$, 
+$\impCoef_{\eone,\xone, e}$ and $\decCoef_{\eone,\xone, e}$, and any transition matrices $\transProb_e$. Point (ii) is one of the reason that motivated the choice of the exponential kernel in the two models implemented in \cite{MP18sta}. We will now expand on this computation advantages. 
+
+Both in the context of simulating a state-dependent Hawkes process and in the context of maximum likelihood estimation, several evaluations of the intensities $\intensity$ are required. Let $(\multiCountingProc,\stateVariable)$ be a state-dependent Hawkes process with Hawkes kernel as in equation \eqref{eq.parametric_hawkes_kernel_general}. Then, the evaluation of the intensities $\intensity$ in \eqref{eq.intensity_of_sdHawkes} reduces to the computation of the following formula
+\begin{equation*}
+ \intensity(t) = \baseRate_e 
+ +\sum_{\eone, \, \xone} \sum_{\arrivalTimes[\eone, \xone]_{j} < t} 
+ \parametricHawkesKernel(t-\arrivalTimes[\eone, \xone]_{j}, \, \impCoef_{\eone,\xone, e}, \,  \decCoef_{\eone,\xone, e}),
+\end{equation*}
+where in the outermost sum the index $\eone$ refers to event types and ranges from $1$ to $\numEventTypes$, the index $\xone$ refers to states and ranges from $1$ to $\numStates$, and where in the innermost sum $(\arrivalTimes[\eone, \xone]_{j})_j$ are the jump times of the $(\eone, \xone)$-th component of the hybrid-MPP counterpart $\hybridHawkes$ of $(\multiCountingProc,\stateVariable)$ defined in equation \eqref{eq.hybridHawkes}.
+
+
+
+
+
+\section{The python module \texttt{pipest}}
+\subsection{Performance tests}
+\subsubsection{Execution speed}
+
+\subsubsection*{Evaluation of loglikelihood and gradient on a laptop}
+   \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{2}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{n}{date\PYZus{}time}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{2020\PYZhy{}04\PYZhy{}12\PYZus{}0738}\PY{l+s+s2}{\PYZdq{}}
+\PY{k}{with} \PY{n+nb}{open}\PY{p}{(}\PY{n}{path\PYZus{}saved\PYZus{}tests}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{/perf\PYZhy{}test\PYZus{}}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{/}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{date\PYZus{}time}\PY{p}{)}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{test\PYZus{}model\PYZus{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{+}\PY{n}{date\PYZus{}time}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rb}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)} \PY{k}{as} \PY{n}{source}\PY{p}{:}
+    \PY{n}{model}\PY{o}{=}\PY{n}{pickle}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{source}\PY{p}{)}
+\PY{n}{meas} \PY{o}{=} \PY{n}{measure\PYZus{}exectime}\PY{o}{.}\PY{n}{PerformanceMeasure}\PY{p}{(}\PY{n}{model}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Number of cpus: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{os}\PY{o}{.}\PY{n}{cpu\PYZus{}count}\PY{p}{(}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s2}{Model}\PY{l+s+s2}{\PYZsq{}}\PY{l+s+s2}{s key features:}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{d\PYZus{}E=}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{; d\PYZus{}S=}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{meas}\PY{o}{.}\PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}event\PYZus{}types}\PY{p}{,} \PY{n}{meas}\PY{o}{.}\PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}states}\PY{p}{)}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Number of simulated LOB events: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{meas}\PY{o}{.}\PY{n}{model}\PY{o}{.}\PY{n}{simulated\PYZus{}events}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+PerformanceMeasure is being initialised on
+model.name\_of\_model=test\_model\_2020-04-12\_0738
+posix.uname\_result(sysname='Linux', nodename='claudio-HP-EliteBook-850-G3',
+release='5.3.0-46-generic', version='\#38\textasciitilde{}18.04.1-Ubuntu SMP Tue Mar 31 04:17:56
+UTC 2020', machine='x86\_64')
+Number of cpus: 4
+
+Model's key features:
+d\_E=4; d\_S=15
+Number of simulated LOB events: 19958
+    \end{Verbatim}
+
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{3}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{c+c1}{\PYZsh{}select component of multivariate Hawkes process e=0,...,d\PYZus{}E\PYZhy{}1}
+\PY{n}{e} \PY{o}{=} \PY{l+m+mi}{0}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{4}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{o}{\PYZpc{}\PYZpc{}timeit} \PYZhy{}n 5 \PYZhy{}r 3
+\PY{n}{meas}\PY{o}{.}\PY{n}{target\PYZus{}loglikelihood}\PY{p}{(}\PY{n}{e}\PY{p}{,} \PY{n}{use\PYZus{}prange}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+3.37 s +/- 50.8 ms per loop (mean +/- std. dev. of 3 runs, 5 loops each)
+    \end{Verbatim}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{5}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{o}{\PYZpc{}\PYZpc{}timeit} \PYZhy{}n 5 \PYZhy{}r 3
+\PY{n}{meas}\PY{o}{.}\PY{n}{target\PYZus{}loglikelihood}\PY{p}{(}\PY{n}{e}\PY{p}{,} \PY{n}{use\PYZus{}prange}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+1.26 s +/- 5.1 ms per loop (mean +/- std. dev. of 3 runs, 5 loops each)
+    \end{Verbatim}
+
+\subsubsection*{Evaluation of loglikelihood and gradient on a cluster hpc}    
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+ $python test_perf.py --loglikelihood
+this_test_model_name: test_model_2020-04-12_0738
+date_time of model: 2020-04-12_0738
+Date and time of test: 2020-04-12 at 11:50
+
+PerformanceMeasure is being initialised on model.name_of_model=test_model_2020-04-12_0738
+posix.uname_result(sysname='Linux', nodename='r5i2n0', release='3.10.0-514.26.2.el7.x86_64', version='#1 SMP Tue Jul 4 15:04:05 UTC 2017', machine='x86_64')
+Number of cpus: 8
+
+Model's key features:
+d_E=4; d_S=15
+Number of simulated LOB events: 19958
+
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'plain' for-loops (no prange):
+[3.7853622250258923, 4.9914959750603884, 4.556901058880612, 4.488794992910698]
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'prange' in outermost for-loop:
+[0.25286552612669766, 0.33203633199445903, 0.30347337294369936, 0.2986017200164497]
+
+measure_loglikelihood() terminates on 2020-04-12 at 11:53
+============================================
+        Job resource usage summary 
+                 Memory (GB)    NCPUs
+ Requested  :        10             8
+ Used       :         2 (peak)   1.16 (ave)
+============================================
+\end{Verbatim}
+\end{tcolorbox}
+
+
+\subsubsection{Goodness of fit}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{5}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, , fontsize=\small]
+\PY{n}{date\PYZus{}time} \PY{o}{=} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{2020\PYZhy{}04\PYZhy{}12\PYZus{}0738}\PY{l+s+s2}{\PYZdq{}}
+\PY{n}{name\PYZus{}of\PYZus{}test} \PY{o}{=} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{prange\PYZus{}test\PYZus{}model\PYZus{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{+}\PY{n}{date\PYZus{}time}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{6}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{k}{with} \PY{n+nb}{open}\PY{p}{(}\PY{n}{path\PYZus{}tests}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{/saved\PYZus{}tests/perf\PYZhy{}test\PYZus{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{+}\PY{n}{date\PYZus{}time}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{/}\PY{l+s+s1}{\PYZsq{}}\PY{o}{+}\PY{n}{name\PYZus{}of\PYZus{}test}\PY{p}{,}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rb}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)} \PY{k}{as} \PY{n}{source}\PY{p}{:}
+    \PY{n}{model}\PY{o}{=}\PY{n}{pickle}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{source}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{name\PYZus{}of\PYZus{}model}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Date and time of initilisation: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{datetime\PYZus{}of\PYZus{}initialisation}\PY{p}{)}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{number\PYZus{}of\PYZus{}event\PYZus{}types: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{; number\PYZus{}of\PYZus{}states: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}
+    \PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}event\PYZus{}types}\PY{p}{,} \PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}states}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+prange\_test\_model\_2020-04-12\_0738
+Date and time of initilisation: 2020-04-12 07:38:26.601783
+number\_of\_event\_types: 4; number\_of\_states: 15
+    \end{Verbatim}
+
+    The following three figures will show QQ plots that assess goodness of
+fit. The first figure refers to the coefficients inserted by the user;
+it asseses the reliability of the simulation and it is expected to show
+good results. The second picture refers to the coefficients obtained via
+non-parametric estimation. The results can be mixed since the procedure
+assumes stationarity of the point process and i.i.d. sequences of marks
+(which may not hold). The third figure refers to the parameters obtained
+via maximum likelihood estimation and it is expected to be an
+improvement over the non-parametric estimation; this is because on the
+one hand the mle estimation does not assume stationarity, and on the
+other hand the results of the non-parametric estimations are used as one
+of the initilisations for the gradient descent of the mle estimation.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{7}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{n}{model}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+Anderson-Darling test to check distribution of residuals
+Null hypothesis is "expon"
+Significance levels: [15.  10.   5.   2.5  1. ]
+Critical values: [0.922 1.078 1.341 1.606 1.957]
+event type=0, ad\_stat: 0.2141966471563137
+event type=1, ad\_stat: 0.49801130759806256
+event type=2, ad\_stat: 0.45093652879040746
+event type=3, ad\_stat: 0.8266097663436085
+    \end{Verbatim}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{8}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{n}{model}\PY{o}{.}\PY{n}{nonparam\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{nonparam\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738_nonparam.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+Anderson-Darling test to check distribution of residuals
+Null hypothesis is "expon"
+Significance levels: [15.  10.   5.   2.5  1. ]
+Critical values: [0.922 1.078 1.341 1.606 1.957]
+event type=0, ad\_stat: 120.51717269351502
+event type=1, ad\_stat: 54.94009196285606
+event type=2, ad\_stat: 0.8662745583551441
+event type=3, ad\_stat: 222.09860859998298
+    \end{Verbatim}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{9}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{n}{model}\PY{o}{.}\PY{n}{mle\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{mle\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738_mle.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+Anderson-Darling test to check distribution of residuals
+Null hypothesis is "expon"
+Significance levels: [15.  10.   5.   2.5  1. ]
+Critical values: [0.922 1.078 1.341 1.606 1.957]
+event type=0, ad\_stat: 0.2137307976381635
+event type=1, ad\_stat: 0.8740122294875619
+event type=2, ad\_stat: 1.5654262188509165
+event type=3, ad\_stat: 1.3660949155273556
+    \end{Verbatim}
+
+
+\section{A state-dependent Hawkes model for order driven markets}
+Recall \cite{BM14haw}.
+
+Describe the model: choice of event types, choice of states. 
+
+\subsection{Calibration on LOBSTER data}
+Describe how the lobster dataset is filtered. Report results of calibrationand key findings. 
+
+
+\section{Price impact profiles}
+Describe how the labelled agent (i.e. the liquidator) is introduced in the market model; define the impact profile \`a la Bacry-Muzy and the normalised one-sided impact profile.  
+
+    
+
+\addcontentsline{toc}{section}{References}
+\bibliographystyle{alpha}
+\bibliography{pipest_bib}    
+
+
+\begin{appendices}
+\section{Readouts of \texttt{test 2020-04-12\_0738}}
+\subsection{Execution times and resource usage summaries}
+\subsubsection{Estimation of component e=0}
+ \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+ \input{../readouts/summarye0}
+\end{tcolorbox}
+\subsubsection{Estimation of component e=1}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+ \input{../readouts/summarye1}
+\end{tcolorbox}
+\subsubsection{Estimation of component e=2}
+ \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+ \input{../readouts/summarye2}
+\end{tcolorbox}
+\subsubsection{Estimation of component e=3}
+ \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+ \input{../readouts/summarye3}
+\end{tcolorbox}
+\end{appendices}
+
+\end{document}
