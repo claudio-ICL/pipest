@@ -1,0 +1,1759 @@
+\documentclass[10pt]{article}
+    \usepackage[round,sort,comma,numbers,authoryear]{natbib}
+    \setcitestyle{aysep={ },yysep={,}}
+    \usepackage[breakable]{tcolorbox}
+%     \usepackage{parskip} % Stop auto-indenting (to mimic markdown behaviour)
+    \usepackage{algorithm}
+    \usepackage{algorithmic}
+    \usepackage[title]{appendix}
+    \usepackage{iftex}
+    \ifPDFTeX
+    	\usepackage[T1]{fontenc}
+    	\usepackage{mathpazo}
+    \else
+    	\usepackage{fontspec}
+    \fi
+
+    % Basic figure setup, for now with no caption control since it's done
+    % automatically by Pandoc (which extracts ![](path) syntax from Markdown).
+    \usepackage{graphicx}
+    \graphicspath{{./figures/}}
+    % Maintain compatibility with old templates. Remove in nbconvert 6.0
+    \let\Oldincludegraphics\includegraphics
+    % Ensure that by default, figures have no caption (until we provide a
+    % proper Figure object with a Caption API and a way to capture that
+    % in the conversion process - todo).
+    \usepackage{booktabs}
+    \usepackage{caption}
+    \DeclareCaptionFormat{nocaption}{}
+    \captionsetup{format=nocaption,aboveskip=0pt,belowskip=0pt}
+
+    \usepackage[Export]{adjustbox} % Used to constrain images to a maximum size
+    \adjustboxset{max size={0.9\linewidth}{0.9\paperheight}}
+    \usepackage{float}
+    \floatplacement{figure}{H} % forces figures to be placed at the correct location
+    \usepackage{xcolor} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage{textcomp} % defines textquotesingle
+    % Hack from http://tex.stackexchange.com/a/47451/13684:
+    \AtBeginDocument{%
+        \def\PYZsq{\textquotesingle}% Upright quotes in Pygmentized code
+    }
+    \usepackage{upquote} % Upright quotes for verbatim code
+    \usepackage{eurosym} % defines \euro
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics 
+                         % to support a larger range
+    \makeatletter % fix for grffile with XeLaTeX
+    \def\Gread@@xetex#1{%
+      \IfFileExists{"\Gin@base".bb}%
+      {\Gread@eps{\Gin@base.bb}}%
+      {\Gread@@xetex@aux#1}%
+    }
+    \makeatother
+
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    % The default LaTeX title has an obnoxious amount of whitespace. By default,
+    % titling removes some of it. It also provides customization options.
+    \usepackage{titling}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+    \usepackage[inline]{enumitem} % IRkernel/repr support (it uses the enumerate* environment)
+    \usepackage[normalem]{ulem} % ulem is needed to support strikethroughs (\sout)
+                                % normalem makes italics be italics, not underlines
+    \usepackage{mathrsfs}
+    
+    % Colors for the hyperref package
+    \definecolor{urlcolor}{rgb}{0,.145,.698}
+    \definecolor{linkcolor}{rgb}{.71,0.21,0.01}
+    \definecolor{citecolor}{rgb}{.12,.54,.11}
+
+    % ANSI colors
+    \definecolor{ansi-black}{HTML}{3E424D}
+    \definecolor{ansi-black-intense}{HTML}{282C36}
+    \definecolor{ansi-red}{HTML}{E75C58}
+    \definecolor{ansi-red-intense}{HTML}{B22B31}
+    \definecolor{ansi-green}{HTML}{00A250}
+    \definecolor{ansi-green-intense}{HTML}{007427}
+    \definecolor{ansi-yellow}{HTML}{DDB62B}
+    \definecolor{ansi-yellow-intense}{HTML}{B27D12}
+    \definecolor{ansi-blue}{HTML}{208FFB}
+    \definecolor{ansi-blue-intense}{HTML}{0065CA}
+    \definecolor{ansi-magenta}{HTML}{D160C4}
+    \definecolor{ansi-magenta-intense}{HTML}{A03196}
+    \definecolor{ansi-cyan}{HTML}{60C6C8}
+    \definecolor{ansi-cyan-intense}{HTML}{258F8F}
+    \definecolor{ansi-white}{HTML}{C5C1B4}
+    \definecolor{ansi-white-intense}{HTML}{A1A6B2}
+    \definecolor{ansi-default-inverse-fg}{HTML}{FFFFFF}
+    \definecolor{ansi-default-inverse-bg}{HTML}{000000}
+
+    % commands and environments needed by pandoc snippets
+    % extracted from the output of `pandoc -s`
+    \providecommand{\tightlist}{%
+      \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}, fontsize=\small}
+    % Add ',fontsize=\small' for more characters per line
+    \newenvironment{Shaded}{}{}
+    \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{{#1}}}
+    \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{{#1}}}}
+    \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{{#1}}}
+    \newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{{#1}}}
+    \newcommand{\RegionMarkerTok}[1]{{#1}}
+    \newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\NormalTok}[1]{{#1}}
+    
+    % Additional commands for more recent versions of Pandoc
+    \newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{{#1}}}
+    \newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{{#1}}}
+    \newcommand{\ImportTok}[1]{{#1}}
+    \newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{{#1}}}}
+    \newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{{#1}}}
+    \newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{{#1}}}
+    \newcommand{\BuiltInTok}[1]{{#1}}
+    \newcommand{\ExtensionTok}[1]{{#1}}
+    \newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{{#1}}}
+    \newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{{#1}}}
+    \newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    
+    
+    % Define a nice break command that doesn't care if a line doesn't already
+    % exist.
+    \def\br{\hspace*{\fill} \\* }
+    % Math Jax compatibility definitions
+    \def\gt{>}
+    \def\lt{<}
+    \let\Oldtex\TeX
+    \let\Oldlatex\LaTeX
+    \renewcommand{\TeX}{\textrm{\Oldtex}}
+    \renewcommand{\LaTeX}{\textrm{\Oldlatex}}
+    % Document parameters
+    % Document title
+    \title{Price impact profiles emerging from state trajectories in Hawkes-modelled event-driven high-frequency markets}
+    \author{Claudio Bellani}
+    
+    
+    
+    
+    
+% Pygments definitions
+\makeatletter
+\def\PY@reset{\let\PY@it=\relax \let\PY@bf=\relax%
+    \let\PY@ul=\relax \let\PY@tc=\relax%
+    \let\PY@bc=\relax \let\PY@ff=\relax}
+\def\PY@tok#1{\csname PY@tok@#1\endcsname}
+\def\PY@toks#1+{\ifx\relax#1\empty\else%
+    \PY@tok{#1}\expandafter\PY@toks\fi}
+\def\PY@do#1{\PY@bc{\PY@tc{\PY@ul{%
+    \PY@it{\PY@bf{\PY@ff{#1}}}}}}}
+\def\PY#1#2{\PY@reset\PY@toks#1+\relax+\PY@do{#2}}
+
+\expandafter\def\csname PY@tok@w\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.73,0.73}{##1}}}
+\expandafter\def\csname PY@tok@c\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.74,0.48,0.00}{##1}}}
+\expandafter\def\csname PY@tok@k\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.69,0.00,0.25}{##1}}}
+\expandafter\def\csname PY@tok@o\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ow\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@ne\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.82,0.25,0.23}{##1}}}
+\expandafter\def\csname PY@tok@nv\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@no\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ni\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.60,0.60,0.60}{##1}}}
+\expandafter\def\csname PY@tok@na\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.49,0.56,0.16}{##1}}}
+\expandafter\def\csname PY@tok@nt\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@s\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sd\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@si\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@se\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sr\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@ss\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sx\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@m\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@gh\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gu\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.50,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gr\endcsname{\def\PY@tc##1{\textcolor[rgb]{1.00,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ge\endcsname{\let\PY@it=\textit}
+\expandafter\def\csname PY@tok@gs\endcsname{\let\PY@bf=\textbf}
+\expandafter\def\csname PY@tok@gp\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@go\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.53,0.53}{##1}}}
+\expandafter\def\csname PY@tok@gt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.27,0.87}{##1}}}
+\expandafter\def\csname PY@tok@err\endcsname{\def\PY@bc##1{\setlength{\fboxsep}{0pt}\fcolorbox[rgb]{1.00,0.00,0.00}{1,1,1}{\strut ##1}}}
+\expandafter\def\csname PY@tok@kc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kd\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kr\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@bp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@fm\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@vc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vg\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vm\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sa\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@dl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@s2\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@s1\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@mb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@il\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mo\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ch\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cm\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cpf\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@c1\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cs\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+
+\def\PYZbs{\char`\\}
+\def\PYZus{\char`\_}
+\def\PYZob{\char`\{}
+\def\PYZcb{\char`\}}
+\def\PYZca{\char`\^}
+\def\PYZam{\char`\&}
+\def\PYZlt{\char`\<}
+\def\PYZgt{\char`\>}
+\def\PYZsh{\char`\#}
+\def\PYZpc{\char`\%}
+\def\PYZdl{\char`\$}
+\def\PYZhy{\char`\-}
+\def\PYZsq{\char`\'}
+\def\PYZdq{\char`\"}
+\def\PYZti{\char`\~}
+% for compatibility with earlier versions
+\def\PYZat{@}
+\def\PYZlb{[}
+\def\PYZrb{]}
+\makeatother
+
+
+    % For linebreaks inside Verbatim environment from package fancyvrb. 
+    \makeatletter
+        \newbox\Wrappedcontinuationbox 
+        \newbox\Wrappedvisiblespacebox 
+        \newcommand*\Wrappedvisiblespace {\textcolor{red}{\textvisiblespace}} 
+        \newcommand*\Wrappedcontinuationsymbol {\textcolor{red}{\llap{\tiny$\m@th\hookrightarrow$}}} 
+        \newcommand*\Wrappedcontinuationindent {3ex } 
+        \newcommand*\Wrappedafterbreak {\kern\Wrappedcontinuationindent\copy\Wrappedcontinuationbox} 
+        % Take advantage of the already applied Pygments mark-up to insert 
+        % potential linebreaks for TeX processing. 
+        %        {, <, #, %, $, ' and ": go to next line. 
+        %        _, }, ^, &, >, - and ~: stay at end of broken line. 
+        % Use of \textquotesingle for straight quote. 
+        \newcommand*\Wrappedbreaksatspecials {% 
+            \def\PYGZus{\discretionary{\char`\_}{\Wrappedafterbreak}{\char`\_}}% 
+            \def\PYGZob{\discretionary{}{\Wrappedafterbreak\char`\{}{\char`\{}}% 
+            \def\PYGZcb{\discretionary{\char`\}}{\Wrappedafterbreak}{\char`\}}}% 
+            \def\PYGZca{\discretionary{\char`\^}{\Wrappedafterbreak}{\char`\^}}% 
+            \def\PYGZam{\discretionary{\char`\&}{\Wrappedafterbreak}{\char`\&}}% 
+            \def\PYGZlt{\discretionary{}{\Wrappedafterbreak\char`\<}{\char`\<}}% 
+            \def\PYGZgt{\discretionary{\char`\>}{\Wrappedafterbreak}{\char`\>}}% 
+            \def\PYGZsh{\discretionary{}{\Wrappedafterbreak\char`\#}{\char`\#}}% 
+            \def\PYGZpc{\discretionary{}{\Wrappedafterbreak\char`\%}{\char`\%}}% 
+            \def\PYGZdl{\discretionary{}{\Wrappedafterbreak\char`\$}{\char`\$}}% 
+            \def\PYGZhy{\discretionary{\char`\-}{\Wrappedafterbreak}{\char`\-}}% 
+            \def\PYGZsq{\discretionary{}{\Wrappedafterbreak\textquotesingle}{\textquotesingle}}% 
+            \def\PYGZdq{\discretionary{}{\Wrappedafterbreak\char`\"}{\char`\"}}% 
+            \def\PYGZti{\discretionary{\char`\~}{\Wrappedafterbreak}{\char`\~}}% 
+        } 
+        % Some characters . , ; ? ! / are not pygmentized. 
+        % This macro makes them "active" and they will insert potential linebreaks 
+        \newcommand*\Wrappedbreaksatpunct {% 
+            \lccode`\~`\.\lowercase{\def~}{\discretionary{\hbox{\char`\.}}{\Wrappedafterbreak}{\hbox{\char`\.}}}% 
+            \lccode`\~`\,\lowercase{\def~}{\discretionary{\hbox{\char`\,}}{\Wrappedafterbreak}{\hbox{\char`\,}}}% 
+            \lccode`\~`\;\lowercase{\def~}{\discretionary{\hbox{\char`\;}}{\Wrappedafterbreak}{\hbox{\char`\;}}}% 
+            \lccode`\~`\:\lowercase{\def~}{\discretionary{\hbox{\char`\:}}{\Wrappedafterbreak}{\hbox{\char`\:}}}% 
+            \lccode`\~`\?\lowercase{\def~}{\discretionary{\hbox{\char`\?}}{\Wrappedafterbreak}{\hbox{\char`\?}}}% 
+            \lccode`\~`\!\lowercase{\def~}{\discretionary{\hbox{\char`\!}}{\Wrappedafterbreak}{\hbox{\char`\!}}}% 
+            \lccode`\~`\/\lowercase{\def~}{\discretionary{\hbox{\char`\/}}{\Wrappedafterbreak}{\hbox{\char`\/}}}% 
+            \catcode`\.\active
+            \catcode`\,\active 
+            \catcode`\;\active
+            \catcode`\:\active
+            \catcode`\?\active
+            \catcode`\!\active
+            \catcode`\/\active 
+            \lccode`\~`\~ 	
+        }
+    \makeatother
+
+    \let\OriginalVerbatim=\Verbatim
+    \makeatletter
+    \renewcommand{\Verbatim}[1][1]{%
+        %\parskip\z@skip
+        \sbox\Wrappedcontinuationbox {\Wrappedcontinuationsymbol}%
+        \sbox\Wrappedvisiblespacebox {\FV@SetupFont\Wrappedvisiblespace}%
+        \def\FancyVerbFormatLine ##1{\hsize\linewidth
+            \vtop{\raggedright\hyphenpenalty\z@\exhyphenpenalty\z@
+                \doublehyphendemerits\z@\finalhyphendemerits\z@
+                \strut ##1\strut}%
+        }%
+        % If the linebreak is at a space, the latter will be displayed as visible
+        % space at end of first line, and a continuation symbol starts next line.
+        % Stretch/shrink are however usually zero for typewriter font.
+        \def\FV@Space {%
+            \nobreak\hskip\z@ plus\fontdimen3\font minus\fontdimen4\font
+            \discretionary{\copy\Wrappedvisiblespacebox}{\Wrappedafterbreak}
+            {\kern\fontdimen2\font}%
+        }%
+        
+        % Allow breaks at special characters using \PYG... macros.
+        \Wrappedbreaksatspecials
+        % Breaks at punctuation characters . , ; ? ! and / need catcode=\active 	
+        \OriginalVerbatim[#1,codes*=\Wrappedbreaksatpunct]%
+    }
+    \makeatother
+
+    % Exact colors from NB
+    \definecolor{incolor}{HTML}{303F9F}
+    \definecolor{outcolor}{HTML}{D84315}
+    \definecolor{cellborder}{HTML}{CFCFCF}
+    \definecolor{cellbackground}{HTML}{F7F7F7}
+    
+    % prompt
+    \makeatletter
+    \newcommand{\boxspacing}{\kern\kvtcb@left@rule\kern\kvtcb@boxsep}
+    \makeatother
+    \newcommand{\prompt}[4]{
+        \ttfamily\llap{{\color{#2}[#3]:\hspace{3pt}#4}}\vspace{-\baselineskip}
+    }
+    
+
+    
+    % Prevent overflowing lines due to hard-to-break entities
+    \sloppy 
+    % Setup hyperref package
+    \hypersetup{
+      breaklinks=true,  % so long urls are correctly broken across lines
+      colorlinks=true,
+      urlcolor=urlcolor,
+      linkcolor=linkcolor,
+      citecolor=citecolor,
+      }
+    % Slightly bigger margins than the latex defaults
+    
+    \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\usepackage{amsthm}
+ %\theoremstyle{definition}
+{\newtheorem{thm}{Theorem}[section]
+\newtheorem{defi}[thm]{Definition}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{corol}[thm]{Corollary}
+{\theoremstyle{definition}{
+	\newtheorem{remark}[thm]{Remark} 
+	\newtheorem{example}[thm]{Example} 
+	\newtheorem{exercise}[thm]{Exercise}
+	\newtheorem{assumption}[thm]{Assumption}
+}}}
+
+\include{notation}   
+
+\begin{document} 
+\numberwithin{equation}{section}
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+Include brief discussion on LOB inspired by \citealp[Chapter 6]{FPR13mar} and \citealp{GPWMFH13lim}.
+\section{Preliminaries on the theory of counting processes} 
+In this section we introduce the adopted notation by reviewing basic concepts from the theory of counting processes. Our main reference is \citealp[Chapter 14]{DVJ08int}.
+
+Let $\numEventTypes$ be a positive integer. For each $e$ ranging from $1$ to $\numEventTypes$, let $\arrivalTimes_{j}$, $j=1, 2, \dots$, be a strictly increasing sequence of positive random times, and assume that $\arrivalTimes_{j}\neq\arrivalTimes[e\derivative]_{j\derivative}$ if $(e,j)\neq (e\derivative,j\derivative)$. Then, 
+\begin{equation*}
+ \countingProc(t):= \sum_{j} \one\left\lbrace\arrivalTimes_{j}\leq t \right\rbrace, \qquad t\geq 0,
+\end{equation*}
+is a non-decreasing right-continuous process; we call $\countingProc$ the counting process associated with the sequence $(\arrivalTimes_{j})_j$. Notice that $(\arrivalTimes_{j})_j$ can be retrieved from $\countingProc$ by 
+\begin{equation*}
+ \arrivalTimes_{j} = \inf \left\lbrace t>0: \, \countingProc(t)\geq j\right\rbrace;
+\end{equation*}
+hence, there is a one-to-one correspondence between $\countingProc$ and $(\arrivalTimes_{j})_j$. 
+
+Fot $t>0$ we define 
+\begin{equation*}
+ \delta\countingProc(t):= \lim_{h\downarrow 0} \Big( \countingProc(t) - \countingProc(t-h) \Big),
+\end{equation*}
+and we notice that $\delta \countingProc(t) = 1$ if and only if $t=\arrivalTimes_{j}$ for some $j$, otherwise $\delta \countingProc(t) = 0$.
+
+The $\numEventTypes$-dimensional vector $\multiCountingProc(t) = (\countingProc[1](t), \dots , \countingProc[\numEventTypes](t))$ is referred to as multivariate counting process associated with the $\numEventTypes$ sequences $(\arrivalTimes_{j})_j$, $e=1,\dots, \numEventTypes$. Let $\groundProc(t) := \countingProc[1](t)+ \dots + \countingProc[\numEventTypes](t)$ be the ground process of $\multiCountingProc$, and let 
+\begin{equation*}
+ \arrivalTimes[ ]_{n} := \inf \left\lbrace t>0: \, \groundProc(t) \geq n\right\rbrace, \qquad n=1,2,\dots, 
+\end{equation*}
+be the ordered sequence of random times stemming from the union $\lbrace \arrivalTimes_{j}: \, j=1,2,\dots; \,\, e=1,\dots,\numEventTypes\rbrace$. By defining for $n=1,2, \dots$, 
+\begin{equation*}
+ \event := \sum_{e=1}^{\numEventTypes} e \, \one\left\lbrace \delta \groundProc(\arrivalTimes[ ]_{n}) = \delta\countingProc(\arrivalTimes[ ]_{n}) \right\rbrace,
+\end{equation*}
+we have that the pair $(\arrivalTimes[ ]_{n}, \event[n])$ equivalently characterises the multivariate counting process, because 
+\begin{equation}\label{eq.NTE_counting_proc}
+ \countingProc(t) = \sum_{n} \one \left\lbrace \arrivalTimes[ ]_{n}\leq t, \, \event[n] = e\right\rbrace,
+\end{equation}
+for all $t>0$ and all $e=1,\dots, \numEventTypes$.
+
+We can interpret this construction by saying that the index $e$ labels $\numEventTypes$ types of events that occur in time, and $\countingProc(t)$ counts the number of events of type $e$ that have occurred by time $t$. 
+
+\begin{example}[``Poisson process'']
+ Let $\tau_e^j$, $j=1,2,\dots$, $\, \, e=1,\dots, \numEventTypes$ be independent random variables such that $\tau_e^j$ is exponentially distributed with parameter $\intensity>0$, $\, e=1,\dots, \numEventTypes$. Let $\arrivalTimes_{j} := \sum_{k\leq j} \tau_e^{k}$, and notice that $\arrivalTimes_{j}$ has probability density function 
+ \begin{equation*}
+  f_{e,j}(t) = \frac{\intensity^j}{(j-1)!}t^{j-1} e^{-\intensity t} \one\lbrace t>0\rbrace.
+ \end{equation*}
+ Then, the multivariate counting process $\multiCountingProc$ associated with the arrival times $\arrivalTimes_{j}$ is called $\numEventTypes$-dimensional Poisson process of rates $\intensity[1], \dots \intensity[\numEventTypes]$. This name is justified as follows. 
+ Since $\lbrace \countingProc(t)\geq j\rbrace = \lbrace \arrivalTimes_{j} \leq t\rbrace$, we have that $\frac{d}{dt} \Prob(\countingProc(t) \geq j) = f_{e,j} (t)$. On the other hand, if we define 
+ \begin{equation*}
+  S_{e,j}(t) := \sum_{k\geq j} \frac{(\intensity t)^k}{k!}e^{-\intensity t},
+ \end{equation*}
+we also have that $\frac{d}{dt} S_{e,j}(t) = f_{e,j}(t)$, by telescopic sum. Since $S_{e,j}(0) = \Prob (\countingProc(t)\geq 0)$, we deduce that $\Prob(\countingProc(t) \geq j) = S_{e,j}(t)$, and that
+\begin{equation*}
+ \Prob\left( \countingProc(t) = j\right) = 
+ \frac{(\intensity t)^j}{j!} \exp\left( -\intensity t\right).
+\end{equation*}
+Therefore for every $t$, $\countingProc(t)$ is a Poisson random variable of parameter $\intensity t$, and the ground process $\groundProc$ of $\multiCountingProc$ is such that for every $t$, $\groundProc(t) \sim \text{Pois}(\intensity[1]t + \dots + \intensity[\numEventTypes]t)$.
+\end{example}
+
+The minimal filtration to which a multivariate counting process $\multiCountingProc$ is adapted -- and such that it satisfies the usual conditions of completeness and right-continuity -- is called the internal history of $\multiCountingProc$. Any other filtration to which $\multiCountingProc$ is adapted is called a history of $\multiCountingProc$, and it must be a superset of the internal history. 
+
+\begin{defi}\label{def.compensator}
+ Let $\stochasticBase$ be a filtered probability space where the multivariate counting process $\multiCountingProc$ is defined, and assume that $\filtrationF$ is a history of $\multiCountingProc$. We say that the $\numEventTypes$-dimensional stochastic process $\compensator = (\compensator_1, \dots , \compensator_{\numEventTypes})$ is an $\filtrationF$-compensator for $\multiCountingProc$ if: (o) $\compensator(0)=0$ and $\compensator$ is of finite variation; (i) $\compensator$ is $\filtrationF$-predictable; (ii) $\compensator$ is right-continuous; (iii) $\multiCountingProc - \compensator$ is a local martingale. 
+\end{defi}
+
+Since a counting process $\multiCountingProc$ is non-decreasing, as soon as an $\filtrationF$-compensator $\compensator$ for $\multiCountingProc$ exists, not only it is of finite variation as required by Definition \ref{def.compensator}, but in fact it must be non-decreasing too. Furthermore, because of requirements (i) and (ii), the discontinuities of $\compensator$ -- if any -- are typically associated with the occurrence of deterministic events, such as fixed atoms in the distribution of $\multiCountingProc$. In the following, our concern will be on continuous compensators.
+
+Given the counting process $\multiCountingProc$ and a history $\filtrationF$, the $\filtrationF$-compensator is unique upto an evanescent set, and it is equivalently characterised as the $\filtrationF$-predictable projection of $\multiCountingProc$, namely as the $\filtrationF$-predictable non-decreasing process $\compensator$ such that 
+\begin{equation}\label{eq.compensators_and_predict_projections}
+ \Expectation \left[ \int_{\R_+} Y d\multiCountingProc\right]
+ = 
+ \Expectation \left[ \int_{\R_+} Y d\compensator\right]
+\end{equation}
+for all non-negative $\filtrationF$-predictable processes $Y$ (see \citealp[Proposition 14.2.II]{DVJ08int}). 
+
+Because of requirement \textit{(o)} in Definition \ref{def.compensator}, as soon as a compensator exists and is continuous, it can be written as 
+\begin{equation*}
+ \compensator (t) = \intzerot \intensity[ ](s)ds,
+\end{equation*}
+for some $\filtrationF$-predictable process $\intensity[ ]=(\intensity[1],\dots,\intensity[\numEventTypes])$, which is called intensity of the counting process $\multiCountingProc$. Combining this with equation \eqref{eq.compensators_and_predict_projections}, one obtains the formula 
+\begin{equation*}
+ \Expectation\left[ \countingProc(t)-\countingProc(s) \vert \filtrationF_s \right]
+ =
+ \Expectation\left[ \int_{s}^{t} \intensity(u) du
+  \vert \filtrationF_s \right],
+  \qquad  s\leq t,
+\end{equation*}
+which allows to interpret $\intensity(t)$ as a measure of the ``instantaneous risk'' of a jump at time $t$ in the $e$-th component of the counting process $\multiCountingProc$. Notice that this ``risk'' evolves in time and it varies depending on the information available upto time $s$. 
+
+Compensators are crucial in the following time-change result, whcih will be used to perform goodness-of-fit diagnostics.
+
+\begin{thm}[{\citealp{Mey71dem}}]\label{thm.meyer1971}
+Let $\multiCountingProc$ be a $\numEventTypes$-dimensional counting process with arrival times $\arrivalTimes$. Assume that $\multiCountingProc$ has conitnuous compensator $\compensator$ such that $\compensator_{e}(t) \rightarrow \infty$ as $t\rightarrow \infty$ for all $e=1, \dots, \numEventTypes$. Then, the random sequences $\lbrace \compensator(\arrivalTimes_{j}): \, j=1,2,\dots \rbrace$, $e=1,\dots, \numEventTypes$ are the arrival times of a $\numEventTypes$-dimensional unit-rate Poisson process, namely the time-changed interarrival times
+\begin{equation}\label{eq.time-changed_intertimes}
+ \tau_e^j := \compensator(\arrivalTimes_{j}) - \compensator(\arrivalTimes_{j-1})
+\end{equation}
+are all independent exponentially distributed random variables for $j=1,2,\dots$ and $e=1,\dots,\numEventTypes$.  
+\end{thm}
+For a proof of Theorem \ref{thm.meyer1971}, see \citealp{BN88sim}. 
+
+Testing the distribution of a multivariate counting process satisfying the assumptions of Theorem \ref{thm.meyer1971} can therefore be reduced to testing that the variables in equation \eqref{eq.time-changed_intertimes} are i.i.d samples from a unit rate exponential distribution. The latter can be based on EDF statistics (see e.g. \citealp[Chapter 4]{DS86goo}, as explained in the rest of the section. 
+
+Given $\numEventTypes$ samples, each of $n_e$ data points $\arrivalTimes_{j}$, $j=1,\dots,n_e$, make the null hypothesis that they are generated by a multivariate counting process satisfying the assumptions of Theorem \ref{thm.meyer1971}. Define $\tau_e^j$ as in equation \eqref{eq.time-changed_intertimes}, and let $\EDFfun$ be the empirical distribution function associated with the sample $(\tau_e^j)_j$, namely 
+\begin{equation*}
+ \EDFfun(t) = \frac{1}{n_e}\sum_{j=1}^{n_e} \one \left\lbrace \tau_e^j \leq t \right\rbrace.
+\end{equation*}
+If $(\tau_e^j)_j$ are independent samples from a unit-rate exponential distribution and if $n_e$ is sufficiently large, then $\EDFfun$ is expected to be close to $F(t)=1-e^{-t}$. 
+Let $d$ be a distance between cumulative distribution functions. We call $c_e:=d(\EDFfun, F)$ the critical value associated with the sample. 
+
+On a probability space $\probabilitySpace$, let $\sigma_i$ be $n_e$ i.i.d. random variables $\sim \text{Exp}(1)$, $i=1,\dots, n_e$, and define the random EDF 
+\begin{equation*}
+ F^{\sigma}(t) = \frac{1}{n_e}\sum_{i=1}^{n_e} \one \left\lbrace \sigma_i \leq t\right\rbrace.
+\end{equation*}
+
+We say that the null hypothesis that $\arrivalTimes_{j}$, $j=1, \dots, n_e$, are generated by the $e$-th component $\countingProc$ of $\multiCountingProc$ cannot be rejected with confidence greater than $100\text{x}(1-\alpha)\text{\%}$ if 
+\begin{equation*}
+ \Prob\left( d(F^\sigma, F) \geq c_e \right) \leq \alpha.
+\end{equation*}
+Since the function $c \mapsto \Prob\left( d(F^\sigma, F) \geq c \right)$ is non-decreasing, the smaller $d(\EDFfun, F)$ is, the less confidently the null hypothesis can be rejected. Therefore, given the test statistics $c_e:=d(\EDFfun, F)$, its associated p-value $\alpha(d(\EDFfun,F)) := \Prob(d(F^\sigma, F) \geq d(\EDFfun,F))$ is such that $100\text{x}(1-\text{p-value})\text{\%}$ is the highest level of confidence with which the null hypothesis can be rejected.
+
+Furthermore, the independence among the components $e=1,\dots, \numEventTypes$ can be assessed by drawing correlograms, and by testing that the time-changed interarrival times of the ground process are i.i.d. with $\sim \text{Exp}(\numEventTypes)$.
+
+\section{State-dependent Hawkes processes}
+A $\numEventTypes$-dimensional counting process $\multiCountingProc$ is called Hawkes process if it admits a continuous compensator $\compensator$ with intensities 
+\begin{equation}\label{eq.intensity_ordHawkes}
+ \intensity(t) = \baseRate_e + \sum_{\eone=1}^{\numEventTypes}\intzerot \hawkesKernel\subscriptee(t-s)d\countingProc[\eone](s), \qquad e=1,\dots,\numEventTypes,
+\end{equation}
+for some non-negative base rates $\baseRate_e \geq 0$, and some non-negative locally integrable functions $\hawkesKernel\subscriptee \geq 0$ that are supported on the non-negative half line.
+
+The matrix-valued function $t\mapsto [\hawkesKernel\subscriptee(t)]_{e,\eone = 1, \dots, \numEventTypes}$ is referred to as the kernel of the Hawkes process $\multiCountingProc$.  If all the kernel functions are integrable, the spectral radius $\rho$ of the $\numEventTypes\times\numEventTypes$-matrix of $\Lone$ norms $\Vert \hawkesKernel\subscriptee \Vert_{1}$ is called radius of the Hawkes kernel; if some of the kernel functions are not integrable, the spectral radius is set to $+\infty$.  
+
+A $\numEventTypes$-dimensional Hawkes process is asymptotically stationary if the radius of its kernel is smaller than $1$; in this case the the intensity process $\intensity[ ]$ is asymptotically stationary.  
+
+A model based on Hawkes processes can capture a phenomenon's event-driven nature, and the possibly complex ways in which past events affect the occurence of future events. Because of the mechanism through which orderbooks operate, Hawkes processes are therefore well suited to model order dynamics in such trading venues and the resulting time evolutions of prices. Yet, a modeller might need to include more in her work. More accurate models will indeed be obtained by recording not only the events' arrival times, but also the state of the system every time such events occurred. The rationale for introducing state-dependent Hawkes processes is based on this additional need. Their study was initiated by \citealp{MP20hyb} and \citealp{MP18sta}. Following these works, we introduce state-dependent Hawkes  processes in the next section (Section \ref{sec.sdHawkes_def_and_props}), we present a general simulation algorithm in Section \ref{sec.simulation},  we discuss parametric families of state-dependent Hawkes processes in Section \ref{sec.parametric_hawkes}, and among these families we select the case of power-law kernels to focus on in Section \ref{sec.powerlaw_kernels}.
+
+\subsection{Definition and main properties}\label{sec.sdHawkes_def_and_props}
+Let $\stateSpace$ be a state space. We will always assume that $\stateSpace$ is finite, so that we can label its elements as $x=1, \dots, \numStates$, where $\numStates$ is the number of possible states of the system. A state-dependent counting process will be a pair $(\multiCountingProc, \stateVariable)$, where for all $t$, $\multiCountingProc(t)$ records the number of events occurred by time $t$ as per formula \eqref{eq.NTE_counting_proc}, and $\stateVariable(t)$ records the state of the system at time $t$. More specifically, we have
+\begin{defi}[{\citealp[Definition 2.1]{MP18sta}}]\label{def.sdHawkes}
+ Let $\multiCountingProc$ be a $\numEventTypes$-dimensional counting process. Let $\stateVariable$ be a continuous-time picewise-constant process in the finite state space $\stateSpace$ of cardinality $\numStates$. Let $\filtrationF$ be the minimal complete right-continuous filtration generated by the pair $(\multiCountingProc, \stateVariable)$. Then, we say that $(\multiCountingProc, \stateVariable)$ is a state-dependent Hawkes process if 
+ \begin{enumerate}
+  \item $\multiCountingProc$ admits a $\filtrationF$-continuous compensator with intensities
+  \begin{equation}\label{eq.intensity_of_sdHawkes}
+   \intensity(t) = \baseRate_e + \sum_{\eone=1}^{\numEventTypes}\int_{[0,t)} \hawkesKernel\subscriptee(t-s, \stateVariable(s))d\countingProc[\eone](s), \qquad e=1,\dots,\numEventTypes,
+  \end{equation}
+  for some $\numEventTypes$ non-negative base rates $\baseRate_e\geq 0$, $\, e=1, \dots, \numEventTypes$, and some measurable functions $\hawkesKernel: \R_+ \times \stateSpace \rightarrow \R_+$ such that $\hawkesKernel(\cdot, x)$ is locally integrable for all $x$ in $\stateSpace$;
+  \item $\stateVariable$ jumps only at arrival times $\arrivalTimes[ ]_{n}$ of $\multiCountingProc$, and there exist $\numEventTypes$ transition matrices $\transProb_e(\cdot,\cdot)$, $e=1,\dots, \numEventTypes$, defined on $\stateSpace$ such that for all $n$
+  \begin{equation}\label{eq.markov_update_stateVariable}
+   \Prob\left( \stateVariable(\arrivalTimes[ ]_{n})=x \,  \vert \,  E_n, \, \filtrationF_{\arrivalTimes[ ]_{n}-} \right)
+   =
+   \transProb_{E_n}\left(\stateVariable(\arrivalTimes[ ]_{n}-),x\right),
+   \qquad
+   x=1, \dots, \numStates,
+  \end{equation}
+  where $\stateVariable(\arrivalTimes[ ]_{n}- ) = \lim_{t\uparrow \arrivalTimes[ ]_{n}} \stateVariable(t)$ is the state of the system immediately before the $n$-th event $E_n$, and $\filtrationF_{\arrivalTimes[ ]_{n}-} = \bigvee_{\epsilon>0} \filtrationF_{\arrivalTimes[ ]_{n} - \epsilon}$ represents the information available immediately before this event.
+ \end{enumerate}
+\end{defi}
+
+Given a $\numEventTypes$-dimensional vector $\baseRate$ with non-negative components, given a $\numEventTypes\times\numEventTypes$-dimensional matrix valued function $\hawkesKernel$ defined on $\R_{+} \times \stateSpace$, and given $\numEventTypes$ transition matrices $\transProb_e$, $e=1,\dots,\numEventTypes$, defined on $\stateSpace$, conditions for the existence of a pair $(\multiCountingProc,\stateVariable)$ that satisfies the requirements of Definition \ref{def.sdHawkes} with $\baseRate$ as vector of base rates, $\hawkesKernel$ as matrix of Hawkes kernels and $\transProb$ as transition probabilities are obtained by relying on existence results for the more general class of hybrid marked point processes introduced in \citealp{MP20hyb} -- see \citealp[Theorem 2.3]{MP18sta}. We will use the following sufficient condition for existence, uniqueness and non-explosiveness.
+\begin{prop}[{\citealp[Theorem 2.3]{MP18sta}}]\label{prop.existence_sdHawkes}
+ Let $\baseRate$ be a $\numEventTypes$-dimensional vector with non-negative components; let $\hawkesKernel\subscriptee$ be non-negative functions defined on $\R_{+} \times \stateSpace$, where the indexes $e$ and $\eone$ range from $1$ to $\numEventTypes$; let $\transProb_e$ be transition matrices defined on the state space $\stateSpace$, for $e=1,\dots,\numEventTypes$. If the functions $\hawkesKernel\subscriptee$ are bounded for all $e,\eone=1,\dots,\numEventTypes$, then a state-dependent Hawkes process $(\multiCountingProc, \stateVariable)$ with base rates $\baseRate_e$, kernels $\hawkesKernel\subscriptee$ and transition probabilities $\transProb_e$ exists, and such state-dependent Hawkes process is unique and non-explosive. 
+\end{prop}
+
+The mentioned link with the general class of hybrid marked point processes is obtained by the introduction of the following $\numEventTypes\numStates$-dimensional counting process $\hybridHawkes$. It gives a complementary point of view on state-dependent Hawkes processes, to which we will refer in the following. We define it here and we set the notation for later use.
+
+Given a state-dependent Hawkes process $(\multiCountingProc, \stateVariable)$ as in Definition \ref{def.sdHawkes}, let $\arrivalTimes[]_n$ and $\event[n]$ be the sequences of arrival times and events that equivalently describe the counting process component $\multiCountingProc$ of the pair $(\multiCountingProc, \stateVariable)$, as per equation \eqref{eq.NTE_counting_proc}. Let $\stateVariable_n$ be the sequence of states $X(\arrivalTimes[]_n)$, for $n=1,2,\dots$. Then, the 
+$\numEventTypes\numStates$-dimensional counting process
+\begin{equation}\label{eq.hybridHawkes}
+ \hybridHawkes_{e,x}(t) := 
+ \sum_{n} \one \left\lbrace \arrivalTimes[]_n \leq t, \, \event[n] = e, \, 
+ \stateVariable_n = x \right\rbrace
+\end{equation}
+is called the hybrid-MPP counterpart of  $(\multiCountingProc, \stateVariable)$.
+We have that the $j$-th jump time $\arrivalTimes[e]_j$ of the $e$-th component of $\multiCountingProc$ is the $j$-th order statistic of $\lbrace \arrivalTimes[e,x]_k: \, k=1,2,\dots; \, \, x=1,\dots,\numStates \rbrace$, where $(\arrivalTimes[e,x]_k)_k$ are the jump times of the $(e,x)$-th component of $\hybridHawkes$. Similarly, $\arrivalTimes[]_n$ is the $n$-th order statistics of $\lbrace \arrivalTimes[e,x]_k: \, k=1,2,\dots; \, \, e=1,\dots, \numEventTypes; \, \,  x=1,\dots,\numStates \rbrace$. The $(e,x)$-th component $ \hybridHawkes_{e,x}$ of the hybrid-MPP counterpart of $(\multiCountingProc, \stateVariable)$ admits a continuous compensator with density given by 
+\begin{equation}\label{eq.density_of_hybridMPPcounterpart}
+ \hybridIntensity_{e,x}(t) 
+ =
+ \transProb_{e}\left(\stateVariable(t),x\right)
+ \left(
+ \baseRate_e
+ +\sum_{\eone,\, \xone} \int_{[0,t)} \hawkesKernel\subscriptee(t-s,\xone)d\hybridHawkes_{\eone,\xone}(s)
+ \right),
+\end{equation}
+where $\transProb_{e}$ is the transition matrix associated with event type $e$, and $\hawkesKernel\subscriptee$, for $e,\, \, \eone = 1,\dots,\numEventTypes$, are the Hawkes kernels of $\multiCountingProc$.
+
+
+\subsection{Simulation}\label{sec.simulation}
+In \citealp{MP18sta}, the authors describe a simulation algorithm for state-dependent Hawkes process based on Ogata's thinning algorithm (\citealp{Oga81lew}). We recall the iterative step of this algorithm here, which will later serve as the foundation for our simulation of order executions in a limit order book.
+
+In the following algorithm, the triple $(\arrivalTimes[]_n,\event[n],\stateVariable_n)$ refers to the $n$-th elements of the sequences of arrival times, events labels and states introduced above, which equivalently represent a state-deppendent Hawkes process $(\multiCountingProc, \stateVariable)$. Moreover, for every $t$ we let $\bar{\intensity[]}(t):= \intensity[1](t) + \dots + \intensity[\numEventTypes](t)$ be the sum of the intensities of the $\numEventTypes$ components of $\multiCountingProc$. Notice that the computation of $\bar{\intensity[]}(t)$ requires $\lbrace(\arrivalTimes[]_n,\event[n],\stateVariable_n): \, \arrivalTimes[]_n <t\rbrace$. Moreover, we assume that $\bar{\intensity[]}$ is decreasing in time. 
+\begin{algorithm}
+ \caption{{\citealp[Algorithm 2.4]{MP18sta}}}
+ \label{algo.MP18_ogata}
+ \begin{algorithmic}[5]
+  \REQUIRE $(\arrivalTimes[]_i, \event[i], \stateVariable_i)_{i=1,\dots,n-1}$
+  \STATE set $t:=\arrivalTimes[]_{n-1}$
+  \STATE set $\xi:=0$
+  \WHILE{$\xi=0$}
+  \STATE draw $U \sim \text{Exp}(\bar{\intensity[]}(t))$
+  \STATE set $\xi :=1$ with probability $\bar{\intensity[]}(t+U)/\bar{\intensity[]}(t)$
+  \STATE update $t\leftarrow t+U$
+  \ENDWHILE
+  \STATE set $\arrivalTimes[]_n:=t$
+  \STATE draw $\event[n]$ in $\lbrace 1,\dots,\numEventTypes\rbrace$ with probabilities proportional to $\lbrace \intensity[1](\arrivalTimes[]_n), \dots, \intensity[\numEventTypes](\arrivalTimes[]_n)\rbrace$
+  \STATE draw $\stateVariable_n$ in $\lbrace 1,\dots,\numStates\rbrace$ with probabilities $\lbrace \transProb_{\event}(\stateVariable_{n-1},1), \dots,\transProb_{\event}(\stateVariable_{n-1},\numStates)\rbrace$
+  \RETURN $(\arrivalTimes[]_n,\event[n],\stateVariable_n)$
+ \end{algorithmic}
+\end{algorithm}
+
+We will comment on the computationa complexity of this algorithm in Corollary \ref{corol.complexities}. 
+
+
+Future expansion: give a clustering interpretation of a state-dependent Hawkes process (generalising that valid for ordinary Hawkes processes proved in \citealp{HO74clu}) and, based on this interpretation, describe a simulation algorithm in the spirit of \citealp{MR05per}.
+
+
+
+
+\subsection{Parametric families of state-dependent Hawkes processes}\label{sec.parametric_hawkes}
+Proposition \ref{prop.existence_sdHawkes} says that specifying a state-dependent Hawkes process is tantamount to specifying: (i) a vector of base rates and a (bounded) Hawkes kernel for the intensities of arrival times; (ii) transition functions for the states. The vector of base rates lives in the subset $\R_{+}^{\numEventTypes}$ of the finite dimensional space $\R^{\numEventTypes}$. Moreover, since the state space is assumed finite, the transition functions for the states also live in finite dimensional spaces: there is one $\numStates\times\numStates$-dimensional transition matrix for every event type $e=1,\dots, \numEventTypes$. Therefore, to fully have parametric models based on state-dependent Hawkes processes, one needs only to select a parametric class of Hawkes kernels $\lbrace\hawkesKernel^\theta : \, \theta \in \Theta \rbrace$. In this section we set the stage for the parametric models that we will employ in the rest of our work. 
+
+Fix a parametric class of bounded Hawkes kernels $\lbrace\hawkesKernel^\theta : \, \theta \in \Theta \rbrace$. We can talk about a log-likelihood function associated with state-dependent Hawkes processes with kernels in this class, considered as a funcion of the base rates $\baseRate_e$, $e=1,\dots,\numEventTypes$, of the parameter $\theta \in \Theta$, and implicitly of the $\numStates\numEventTypes\numStates$ values $\transProb_{e}(x,\xone)$, for $e=1,\dots,\numEventTypes$ and $x,\xone=1,\dots,\numStates$. Explicit expressions for log-likelihood functions of state-dependent Hawkes processes are derived from the abstract characterisation of likelihoods in terms of Janossy densities of point processes -- see \citealp[Chapters 7 and 14]{DVJ08int}.
+\begin{prop}[{\citealp[Theorem 3.1]{MP18sta}}]
+ Let $\lbrace\hawkesKernel^\theta : \, \theta \in \Theta \rbrace$ be a parametric family of bounded Hawkes kernels and let $\intensity^{\baseRate,\theta}=\intensity^{\baseRate,\theta}(t)$, for $e=1,\dots, \numEventTypes$, be the intensities obtained from equation \eqref{eq.intensity_of_sdHawkes} in dependence of the base rates $\baseRate_e$ and the parameter $\theta$ of the Hawkes kernel.  Given a realisation of the state-dependent Hawkes process $(\multiCountingProc, \stateVariable)$ consisting of arrival times $t_n$, events $e_n$ and states $x_n$, the log-likelihood function associated with this realisation is 
+ \begin{equation}\label{eq.loglikelihood_general}
+  \log \likelihood (\nu,\theta) 
+  =
+  \sum_{n=1}^{\groundProc(\timeHorizon)} \transProb_{e_n}(x_{n-1},x_{n})
+  +\sum_{n=1}^{\groundProc(\timeHorizon)} \intensity[e_{n}]^{\baseRate,\theta}(t_n)
+  -\sum_{e=1}^{\numEventTypes} \int_{0}^{\timeHorizon} \intensity^{\baseRate,\theta}(t)dt, 
+ \end{equation}
+where $\transProb$ are the transition probabilities of $(\multiCountingProc, \stateVariable)$, $\timeHorizon$ is the time horizon of the realisation, and $\groundProc(\timeHorizon)$ is the total number of events in the realisation, i.e. the value that the ground process of  $\multiCountingProc$ takes at time $\timeHorizon$. 
+\end{prop}
+The assumption of bounded Hawkes kernels in Propostion \ref{prop.parametric_hawkes_kernels} is in place to guarantee existence, uniqueness and non-explosiveness of a state-dependent Hawkes procees for any choice of kernels in such family, base rates and transition probabilities.  
+
+Let $\impCoef_{\eone,\xone, e}$ and $\decCoef_{\eone,\xone, e}$ be real numbers, with the indexes $\eone$ and $e$ ranging from $1$ to $\numEventTypes$, and the index $\xone$ ranging from $1$ to $\numStates$. Think of $\impCoef: \xone \mapsto [\impCoef_{\eone,\xone,e}]_{\eone,e}$ and of $\decCoef: \xone \mapsto [\decCoef_{\eone,\xone,e}]_{\eone,e}$ as matrix-valued functions defined on the state space $\stateSpace$. Since $\stateSpace$ is finite, the pair $(\impCoef,\decCoef)$ can in fact represent the parameter $\theta = (\impCoef,\decCoef)$ of a parametric family of Hawkes kernels; indeed we can set
+\begin{equation}\label{eq.parametric_hawkes_kernel_general}
+ \hawkesKernel^{\theta}\subscriptee(t,\xone)
+ = \parametricHawkesKernel(t,\, \impCoef_{\eone,\xone,e},\, \decCoef_{\eone,\xone,e}),
+\end{equation}
+for some fixed non-negative function $\parametricHawkesKernel$. The parameters $\impCoef\subscriptexe$ will be used below to modulate the instantaneous impacts on $\intensity[e]$ of events of type $\eone$ after which the state of the system is $\xone$, namely the following update rule will hold $\intensity[e](\arrivalTimes[]_n) - \intensity[e](\arrivalTimes[]_n - ) = \sum_{\eone, \xone} \impCoef\subscriptexe \one \lbrace \delta\groundProc(\arrivalTimes[]_n) = \delta\hybridHawkes_{\eone,\xone}(\arrivalTimes[]_n)\rbrace$. Moreover, the parameters $\decCoef\subscriptexe$ will be usedto modulate the decaying effect on $\intensity[e]$ of events of type $\eone$ after which the state is $\xone$.
+The  following proposition specifies the formulas for the intensities and the log-likelihood in the parametric case of equation \eqref{eq.parametric_hawkes_kernel_general}, and Corollary \ref{corol.complexities} addresses their computational cost. 
+\begin{prop}\label{prop.parametric_hawkes_kernels}
+ Let $\lbrace\hawkesKernel^{\impCoef, \decCoef} : \, \, (\impCoef,\decCoef)=:\theta \in \Theta \rbrace$ be a parametric family of bounded Hawkes kernels as in equation \eqref{eq.parametric_hawkes_kernel_general}, for some fixed non-negative function $\parametricHawkesKernel=\parametricHawkesKernel(t,a,b)$. Then, the intensities $\intensity[e]$ in equation \eqref{eq.intensity_of_sdHawkes} are evaluated according to the formula
+ \begin{equation}\label{eq.evaluation_of_intensity}
+ \intensity(t) = \baseRate_e 
+ +\sum_{\eone, \, \xone} \sum_{\arrivalTimes[\eone, \xone]_{j} < t} 
+ \parametricHawkesKernel(t-\arrivalTimes[\eone, \xone]_{j}, \, \impCoef_{\eone,\xone, e}, \,  \decCoef_{\eone,\xone, e}),
+\end{equation}
+where in the outermost sum the index $\eone$ refers to event types and ranges from $1$ to $\numEventTypes$, the index $\xone$ refers to states and ranges from $1$ to $\numStates$, and where, in the innermost sum, $(\arrivalTimes[\eone, \xone]_{j})_j$ are the jump times of the $(\eone, \xone)$-th component of the hybrid-MPP counterpart $\hybridHawkes$ of $(\multiCountingProc,\stateVariable)$ defined in equation \eqref{eq.hybridHawkes}. Moreover, assuming that $0$ is the time origin of a realisation of $(\multiCountingProc, \stateVariable)$ and $\timeHorizon$ is its time horizon,  the log-likelihood is evaluated according to the formula
+\begin{equation}\label{eq.evaluation_of_loglikelihood}
+ \log \likelihood(\baseRate,\impCoef,\decCoef) = \Phi(0,\timeHorizon)
+ + \lplus(0,\timeHorizon) - \lminus(0,\timeHorizon), 
+\end{equation}
+where for $t_0 < t_1$ we have defined
+\begin{equation*}
+\begin{split}
+ \Phi(t_0,t_1) =& \sum_{t_0<\arrivalTimes[]_n \leq t_1} \transProb_{\event}\big(\stateVariable(\arrivalTimes[]_n - ), \stateVariable(\arrivalTimes[]_n)\big), 
+ \\
+ \lplus(t_0,t_1) =& \sum_{e=1}^{\numEventTypes} \sum_{t_0<\arrivalTimes[e]_j\leq t_1} \log \left(\intensity[e](\arrivalTimes[e]_j)\right), 
+ \\
+ \lminus(t_0,t_1) =& (t_1-t_0)\sum_{e=1}^{\numEventTypes} \baseRate_e
+ \\
+ & +\sum_{e=1}^{\numEventTypes} 
+ \sum_{\eone,\xone} \sum_{\arrivalTimes[\eone,\xone]_j < t_1}
+ K\big(\max(0,t_0-\arrivalTimes[\eone,\xone]_j), t_1 - \arrivalTimes[\eone,\xone]_j,  \impCoef\subscriptexe, \decCoef\subscriptexe\big),
+\end{split}
+ \end{equation*}
+where $\eone$, $\xone$ and $\arrivalTimes[\eone,\xone]_j$ have the same meaning as in equation \eqref{eq.evaluation_of_intensity}, $(\arrivalTimes[e]_j)_j$ are the jump times of the $e$-th componet $\countingProc$ of $\multiCountingProc$, $(\arrivalTimes[]_n)_n$ are the jump times of the gound process $\groundProc$ of  $\multiCountingProc$, and where 
+\begin{equation*}
+ K\big(s,t, a, b) = \int_{s}^{t} \parametricHawkesKernel(u,a,b)du.
+\end{equation*}
+\end{prop}
+\begin{proof}
+ The Stiejlties integral in equation \eqref{eq.intensity_of_sdHawkes} is equivalently expressed as $\sum \hawkesKernel\subscriptee (t-\arrivalTimes[\eone]_j, \, X(\arrivalTimes[\eone]_j) )$, where the sum is over the jump times $\arrivalTimes[\eone]_j$ of the $\eone$-th component $\countingProc[\eone]$ of $\multiCountingProc$. This sum is finite because the counting process is non-explosive. Since $\arrivalTimes[\eone]_j$ is the $j$-order statistic of $\lbrace \arrivalTimes[\eone,\xone]_k: \, \xone=1,\dots,\numStates, \,\,\, k=1,2,\dots\rbrace$, the summands can be rearranged to give 
+ \begin{equation*}
+  \sum_{\arrivalTimes[\eone]_j < t} \hawkesKernel\subscriptee (t-\arrivalTimes[\eone]_j, \, X(\arrivalTimes[\eone]_j))
+  = \sum_{\xone=1}^{\numStates} \sum_{\arrivalTimes[\eone, \xone]_j < t} \hawkesKernel\subscriptee (t-\arrivalTimes[\eone, \xone]_j, \, X(\arrivalTimes[\eone,\xone]_j))
+  = \sum_{\xone=1}^{\numStates} \sum_{\arrivalTimes[\eone, \xone]_j < t} \hawkesKernel\subscriptee (t-\arrivalTimes[\eone, \xone]_j, \, \xone),
+ \end{equation*}
+where in the second identity we have used that by definition $X(\arrivalTimes[\eone,\xone]_j) = \xone$ for any $\eone$ and any $j$. Hence by plugging in the parametric form of the Hawkes kernel, we obtain equation \eqref{eq.evaluation_of_intensity}. 
+
+As for formula \eqref{eq.evaluation_of_loglikelihood}, starting from equation \eqref{eq.loglikelihood_general}, we only need to show that $\lminus(0,\timeHorizon) = \sum_{e=1}^{\numEventTypes} \int_{0}^{\timeHorizon}\intensity^{\nu,\impCoef, \decCoef}(t)dt$. To this purpose, we use equation \eqref{eq.evaluation_of_intensity} to write for arbitrary times $t_0<t_1$
+\begin{equation*}
+\begin{split}
+\sum_{e=1}^{\numEventTypes}\int_{t_0}^{t_1} \left(\intensity[e](t) - \baseRate_e \right) dt 
+=&
+\sum_{e=1}^{\numEventTypes}\sum_{\eone,\xone}\int_{t_0}^{t_1} 
+\sum_{\arrivalTimes[\eone,\xone]_j <t} \parametricHawkesKernel(t-\arrivalTimes[\eone,\xone]_j, \impCoef\subscriptexe, \decCoef\subscriptexe)dt 
+\\
+=&
+\sum_{e=1}^{\numEventTypes}\sum_{\eone,\xone}
+\Bigg\lbrace
+\sum_{\arrivalTimes[\eone,\xone]_j \leq t_0}
+\int_{t_0}^{t_1} 
+\parametricHawkesKernel(t-\arrivalTimes[\eone,\xone]_j, \impCoef\subscriptexe, \decCoef\subscriptexe)dt 
+\\
+&+
+\sum_{t_0<\arrivalTimes[\eone,\xone]_j \leq t_1}
+\int_{\arrivalTimes[\eone,\xone]_j}^{t_1} \parametricHawkesKernel(t-\arrivalTimes[\eone,\xone]_j, \impCoef\subscriptexe, \decCoef\subscriptexe)dt 
+\Bigg\rbrace.
+\end{split}
+\end{equation*}
+To get to the second identity, we split the innermost sum over $\arrivalTimes[\eone,\xone]_j<t$ into the sum over $\arrivalTimes[\eone,\xone]_j \leq t_0$ and the sum over $t_0 < \arrivalTimes[\eone,\xone]_j<t$;  we swapped summation over  $\arrivalTimes[\eone,\xone]_j \leq t_0$ with integration in $dt$, whereas we applied Fubini theorem to go from $\int_{t_0}^{t_1}dt\sum_{t_0 < \arrivalTimes[\eone,\xone]_j<t}$ to $\sum_{t_0 < \arrivalTimes[\eone,\xone]_j<t_1}\int_{\arrivalTimes[\eone,\xone]_j}^{t_1}dt$. Then, by using the time primitive $K$ of $\parametricHawkesKernel$, we obtain the calimed expression for $\lminus(t_0,t_1)$.
+\end{proof}
+
+\begin{corol}[Corollary to Proposition \ref{prop.parametric_hawkes_kernels}]
+\label{corol.complexities}
+The computational complexity of evaluating the intensity $\intensity(t)$ in equation \eqref{eq.evaluation_of_intensity} is $O(\groundProc(t))$, and -- assuming that the primitive $K$ of $\parametricHawkesKernel$ is known in closed form (i.e. no numerical integration required) -- the computational complexity of evaluating the loglikelihood of a realisation of $(\multiCountingProc, \stateVariable)$ with time horizon $\timeHorizon$ is $O(\groundProc\squared(\timeHorizon))$. 
+
+Furthermore, the computational complexity of simulating a state-depepndet Hawkes process up to time $\timeHorizon$ using the iterative step in Algorithm \ref{algo.MP18_ogata} where the intensities are evaluated according to equation \eqref{eq.evaluation_of_intensity} is $O(\numEventTypes\groundProc\squared(\timeHorizon))$.
+\end{corol}
+\begin{proof}
+The number of summands in equation \eqref{eq.evaluation_of_intensity} is equal to the number of arrival times before $t$, namely $\groundProc(t-)$, hence the computational complexity of $\intensity(t)$ is $O(\groundProc(t))$. Similarly, the complexities of $\Phi(0,T)$ and of $\lminus(0,T)$ are $O(\groundProc(T))$. Instead, since every summand in the expression for $\lplus$ requires the evaluation of the intensity $\intensity$, the complexity of $\lplus(0,T)$ is $O(\groundProc\squared(T))$. To see this, write 
+\begin{equation*}
+ \lplus(0,T) = \sum_{n=1}^{\groundProc(T)}
+ \log \left(
+ \baseRate_{\event} + \sum_{m < n}\parametricHawkesKernel\left(\arrivalTimes[]_n - \arrivalTimes[]_m, \impCoef_{\event[m],\stateVariable_m,\event[n]}, \decCoef_{\event[m],\stateVariable_m,\event[n]}\right)
+ \right),
+\end{equation*}
+and hence deduce that evaluating $\lplus(0,T)$ requires $\groundProc(T)(1+\groundProc(T))/2$ additions. 
+Therefore, the overall computation complexity of the log-likelihood is $O(\groundProc\squared(T))$.
+
+Finally, the iterative step described in Algorithm \ref{algo.MP18_ogata} requires $1+n_r$ evaluations of the overall intesity $\bar{\intensity[]}(t) = \intensity[1](t)+\dots+\intensity[\numEventTypes](t)$, where $n_r$ is the number of rejections. Therefore, updating from $\lbrace(\arrivalTimes[]_i,\event[i],\stateVariable_i): \, i=1,\dots,n-1\rbrace$ to $\lbrace(\arrivalTimes[]_i,\event[i],\stateVariable_i): \, i=1,\dots,n\rbrace$ costs $(1+n_r)\numEventTypes\groundProc(\arrivalTimes[]_{n-1})$ operations. Compounding all these costs, the overall complexity of the simulation up to time $\timeHorizon$ is $O(\numEventTypes\groundProc\squared(\timeHorizon))$. 
+\end{proof}
+
+
+
+A remarkable choice for a parametric family $\lbrace \hawkesKernel^{\impCoef,\decCoef}: \, \impCoef, \, \decCoef\rbrace$ of the form synthetised in equation \eqref{eq.parametric_hawkes_kernel_general} is 
+\begin{equation}\label{eq.exponentialHawkesKernel}
+ \hawkesKernel^{\alpha,\beta}\subscriptee(t,\xone) = \impCoef_{\eone,\xone,e} \, \exp\left( -\decCoef_{\eone,\xone,e} \, t \right),
+\end{equation}
+where the fixed function $\parametricHawkesKernel$ is $\parametricHawkesKernel(t,a,b)=a\exp(-bt)$.
+This choice is remarkable because (i) for any non-negative $\decCoef\subscriptexe$ the kernels are bounded, hence satisfying the assumption in Proposition \ref{prop.existence_sdHawkes}; (ii) it offers computational advantages for the evaluation of the log-likelihood in equation \eqref{eq.evaluation_of_loglikelihood}. 
+Point (i) guarantees the existence, uniqueness and non-explosiveness of a state-dependent Hawkes process for any choice of non-negative parameters $\baseRate_e$, 
+$\impCoef_{\eone,\xone, e}$ and $\decCoef_{\eone,\xone, e}$, and any transition matrices $\transProb_e$. Point (ii) is one of the reasons that motivated  exponential kernels in the two models implemented in \citealp{MP18sta}. We will now expand on this computation advantages. 
+
+Both in the context of simulating a state-dependent Hawkes process and in the context of maximum likelihood estimation, several evaluations of the intensities $\intensity$ are required. 
+In the presence of several events -- each happening at the arrival times $\arrivalTimes[\eone,\xone]_j$ --, each of these evaluations involves the long iterations spelled out in Proposition \ref{prop.parametric_hawkes_kernels}, and this may be compounded with a large number of states and/or of event types (curse of dimensionality). However, in the case of exponential kernels as in equation \eqref{eq.exponentialHawkesKernel}, knowledge of the intensities at some earlier time $s$ can be reused for a quicker evaluation of $\intensity(t)$ at a later time $t$. Indeed, for $e,\eone=1,\dots,\numEventTypes$ and $\xone=1,\dots,\numStates$, let $\tilde{\intensity[]}_{\eone,\xone,e}(s):= \sum_{\arrivalTimes[\eone,\xone]_j<s}\impCoef_{\eone,\xone,e}\exp(-\decCoef_{\eone,\xone,e}(s-\arrivalTimes[\eone,\xone]_j))$, so that $\intensity[e](s)=\baseRate_e+\sum_{\eone,\xone}\tilde{\intensity[]}_{\eone,\xone,e}(s)$. Then, for $s<t$ it holds
+\begin{equation}\label{eq.update_of_exponential_intensity}
+ \intensity[e](t) = \baseRate_e + \sum_{\eone,\xone}\tilde{\intensity[]}_{\eone,\xone,e}(s)\exp\left(-\decCoef_{\eone,\xone,e}(t-s)\right)
+ + \sum_{\eone,\xone}\sum_{s\leq\arrivalTimes[\eone,\xone]_j<t} \impCoef\subscriptexe \exp\left(-\impCoef\subscriptexe(t-\arrivalTimes[\eone,\xone]_j)\right).
+\end{equation}
+In the latter formula, the first summation is only over the indexes $\eone$ and $\xone$, and represents the reusage of the past evaluations at time $s$, updated by the factors $\exp(-\decCoef (t-s))$. The second summation instead represents the new contribution to the intensity $\intensity[e](t)$ at time $t$ stemming from events that happened in between $s$ and $t$. 
+
+By using the updating rule in equation \eqref{eq.update_of_exponential_intensity}, the computational complexity of evaluating $\lplus(0,T)$ of equation \eqref{eq.evaluation_of_loglikelihood} in case of exponential kernels is brought down to $O(\groundProc(T))$, hence making the log-likelihood's complexity grow only linearly in the dimension of the sample. 
+Similarly, since in case of exponential kernels the $(n+1)$-th iteration of Algorithm \ref{algo.MP18_ogata} can compute the required intensity $\bar{\intensity[]}$ relying on the evaluation of the same function at the $n$-th iteration, the overall complexity of simulating a state-dependent Hawkes process with exponential kernels up to time $\timeHorizon$ is reduced to $O(\numEventTypes\groundProc(\timeHorizon))$.
+
+\subsection{Power-law kernels}\label{sec.powerlaw_kernels}
+As outlined in the introduction, the motivation for our work stems from  \citealp{BM14haw}. There, the authors implemented a non-parametric estimation of ordinary Hawkes processes to calibrate their Hawkes-modelled market replayer. After non-parametric procedure, the resulting shapes of Hawkes kernels were shown to be fit by power-law kernels, exhibiting the decay $\hawkesKernel\subscriptee(t) \asymp t^{-\decCoef\subscriptee}$ for some exponenents $\decCoef\subscriptee$ typically found in a right neighborhood of $1$.
+
+Building on Bacry and Muzy's findings, we adopt the following parametric form for our state-dependent Hawkes kernels:
+\begin{equation}\label{eq.powerlaw_kernels}
+ \hawkesKernel\subscriptee(t,\xone) 
+ = \impCoef\subscriptexe \big( t+ 1 \big)^{-\decCoef\subscriptexe},
+\end{equation}
+for some non-negative coefficients $\impCoef\subscriptexe \geq 0$ and $\decCoef\subscriptexe > 1$. 
+This means that with respect to the general expression in \eqref{eq.parametric_hawkes_kernel_general}, we fix the non-negative function $\parametricHawkesKernel$ to be $\parametricHawkesKernel(t,a,b) = a(t+1)^{-b}$.  
+Beside the alignment with the mentioned asymptotic decay, this choice guarantees, on the one hand, the boundedness of the kernels (which implies existence, uniqueness and non-explosiveness of the state-deppendent Hawkes process); on the other hand, it guarantees the interpretation of $\impCoef\subscriptexe$ as the instantaneous impact  that an event of type $\eone$ followed by a state $\xone$ has on the intensity $\intensity[e]$. Both these two properties mirror what we had for the exponential case in equation \eqref{eq.exponentialHawkesKernel}, adopted in the models implebented by \citealp{MP18sta}.
+
+From Proposition \ref{prop.parametric_hawkes_kernels} and from the subsequent discussion on exponential kernels it follows that adopting the power-law kernels in equation \eqref{eq.powerlaw_kernels} poses a computational challenge for the implementation of our model, in particular with regards to the maximum likelihood estimation. In the remaining of this section we present the formulas involved in our algorithms and later in Section \ref{sec.the_python_module} we will take a close look at their implementations, showing how the computational challenge was tackled. 
+
+\begin{prop}\label{prop.intensity_and_compensator_powerlaw}
+ Let $(\multiCountingProc,\stateVariable)$ be a $\numEventTypes$-dimensional state-dependent Hawkes process on a finite state space of cardinality $\numStates$. Let $\baseRate_1, \dots, \baseRate_{\numEventTypes}$ be the non-negative base rates, and let $\transProb_1, \dots,\transProb_{\numEventTypes}$ be the transition matrices on the state space associated with the event types $e=1, \dots, \numEventTypes$. Assume that the Hawkes kernels $\hawkesKernel\subscriptee$ are given by equation \eqref{eq.powerlaw_kernels} for some non-negative coefficients $\impCoef\subscriptexe \geq 0$ and $\decCoef\subscriptexe > 1$.  For $\eone = 1,\dots,\numEventTypes$, and $\xone=1,\dots,\numStates$, let $\arrivalTimes[\eone,\xone]_j$ be the jump times of $(\eone,\xone)$-th component $\hybridHawkes_{\eone,\xone}$ of the hybrid-MPP counterpart of $(\multiCountingProc,\stateVariable)$, and for $e = 1,\dots,\numEventTypes$ and $s<t\leq u$ define
+ \begin{equation}\label{eq.definitions_of_ESSE}
+  \begin{split}
+   \ESSE\subscriptexe(s,t):=& \sum_{s\leq \arrivalTimes[\eone,\xone]_j < t}\big(t-\arrivalTimes[\eone,\xone]_j +1\big)^{-\decCoef\subscriptexe},
+   \\
+   \ESSEone\subscriptexe(s,t):=& \sum_{s\leq \arrivalTimes[\eone,\xone]_j < t}\big(t-\arrivalTimes[\eone,\xone]_j +1\big)^{-\decCoef\subscriptexe}\log(t-\arrivalTimes[\eone,\xone]_j +1),
+   \\
+   \ESSEtwo\subscriptexe(s,t):=& \sum_{s\leq \arrivalTimes[\eone,\xone]_j < t}\big(t-\arrivalTimes[\eone,\xone]_j +1\big)^{1-\decCoef\subscriptexe}\log(t-\arrivalTimes[\eone,\xone]_j +1),
+   \\
+   \ESSEthree\subscriptexe(s,t,u):=& \sum_{s\leq \arrivalTimes[\eone,\xone]_j < t}\big(u-\arrivalTimes[\eone,\xone]_j +1\big)^{1-\decCoef\subscriptexe}.
+  \end{split}
+ \end{equation}
+ Then, the $e$-th component of the intensity vector $(\intensity[1],\dots,\intensity[\numEventTypes])$ has the expression
+ \begin{equation}\label{eq.intensity_powerlaw}
+  \intensity[e](t) = \baseRate_e +\sum_{\eone,\xone}\impCoef\subscriptexe\ESSE\subscriptexe(0,t),
+ \end{equation}
+and the increment from time $t_0$ to time $t_1$ of the compensator of the $e$-th component $\countingProc$ the counting process $\multiCountingProc$ has the expression
+\begin{equation}
+\begin{split}
+ \compensator_e(t_0,t_1)=&\int_{t_0}^{t_1} \intensity[e](s)ds
+ \\
+ =&
+ (t_1 - t_0)\baseRate_e
+ + \sum_{\eone,\xone} \frac{\impCoef\subscriptexe}{\decCoef\subscriptexe - 1}
+ \Bigg(
+ \ESSEthree\subscriptexe(0,t_0,t_0) 
+ \\
+ & - \ESSEthree\subscriptexe(0,t_0,t_1)
+ +\# \left\lbrace t_0 \leq \arrivalTimes[\eone,\xone]_j <t_1\right\rbrace
+ - \ESSEthree\subscriptexe(t_0,t_1,t_1)
+ \Bigg),
+\end{split} 
+\end{equation}
+where $\# \lbrace t_0 \leq \arrivalTimes[\eone,\xone]_j <t_1\rbrace = \hybridHawkes_{\eone,\xone}(t_1 -)-\hybridHawkes_{\eone,\xone}(t_0-)$ is the number of arrival times $\arrivalTimes[\eone,\xone]_j$ in the half-open interval $[t_0,t_1)$. 
+\end{prop}
+
+\begin{prop}
+ Assume the setting of Proposition \ref{prop.intensity_and_compensator_powerlaw}. Recall equation \eqref{eq.loglikelihood_general} for the log-likelihood and let $\lplus$ and $\lminus$ be as in Proposition \ref{prop.parametric_hawkes_kernels}, with the parametric form of the Hawkes kernels as in equation \eqref{eq.powerlaw_kernels}. Let $\timeHorizon$ be the time horizon of the realisation of $(\multiCountingProc, \stateVariable)$. 
+ Then, the gradient of the log-likelihood is computed based on the following espressions for the derivatives of $\lplus$ and $\lminus$ with respect to the model's parameters.
+ \begin{itemize}
+  \item Derivatives of $\lplus$:
+  \begin{equation}\label{eq.derivatives_of_lplus}
+  \begin{split}
+   \frac{\partial\lplus(0,\timeHorizon)}{\partial\baseRate_e}
+   =&
+   1 \cdot \intensity[e]\inverse(\arrivalTimes[e])
+   = \sum_{\arrivalTimes[e]_j < \timeHorizon}\frac{1}{\intensity[e](\arrivalTimes[e]_j)},
+   \\
+   \frac{\partial\lplus(0,\timeHorizon)}{\partial\impCoef\subscriptexe}
+   =&
+   \ESSE\subscriptexe(0,\arrivalTimes[e])\cdot \intensity[e]\inverse(\arrivalTimes[e]),
+   \\
+   \frac{\partial\lplus(0,\timeHorizon)}{\partial\decCoef\subscriptexe}
+   =&
+   -\impCoef\subscriptexe
+   \ESSEone\subscriptexe(0,\arrivalTimes[e])\cdot \intensity[e]\inverse(\arrivalTimes[e]),
+  \end{split}
+ \end{equation}
+ where the symbol $\cdot$ denotes scalar product between two one-dimensional arrays; where $\arrivalTimes[e] = (\arrivalTimes[e]_1, \arrivalTimes[e]_2, \dots )$ is the ordered array of jump times of the $e$-th component $\countingProc$ of $\multiCountingProc$;  where $\intensity[e](\arrivalTimes[e])$ and $\intensity[e]\inverse(\arrivalTimes[e])$ are the arrays whose $j$-th components are respectively $\intensity[e](\arrivalTimes[e]_j)$ and $1/\intensity[e](\arrivalTimes[e]_j)$; and where $\ESSE\subscriptexe(0,\cdot)$ and $\ESSEone\subscriptexe(0,\cdot)$ from equation \eqref{eq.definitions_of_ESSE} are applied component-wise to the arrays $\arrivalTimes[e]$.
+ \item Derivatives of $\lminus$:
+ \begin{equation}\label{eq.derivatives_of_lminus}
+  \begin{split}
+   \frac{\partial\lminus(0,\timeHorizon)}{\partial\baseRate_e}
+   =&
+   \timeHorizon,
+   \\
+   \frac{\partial\lminus(0,\timeHorizon)}{\partial\impCoef\subscriptexe}
+   =&
+   \frac{1}{\decCoef\subscriptexe - 1}
+   \Bigg(
+   \ESSEthree\subscriptexe(0,0,0)  - \ESSEthree\subscriptexe(0,0,\timeHorizon)
+    +\hybridHawkes_{\eone,\xone}(\timeHorizon-)
+   - \ESSEthree\subscriptexe(0,\timeHorizon,\timeHorizon)
+   \Bigg),
+   \\
+   \frac{\partial\lminus(0,\timeHorizon)}{\partial\decCoef\subscriptexe}
+   =&
+   \frac{\impCoef\subscriptexe}{1-\decCoef\subscriptexe}\
+   \left(
+   \frac{\partial\lminus(0,\timeHorizon)}{\partial\impCoef\subscriptexe}
+   +\ESSEtwo\subscriptexe(0,\timeHorizon)
+   \right),
+  \end{split}
+ \end{equation}
+ where $\ESSEtwo\subscriptexe$ and $\ESSEthree\subscriptexe$ were defined in equation \eqref{eq.definitions_of_ESSE}.
+ \end{itemize}
+\end{prop}
+
+\section{A state-dependent Hawkes model for order-driven markets}
+
+\subsection{Order-driven markets}\label{sec.order-driven_markets}
+Order-driven markets are trading venues organised around \emph{limit orders}. A limit order is the fundamental action that market participants in order-driven markets can perform. It is represented by a 4-tuple $(t,q,p,d)$, where $t$ denotes time, $q$ denotes size, $p$ denotes price, and $d$ denotes direction. We say that a market participant posts a limit order $(t,q,p,d)$ if at time $t$ she submits to the exchange her commitment to buy ($d=1$) or sell ($d=-1$) the amount $q$ at the price $p$. The price $p$ is interpreted as the highest price at which she is committed to buy if $d=1$, or the lowest price at which she is commited to sell if $d=-1$. A matching algorithm run by the trading platform looks for possible counterparts to her trade: if other participants' committments to trade exist to (partially) fulfill her order (at a price not worse than $p$ from her point of view), then her order is (partially) cleared. The fraction of her order that is cleared disappers from the market, and it is said to be \emph{executed};  the fraction that could not be fulfilled is recorded in the \emph{limit order book}, waiting for counterparts to trade with.
+
+A limit order book is a grid of equally spaced prices at which non-executed limit orders sit. The space between consecutive grid nodes is called the tick size of the LOB, which we denote by $\tickSizeOfLOB$. Prices are increasing from left to right. At every node of the grid, outstanding limit orders to buy or sell at the corresponding price are collected; these limit orders are also said to be queuing there. Spontaneously -- i.e. by market forces  -- such orders organise in a way that buy offers will be displaced on the left (the so-called \emph{bid side}) and sell offers will be on the right (the so-called \emph{ask side}). Indeed, if there were a buy (respectively, sell) limit order to the right (left) of some sell (buy) limit orders, or at the same node, then the matching algorithm would have matched them, clearing them out from the orderbook.  Therefore, the whole configuration of a limit order book at time $t$ is given when the following variables are specified:
+\begin{enumerate}
+\item the best ask price $\bestAskPrice_{t}$, i.e. the lowest price at which one can find sell offers;
+\item the best bid price $\bestBidPrice_t$, i.e. the highest price at which one can find buy offers;
+\item the volume $\nthBestAskVolume[i]_t$ of ask offers at price $\nthBestAskPrice[i]_t= \bestAskPrice_t + (i-1)\tickSizeOfLOB$, for $i=1,2,\dots$, i.e. the quantity 
+\begin{equation*}
+ \nthBestAskVolume[i]_t = \sum_{\lbrace(s,q,\nthBestAskPrice[i]_t,-1): \quad s\leq t\rbrace} q,
+\end{equation*}
+where the sum is over all the outstanding (i.e. non-executed) sell limit orders submitted by time $t$ for  a price of $\bestAskPrice_t + (i-1)\tickSizeOfLOB$;
+\item the volume $\nthBestBidVolume[i]_t$ of bid offers at price $\nthBestBidPrice[i]_t=\bestBidPrice_t - (i-1)\tickSizeOfLOB$, for $i=1,2,\dots$, i.e. the quantity 
+\begin{equation*}
+ \nthBestBidVolume[i]_t = \sum_{\lbrace (s,q,\nthBestBidPrice[i]_t,1): \quad s\leq t\rbrace} q,
+\end{equation*}
+where the sum is over all the outstanding (i.e. non-executed) buy limit orders submitted by time $t$ for  a price of $\bestBidPrice_t - (i-1)\tickSizeOfLOB$.
+\end{enumerate} 
+
+% The configuration of the LOB at time $t$ is thus depicted in four steps: 1. locate the best bid price $\bestBidPrice_t$ on the price grid;  2. locate the best ask price $\bestAskPrice_t$ on the price grid; 3. on every bid price level $\nthBestBidPrice[i]_t$, draw a column as high as the volume $\nthBestBidVolume[i]_t$  of bid offers at that price; 4. on every ask price level $\nthBestAskPrice[i]_t$, draw a column as high as the volume $\nthBestAskVolume[i]_t$  of ask offers at that price.
+
+The whole configuration of a limit order book at time $t$ is described by the variables $(\bestAskPrice_t, \bestBidPrice_t, \lbrace (\nthBestAskVolume[i]_t, \nthBestBidVolume[i]_t) : \, \, i=1,2,\dots\rbrace)$. Apart from these variables, other derived quantities are useful to assess the properties of an orderbook. These are the spread, the mid-price and the volume imbalance (or queue imbalance). 
+
+The spread at time $t$ is the distance $\lvert \bestAskPrice_t - \bestBidPrice_t \rvert$ between best ask price  and best bid price, which we denote by $\LOBspread_t$.  The mid-price at time $t$ is the mid point in between  $\bestBidPrice_t$ and $\bestAskPrice_{t}$, which we denote by $\price^{m}_t$ and is given by $\price^m_t = (\bestAskPrice_t + \bestBidPrice_{t})/{2}$.
+Finally, the $n$-levels volume imbalance (or queue imbalance) at time $t$, denoted $\volumeImbalance^{n}_t$, is the normalised excess of limit orders on the first $n$ levels of the bid side compared to the limit orders on the first $n$ levels of the ask side, namely
+\begin{equation}\label{eq.definition_volume_imbalance}
+\volumeImbalance^{n}_t =
+\frac{\sum_{i\leq n}\nthBestBidVolume[i]_t - \sum_{i\leq n}\nthBestAskVolume[i]_t}{\sum_{i\leq n}\nthBestBidVolume[i]_t + \sum_{i\leq n}\nthBestAskVolume[i]_t},
+\end{equation}
+where $\sum_{i\leq n}\nthBestBidVolume[i]_t$ (respectively, $\sum_{i\leq n}\nthBestAskVolume[i]_t$) is the cumulative volumes on the first $n$ bid (ask) levels. 
+At least for the case $n=1$, the queue imbalance $\volumeImbalance^n$ is widely acceped as a reliable signal for the next mid-price move (\citealp{CDJ18enh}): when it is close to -1 the mid-price will likley decrease, and when it is close to +1 it will likely increase. 
+
+A variant of the volume imbalance that takes into account the excess of bid offers compared to ask offers arrived to the orderbook in a time window of lenth $\Delta T$ is the order flow imbalance. It is defined as 
+\begin{equation*}
+ \OFI_{\Delta T}(t) : = \frac{\sum_{\lbrace (s,p,q,+1): \, t-\Delta T \leq s \leq t \rbrace} q -  \sum_{\lbrace (s,p,q,-1): \, t-\Delta T \leq s \leq t \rbrace} q}{\sum_{\lbrace (s,p,q,+1): \, t-\Delta T \leq s \leq t \rbrace} q +  \sum_{\lbrace (s,p,q,-1): \, t-\Delta T \leq s \leq t \rbrace} q},
+\end{equation*}
+where sums are take over outstading (i.e. non-executed) limit orders (either buy or sell) with time stamp $s$ in the time window $[t-\Delta T, t]$. The importance of the order flow imbalance for the prediction of price changes was studied in \citealp{CKS14pri}.
+
+We will incorporate proxies for the queue imbalance and the order flow imbalance in our state-dependent Hawkes model, see Section \ref{sec.sdHawkes_model}.
+
+When a limit order comes to the market, it modifies the previous configuration of the orderbook. Proposition \ref{prop.lob_update} gives the updating rule for the variables $(\bestAskPrice_t, \bestBidPrice_t, \lbrace (\nthBestAskVolume[i]_t, \nthBestBidVolume[i]_t) : \, \, i=1,2,\dots\rbrace)$.
+\begin{prop}\label{prop.lob_update}
+ Let $(t,q,p,-1)$ be a sell limit order that arrives to the market at time $t$. Let $(\bestAskPrice_{t-}, \bestBidPrice_{t-},\lbrace  (\nthBestAskVolume[i]_{t-}, \nthBestBidVolume[i]_{t-}) : \, \, i=1,2,\dots\rbrace )$ represent the limit order book immediately before $t$. Then, prices and volumes are updated according to the following formulas:
+ \begin{equation}\label{eq.lob_update_sell_order}
+  \begin{split}
+   \bestBidPrice_t =& \bestBidPrice_{t-} - (N-1)\tickSizeOfLOB;
+   \\
+   \nthBestBidVolume[k]_{t} 
+   =& \nthBestBidVolume[k+N-1]_{t} 
+   - \left( q^{k+N-2}-q^{k+N-1}\right), \qquad k=1,2,\dots ; 
+   \\
+   \bestAskPrice_t = & \bestAskPrice_{t-} 
+   - \left(\bestAskPrice_{t-} - p\right) \one\left\lbrace q^{\infty} > 0\right\rbrace ; 
+   \\
+   \nthBestAskVolume[k]_t = &  \nthBestAskVolume[k-\delta\bestAskPrice_t]_{t-}
+   +q^{\infty}\one\left\lbrace p=\bestAskPrice_t + (k-1)\tickSizeOfLOB \right\rbrace, \qquad k=1,2,\dots ;
+  \end{split}
+ \end{equation}
+ where $\delta\bestAskPrice_t = \bestAskPrice_t - \bestAskPrice_{t-}$ denotes the (non-positive) jump of the best ask price;  $N := \inf\lbrace n\geq 0 : \, q<\sum_{i=1}^{n} \nthBestBidVolume[i]_{t-} \quad \text{ or } \quad  \nthBestBidPrice[n]_{t-}\leq p \rbrace$ denotes the number of levels on the bid side involved in servicing the incoming order; and 
+ \begin{equation*}
+  \begin{split}
+   q^{i}:=& \max\left( 0, 
+   q-\sum_{k=1}^{i\wedge N} \nthBestBidVolume[k]_{t-}
+   \right)
+   \\
+   =& \max\left( 0, 
+   q-\sum_{k\leq i} \nthBestBidVolume[k]_{t-}\one\left\lbrace \nthBestBidPrice[k]_{t-} \geq p\right\rbrace
+   \right)
+  \end{split}
+ \end{equation*}
+ is the oustanding quantity to be executed after the first $i$ levels have been consumed. 
+ For a buy limit order  $(t,q,p,+1)$, the updating rules are similar, with opposite side and direction. 
+\end{prop}
+
+The arrival of a limit order to the market triggers two events: one is the consumption of the liquidity capable to (partially) service the limit order, the other is the addition of the non-executed part of the limit order to the appropriate queue in the orderbook. Proposition \ref{prop.decomposition_of_limit_order} states the terms of this decomposition.
+
+\begin{prop}\label{prop.decomposition_of_limit_order}
+ Given the configuration $(\bestAskPrice_{t-}, \bestBidPrice_{t-},\lbrace  (\nthBestAskVolume[i]_{t-}, \nthBestBidVolume[i]_{t-}) : \, \, i=1,2,\dots\rbrace )$ of the limit order book immediately before time $t$, processing the sell limit order $(t,q,p,-1)$ is equivalent to processing the pair of orders $[(t,q_M,0,-1),(t,q-q_M,p,-1) ]$, where 
+ \begin{equation*}
+  q_M:= \min\left(q, \sum_{i\geq 1} \nthBestBidVolume[i]_{t-} \one \left\lbrace \nthBestBidPrice[i]_{t-}\geq p\right\rbrace\right).
+ \end{equation*}
+Similarly, processing the buy limit order $(t,q,p,+1)$ is equivalent to processing the pair of orders $[(t,q_M,\infty,+1),(t,q-q_M,p,+1) ]$, where 
+ \begin{equation*}
+  q_M:= \min\left (q, \sum_{i\geq 1} \nthBestAskVolume[i]_{t-} \one \left\lbrace \nthBestAskPrice[i]_{t-}\leq  p\right\rbrace\right).
+ \end{equation*}
+\end{prop}
+
+The first component $(t,q_M,0,-1)$ in the decomposition $[(t,q_M,0,-1),(t,q-q_M,p,-1) ]$ of the sell limit order $(t,q,p,-1)$ is called \emph{sell market order}. Notice that in the 4-tuple $(t,q_M,0,-1)$, the price $p$ is set to zero, and this guarantees immediate execution: the sale of the amount $q_M$ is instantaneously matched with outstanding buy limit orders on the bid side, and no fraction of $q_M$ is put into the queue. On the contrary, the second component $(t,q-q_M,p,-1)$ specifies exactly that part of $(t,q,p,-1)$ which will be queued. 
+Similarly, $(t,q_M,\infty,+1)$ represents the market order component of the buy limit order $(t,q,p,+1)$, and it is referred to as \emph{buy market order}. The price $p=\infty$ is a way to express the fact that a counterpart for the purchase of the amount $q_M$ will instantanously be found on the ask side of the orderbook. In the following, when talking about market orders (either buy or sell), we will be referring to the first components  in the decomposition of all limit orders with non-zero market order size $q_M >0$.
+
+Given a time window $\timeWindow$, the evolution in time of the limit order book $\lbrace (\bestAskPrice_t, \bestBidPrice_t,\lbrace (\nthBestAskVolume[i]_t, \nthBestBidVolume[i]_t) : \, \, i=1,2,\dots\rbrace):  \quad 0\leq t \leq \timeHorizon \rbrace$ results from the history of all limit order submissions,  cancellations and executions that happened in $\timeWindow$. If every limit order in   $\lbrace (t,q,p,d): \, 0\leq t\leq \timeHorizon\rbrace$ is decomposed as per in Proposition \ref{prop.decomposition_of_limit_order}, then the seller-initiated trades that happended in $\timeWindow$ are $\lbrace (t,q_M,0,-1):\, \,  q_M>0, \, 0\leq t\leq \timeHorizon \rbrace$, and the buyer-initiated trades that happened in $\timeWindow$ are $\lbrace (t,q_M,\infty,+1):\, \,  q_M>0, \, 0\leq t\leq \timeHorizon \rbrace$.  Hence, in the following we will identify trades with market orders of non-zero size $q_M>0$. Notice that the actual trigger of a trade might be a limit order $(t,q,p,d)$ with non-trivial price specification $0<p<\infty$ rather than a market order, but -- because of the asserted equivalence in Proposition \ref{prop.decomposition_of_limit_order} -- referring to these triggers as ``market orders'' does not alter the evolution of the limit order book.  
+
+
+
+
+
+\subsection{The model of Bacry and Muzy (2014)}\label{sec.BM14_model}
+Two aspects of the time evolution of the order-driven market are modelled: trades and changes in the mid-price. As explained in the previous section (Section \ref{sec.order-driven_markets}), trades can in fact be identified with submissions of market orders, and we will do this here.
+
+Four streams of arrival times are considered: the stream $(\arrivalTimes[1]_j)_j$ of times when limit orders are executed on the bid side (equivalently identified with the arrival times of sell market orders); the stream  $(\arrivalTimes[2]_j)_j$ of times when limit orders are executed on the ask side (equivalently identified with arrival times of buy market orders); the stream  $(\arrivalTimes[3]_j)_j$ of times when the mid-price decreases; the stream  $(\arrivalTimes[4]_j)_j$ of times when the mid-price increases. Correspondingly, these sequences of random times give rise to a four-dimensional counting process $\multiCountingProc=(\countingProc[1],\dots, \countingProc[4])$ with the following interpretation of its components:
+\begin{itemize}
+ \item $\countingProc[1](t)$ denotes the number of seller-initiated trades that happened before or at time $t$ (identified with the number of market orders arrived on the bid side of the orderbook by time $t$);
+ \item $\countingProc[2](t)$ denotes the number of buyer-initiated trades that happened before or at time $t$ (identified with the number of market orders arrived on the ask side of the orderbook by time $t$);
+ \item $\countingProc[3](t)$ denotes the number of downward jumps of the mid-price  that happened before or at time $t$;
+ \item $\countingProc[4](t)$ denotes the number of upward jumps of the mid-price  that happened before or at time $t$.
+\end{itemize}
+
+Notice that $\countingProc[4]-\countingProc[3]$ is a proxy for the mid-price. Indeed, given the tick size $\tickSizeOfLOB$ of the limit order book and the initial position $\midprice_0$ of the mid-price,  the paths $t\mapsto \midprice_0 +(\countingProc[4](t)-\countingProc[3](t))\tickSizeOfLOB$ and $t\mapsto \midprice_t$ wil have discrepancies only when $\vert\delta\midprice(t)\vert \geq 2\tickSizeOfLOB$, and this rarely happens (in particular for limit order books with large tick size).
+
+The counting process $\multiCountingProc$ is assumed to be an ordinary Hawkes process, hence admitting a continuous compensator with an intensity $\intensity[]=(\intensity[1],\dots,\intensity[4])$ of the type in equation \eqref{eq.intensity_ordHawkes}. Hence, we let $\baseRate$ be the $4$-dimensional vector of base rates, and we let $\hawkesKernel$ be the $4\times4$-dimensional matrix of Hawkes kernels. In the model of \citealp{BM14haw}, the following assumptions are in place on the so-introduced four-dimensional Hawkes process:
+\begin{assumption}\label{assumption.BM14}
+ \begin{enumerate}[label={\roman{*}.} , ref={\ref{assumption.BM14}.\roman{*}}]
+  \item\label{assumption.BM14.symmetric_baseRates} (symmetric base rates)
+  $\baseRate_{2k-1}=\baseRate_{2k}$,  for $k=1,2$;
+  \item\label{assumption.BM14.null_price-jumps_baseRates} (fully endogenous price jumps) $\baseRate_3 = \baseRate_4=0$;
+  \item \label{assumption.BM14.symmetric_cross-excitation}(symmetric cross-excitation)
+  $\hawkesKernel_{2k-1,2j}=\hawkesKernel_{2j,2k-1}$, for $j,k=1,2$;
+  \item \label{assumption.BM14.symmetric_self-excitation}(symmetric self-excitation)
+  $\hawkesKernel_{2k-1,2j-1}=\hawkesKernel_{2k,2j}$, for $j,k=1,2$.
+ \end{enumerate}
+\end{assumption}
+Assumption \ref{assumption.BM14.symmetric_baseRates} says that the base rate of arrival of sell market orders is equal to that of buy market orders, and that the base rate at which the mid-price increases is the same as the one at which it decreases. In fact, Assumption \ref{assumption.BM14.null_price-jumps_baseRates} adds that the base rates of mid-price jumps are null. This is interpreted by saying that sources of exogenous information about the fundamental price of the asset exchanged are brought to the orderbook by market orders, which then may or may not trigger changes in the mid-price. These mid-price changes can be triggered either by consuming the available liquidity at some price levels (instantaneous price adjustments) or by causing market makers to react and move limit orders from one level to another (delayed price adjustments). The effects of these triggers are modelled in the Hawkes kernels $\hawkesKernel_{k,j+2}$ for $j,k=1,2$. In Section \ref{sec.BM14_walking_the_book}, we will see that \citealp{BM14haw} reports that calibration on real world data showed that in fact delayed price adjustments have no explanatory power on mid-price jumps, and $\hawkesKernel_{1,3}$ and $\hawkesKernel_{2,4}$ will be turned into Dirac deltas to describe this.   
+
+Assumptions \ref{assumption.BM14.symmetric_cross-excitation} and \ref{assumption.BM14.symmetric_self-excitation} account for the symmetries between bid/ask sides of the trades and up/down jumps of the mid-price. They result in a bloc-decomposition of the $4\times4$-matrix $\hawkesKernel$ into four $2\times2$-symmetric matrices of the form
+\begin{equation*}
+ \left(
+ \begin{tabular}{cc}
+  1 & 0 \\ 0 & 1
+ \end{tabular}
+ \right)s_h(t)
+ +
+ \left(
+ \begin{tabular}{cc}
+  0 & 1 \\ 1 & 0
+ \end{tabular}
+\right) c_h(t)
+\end{equation*}
+for some kernel functions $s_h(t)$ and $c_h(t)$, with $h=1,\dots,4$, which respectively represent self-excitation and cross-excitation. These blocs are labelled clock-wise starting from the top-left bloc. In the next section (Section \ref{sec.BM14_walking_the_book}), we focus on the bloc with label $h=2$ (top-right bloc), i.e. on the sub-matrix $\lbrace \hawkesKernel_{\eone,e}: \, \eone =1,2; \, \, e=3,4 \rbrace$.
+\subsubsection{Market orders walking the book}\label{sec.BM14_walking_the_book}
+There is a discrepancy between the probabilistic features of the stochastic process introduced above and one of the orderbook's mechanics that it is supposed to model. Indeed, assume that a trader places a buy market order (respectively,  sell market order) of a size larger than the available liquidity on the first ask level (on the first bid level).\footnote{In the notation of Proposition \ref{prop.lob_update}, such orders are identified by the condition $N>1$.} When such an order is executed, the limit orders sitting on the first ask (bid) level are depleted, and as a result the mid-price increases (decreases). When this happens, it is said that the market order \emph{walks the book}. We will also refer to such market orders as \emph{aggressive} market orders. 
+
+A buy (sell) market order coming into the exchange and walking the book at time $t$ would be represented in the Bacry\&Muzy model by the equation $\delta\countingProc[2](t) = \delta\countingProc[4](t) = 1$ (respectively, $\delta\countingProc[1](t) = \delta\countingProc[3](t) = 1$). However, the components of a multidimensional Hawkes process jump simultaneously with probability zero. In other words, if $\lbrace (\arrivalTimes[e]_j)_j: \, e=1,.\dots,\numEventTypes\rbrace$ are the arrival times associated with a $\numEventTypes$-dimensional Hawkes process, it holds $\Prob(\arrivalTimes[e]_j = \arrivalTimes[\eone]_{j\derivative}, \, \text{for some } j,j\derivative\geq 1, \text{ and } e\ne\eone) = 0$.
+
+A way around this discrepancy had therefore to be designed; Bacry and Muzy call it ``impulsive impact kernel''. 
+Since the direction of the causality is unambiguous (a market order originates first and as a result of its execution the mid--price jumps), they propose to allow the diagonal entries in the top-right bloc of the Hawkes kernel to posses an atomic component. This means that,  with the notation introduced in the previous paragraph, they assume 
+\begin{equation*}
+ s_2(t) = \diracDelta_t + \tilde{s}_2(t),
+\end{equation*}
+where $\diracDelta_t$ is the Dirac delta concentrated at $t=0$, and $\tilde{s}_2 (t)$ is the non-atomic component of $s_2(t)$, i.e. a regular non-negative Lebesgue-integrable function defined on the non-negative half line. $\diracDelta_t$ accounts for instantaneous price adjustments when trades happen; $\tilde{s}_2 (t)$ accounts for delayed price adjustments after trades happened. Notice that the atomic component in the Hawkes kernel raises interesting mathematical questions about existence of an associated Hawkes process, which the authors defer to future works. From a numerical point of view, the atomic component $\diracDelta_t$ is encoded as a non-negative $\Lone$ function supported in some small right-neighbourhood of the origin and  with a certain positive $\Lone$-norm. 
+
+Although a priori $\tilde{s}_2$ is not expected to be null, the calibration on real data performed in \citealp{BM14haw} finds that this is in fact the  case. Less surprisingly, $c_2 = c_2 (t)$ is also found to be identically null (buy market orders have no influence on price decrease, and sell market orders have no influence on price increase).  Consequently, the top-right bloc in the decomposition of $\hawkesKernel$ is a multiple of a $2\times2$-identity matrix, where the multiplying factor $s_2$ is equal to a Dirac delta concentrated in $t=0$. This form of the top-right bloc is the defining property of the ``impulsive impact kernel''. 
+
+An impulsive impact kernel is therefore a way to model the fact that the influence of market orders on the changes in the mid-price is binary: either they instantaneously trigger a jump, or they have no influence on the mid-price.  In conjunction with Assumption \ref{assumption.BM14.null_price-jumps_baseRates}, this means that in Bacry\&Muzy model, exogenous information -- if any -- is carried to the orderbook by market orders, whose effect does not accrue over time. Instead, it is the flow of limit orders that is responsible for those price jumps that are not a result of market orders walking the book.
+
+Non-market-orders-induced changes in the mid-price result either from new limit orders posted inside the spread, or from the cancellation of existing orders sitting on the first levels of either sides. The first alternative reduces the spread, the second widens it. Collectively, we refer to these modifications in the orderbook configuration as \emph{limit orders' re-adjustments}.   Bacry\&Muzy model does not keep track of limit orders, but captures their effect on the mid-price via the bottom-right bloc of the Hawkes kernels: $s_3=s_3(t)$ (respectively, $c_3=c_3(t)$)  models the effect that a price jump in one direction has on the likelihood of subsequent jumps in the same (opposite) direction resulting from limit orders' re-adjustments.
+
+In Section \ref{sec.sdHawkes_model} we will present an alternative description of the orderbook dynamics which, on the one hand, will not necessitate atomic components in the Hawkes kernel; on the other hand, it will increase the granularity by keeping track of limit orders. Crucially, this will hinge on the introduction of a state-variable $\stateVariable$ paired with the  counting process $\multiCountingProc$. 
+
+\subsubsection{Price impact profiles in Bacry\&Muzy model}\label{sec.BM14_price_impact_profiles}
+In \citealp[Section 4]{BM14haw}, the authors study how a labelled agent's market orders can affect the evolution of the orderbook dynamics. This addresses the impact of a trader's own activity on the asset's price that she is trading, and is the main focus of our work. In this paragraph we describe Bacry\&Muzy approach in the case of a liquidation, i.e. the sale of some (usually large) amount of shares in a trading venue that operates via a limit order book.\footnote{In fact, \citealp{BM14haw} give a more general description in which the labelled agent can intervene in the market either by sell market orders, buy market orders or both.}
+
+Let the instant at which the liquidator becomes active in the market be the origin of time. Let $A(t)$ be the number of sell market orders sent by the liquidator before time  $t$. The map $t\mapsto A(t)$ is called execution schedule, and describes how the liquidator is distributing the overall sale, or  \emph{metaorder}, over time.  In practice, the metaorder comprises several smaller \emph{child orders}, and $A$ is thouhgt of as a description of the rate of their execution during the time window $[0,\timeHorizon)$. Noice, however, that the volumes of the child orders are left out from the model. 
+
+From the point of view of the trading mechanism, $A(t)$ is similar to the first component $\countingProc[1](t)$ of the four-dimensional Hawkes process $\multiCountingProc(t)$ around which the orderbook dynamics are modelled: while $\countingProc[1](t)$ represents the aggregate anonymous quantity of sell market orders that all the market participants other than the liquidator have sent to the orderbook by time $t$, $A(t)$ represents the identifiable orders sent by the liquidator.  However, the mathematical representation of $A(t)$ is different from that of  $\countingProc[1](t)$. Indeed, $A(t)$ is assumed to be a non-negative non-decreasing right-continuous deterministic function, such that the associated measure $dA(t)$ is supported in the half-open interval $[0,\timeHorizon)$, for some $\timeHorizon>0$ representing the time horizon of the liquidation.
+
+The presence of the liquidator affects the dynamics of the orderbook by contributing to the intensities of $\multiCountingProc$. For $e=1,\dots,4$ and $t>0$ it is set 
+\begin{equation}\label{eq.BM14_intensity_with_liquidator}
+ \intensity[e](t) = 
+ \baseRate_e
+ +\sum_{\eone=1}^{4}\int_{[0,t)} \hawkesKernel\subscriptee (t-s)d\countingProc[\eone](s) 
+ + \int_{[0,t)} \theta_e(s)dA(s),
+\end{equation}
+where $\theta_1 = \theta_1(t)$ (respectively, $\theta_2=\theta_2(t)$) represents the impact of the liquidator's market orders on the arrival of other participants' sell (buy) market orders, and $\theta_3 = \theta_3(t)$ (respectively, $\theta_4 = \theta_4(t)$) represents the impact of the liquidator's market orders on downward (upward) jumps of the mid-price.
+
+Noitice that, from the point of view of the study of price impact, $\theta_3(t)$ and $\theta_4(t)$ are crucial aspects of the model. Since there is no a priori reason to assume that the liquidator's market orders have an effect on price different from other participants', it is set $\theta_3(t) = \hawkesKernel_{1,3}(t) = s_2(t)$ and $\theta_4(t)=\hawkesKernel_{1,4}(t)=c_2(t)=0$. Practically, this translates into the fact that the measure of the liquidator's price impact is mapped back to the estimated overall impact of other participants' market orders, and the liquidator's impact profile will result from the combination of the execution schedule $A(t)$ with these estimates.
+
+More precisely, the price impact is assessed as follows. Because of the assumed symmetries (Assumption \ref{assumption.BM14}), in the absence of the liquidator (i.e. when $A\equiv 0$), the expected price movement $\Expectation [\countingProc[4](t) - \countingProc[3](t)]$ is null for all $t$. Instead, when $A(t)$ is non-constant,  the liquidator's intervention tends to depress this expected price. It is therefore the expected curve $t\mapsto \Expectation[\countingProc[4](t)-\countingProc[3](t)]$ that is defined as the price impact profile. A closed-form formula for this expectation is derived in \citealp[Propositon 5.1 and Corollary 5.2]{BM14haw}, where indeed the main ingredients are the execution schedule $A(t)$ and the functions $s_h(t)$, $c_h(t)$, for $h=1,\dots,4$. The closed-form formula has also the merit to reconcile this rather theoretical measurement with more empirical ones such as \citealp{BN13mar} and  \citealp{MVMGFVLM09mar}.  
+
+Our proposed assessment of price impact profiles in Section \ref{sec.price_impact_profiles} is motivated by the will to offer alternatives to the following three choices of Bacry\&Muzy model. Firstly, we will attempt a measurament of the impact profile that is scenario-dependent, i.e. we will refrain from measuring the \emph{average} impact, yet factoring out the ``noise'' associated with the random evolution of the orderbook dynamics. Secondly, we will account for stochastic execution schedule $A(t)$, bringing the mathematical description of them closer to the one of $\countingProc[1](t)$. Thirdly, we will not assume that the liquidator's market orders impact the price jumps in the same way as other market orders do.
+
+At a first glance, assuming $\theta_3(t) = s_2(t)$ seems very reasonable, but in connection with the impulsive impact kernel it limits some of the questions that the model could otherwise answer. Indeed, recall from the previous section (Section \ref{sec.BM14_walking_the_book}) that market orders have binary effects on price movements: either they deplete the available liquidity sitting at the best bid/ask prices (they walk the book), or they have no influence on the mid-price (when the liquidity that they demand is fully serviced by limit orders sitting on level 1 of either sides). Assuming that the liquidator's market orders impact the price jumps in the same way as other market orders do would therefore imply that the liquidator chooses to walk the book at an average rate equal to the overall proportion of aggressive market orders. Instead, one would like to have a measurement of price impact that could distinguish liquidator's strategies with different child orders' sizes. Possible questions could be: does a liquidator that never sends a child order for an amount larger than the best bid volume have no price impact? Or, is a liquidator with reliable forecasts for a future price downturn better off to send aggressive market orders before this downturn materialises? To which extent is her liquidation exhacerbating the downturn or even triggering a fire sale? We will tackle these questions with a state-dependent Hawkes process, where the state variable will account for the volumes in the orderbook and it will interact with the liquidator's child orders' sizes. 
+ 
+\subsection{State-dependent Hawkes model}\label{sec.sdHawkes_model}
+Our state-dependent Hawkes model of an order-driven market is a more granular version of Bacry\&Muzy model that embeds in the events-states relation the mechanism underlying the ``impulsive impact kernel'' of \citealp{BM14haw}.
+We will leave the interpretation of the first two components of the counting process as it was in their original model, but we will modify the third and the fourth components to account, rather than for proxy of the mid-price, for limit order events that put pressure on price decreases and price increases respectively. A proxy for the mid-price will be retrieved from the time-evolution of the state variable. 
+
+More precisely, we consider four streams of arrival times: the stream $(\arrivalTimes[1]_j)_j$ of times when limit orders are executed on the bid side (equivalently identified with the arrival times of sell market orders); the stream  $(\arrivalTimes[2]_j)_j$ of times when limit orders are executed on the ask side (equivalently identified with arrival times of buy market orders); the stream  $(\arrivalTimes[3]_j)_j$ of times when a new limit order is queued on the ask side, or when an existing limit order on the bid side is cancelled from its queue; the stream  $(\arrivalTimes[4]_j)_j$ of times when a new limit order is queued on the bid side, or when an existing limit order on the ask side is cancelled from its queue. Correspondingly, these sequences of random times give rise to a four-dimensional counting process $\multiCountingProc=(\countingProc[1],\dots, \countingProc[4])$ with the following interpretation of its components:
+\begin{itemize}
+ \item $\countingProc[1](t)$ denotes the number of seller-initiated trades that happened before or at time $t$ (identified with the number of market orders arrived on the bid side of the orderbook by time $t$);
+ \item $\countingProc[2](t)$ denotes the number of buyer-initiated trades that happened before or at time $t$ (identified with the number of market orders arrived on the ask side of the orderbook by time $t$);
+ \item $\countingProc[3](t)$ denotes the number of limit orders posted on the ask side by time $t$, plus the number of limit orders cancelled from the bid side by time $t$;
+ \item $\countingProc[4](t)$ denotes the number of limit orders posted on the bid side by time $t$, plus the number of limit orders cancelled from the ask side by time $t$.
+\end{itemize}
+
+While in Bacry\&Muzy model the difference $\countingProc[4] - \countingProc[3]$ was linked to a proxy for the mid-price, here in our model the same difference is linked to the order flow imbalance $\orderFlowImbalance$, beacuse 
+\begin{equation*}
+ \orderFlowImbalance_{\Delta T}(t) \approx  \frac{\countingProc[4](t-\Delta T,t)-\countingProc[3](t-\Delta T,t)}{\countingProc[4](t-\Delta T,t) + \countingProc[3](t-\Delta T,t)},
+\end{equation*}
+where $\countingProc(t-\Delta T, t) = \countingProc(t) - \countingProc(t-\Delta T)$ is the number of  events of type $e$ that occured in the time window $[t-\Delta T, t]$. This is a proxy rather than the actual order flow imbalance for two reasons. The first is that it only tracks the number of limit orders posted or cancelled and not their sizes; the second is that  in the actual order flow imbalance ask (bid) volumes are diminished by executions of buy (sell) orders, which are not taken into account in the difference $\countingProc[4] - \countingProc[3]$. A way to take into account executions of orders could be to replace $\countingProc[4](t-\Delta T, t)$ with $(\countingProc[4]-\countingProc[1])(t-\Delta T, t)$, i.e.  the net flow of limit orders on the bid side, and $\countingProc[3](t-\Delta T, t)$ with $(\countingProc[3]-\countingProc[2])(t-\Delta T, t)$, i.e.  the net flow of limit orders on the ask side. However, because of the far larger number of limit orders compared to market orders, the given expression already approximates the order flow imbalance in a satisfactory way. 
+
+The counting process $\multiCountingProc$ is paired with the state variable $\stateVariable$. At time $t$, the state variable $\stateVariable(t)$ summarises the configuration $(\bestBidPrice_t,\bestAskPrice_t,\lbrace( \nthBestBidVolume[i]_t, \nthBestAskVolume[i]_t): \, \, i=1,2,\dots \rbrace)$ of the limit order book at time $t$, by recording a proxy for the $n$-levels volume imbalance, and the variation of the mid-price compared to time $t-$. More precisely, 
+\begin{equation*}
+ \stateVariable(t)
+ =
+ \begin{pmatrix}
+ \stateVariable_1 (t)
+ \\
+ \stateVariable_2(t)
+ \end{pmatrix}
+ :=
+ \begin{pmatrix}
+ \one\lbrace\delta\midprice(t)>0\rbrace - \one\lbrace\delta\midprice(t)<0\rbrace
+ \\
+ \half\sum_{k=0}^{K-1} (2k-K+1 )\one\left\lbrace \frac{k-K}{K} \leq \volumeImbalance^n_t < \frac{2(k+1)-K}{K} \right\rbrace
+ \end{pmatrix},
+\end{equation*}
+where $\delta\midprice(t) = \lim_{\epsilon\downarrow 0} (\midprice(t) - \midprice(t-\epsilon) )$, and $\volumeImbalance^{n}_t$ was defined in eqaution \eqref{eq.definition_volume_imbalance}. The first component $\stateVariable_1$ of the state variable $\stateVariable$ can take the values $-1$, $0$, $+1$, respectively denoting downward jump in the mid-price, unchanged mid-price, and upward jump in the mid-price. The second component $\stateVariable_2$ of the state variable $\stateVariable$ is a discretisation of the $n$-levels volume imbalance $\volumeImbalance^{n}_t$, and -- assuming that $K$ is odd -- it takes integer values from $-(K-1)/2$ to $(K-1)/2$, spanning the full range of possible values of $\volumeImbalance^n$ from $-1$ to $+1$. 
+It follows from the definition of $\stateVariable_2$ that if at time $t$ we have that $\stateVariable_2 (t) = x_2$, then the $n$-levels queue imbalance $\volumeImbalance^n_t$ at time $t$ must be in the half-open interval $[(2x_2 -K -1)/2K, \, \, (2x_2 +1)/K \, [$.
+Notice that $\stateVariable_2$ depends on the two additional parameters $n$ and $K$, which refer to the number $n$ of levels of the limit order books taken into account in the computation of the volume imbalance $\volumeImbalance^n$, and the number $K$ of points in the partition of the interval $[-1,1]$  used for the discretisation of $\volumeImbalance^n$. 
+
+The pair $(\multiCountingProc, \stateVariable)$ is modelled as a state-dependent Hawkes process, hence we assume that there are base rates $\baseRate_e$, Hawkes kernels $\hawkesKernel\subscriptee=\hawkesKernel\subscriptee(t, \xone)$ and transition matrices $\transProb_e$ such that  Definition \ref{def.sdHawkes} is satisfied. The number of event types is $\numEventTypes = 4$ and the number of states is $\numStates = 3K$, since the state variable $\stateVariable = (\stateVariable_1, \stateVariable_2)$ is such that $\stateVariable_1$ can take three possible values, and $\stateVariable_2$ can take $K$ possible values. Furthermore, we assume the parametric form of equation \eqref{eq.powerlaw_kernels} for the state-dependent Hawkes kernels; this guarantees that their decay in the limit as $t\uparrow\infty$ is aligned to the findings in \citealp{BM14haw}. 
+
+When a new event occurs, i.e. when one of the components $\countingProc$ of $\multiCountingProc$ jumps, the state variable $\stateVariable$ is updated as per in equation \eqref{eq.markov_update_stateVariable}. In the case of $e=1,2$, the update of the first component $\stateVariable_1$ models the mechanism that led to the ``impulsive impact kernel'', providing an alternative description for it that does not require the introduction of singular components in the Hawkes kernel. Indeed, assume that a sell (buy) market order arrives at time $\arrivalTimes[1]_j$ ($\arrivalTimes[2]_j$, respectively), and that $\stateVariable(\arrivalTimes[1]_j -) = (x_1,x_2)$ (respectively, $\stateVariable(\arrivalTimes[2]_j -) = (x_1,x_2)$) for some $x_1$ in $\lbrace -1, 0, +1\rbrace$ and some $x_2$ in $\lbrace (1-K)/2, (3-K)/2, \dots, (K-1)/2 \rbrace$. Then, the mid-price jumps downward (upward) with probability $p_{-}:=\sum_{y_2 = (1-K)/2}^{(K-1)/2} \transProb_{1}((x_1, x_2), (-1,y_2))$ (respectively, $p_{+}:=\sum_{y_2 = (1-K)/2}^{(K-1)/2} \transProb_{2}((x_1, x_2), (+1,y_2))$), and it remains unchanged with probability $p_{0}:=1-p_{-}=\sum_{y_2 = (1-K)/2}^{(K-1)/2} \transProb_{1}((x_1, x_2), (0,y_2))$  (respectively, $p_{0}:=1-p_{+}=\sum_{y_2 = (1-K)/2}^{(K-1)/2} \transProb_{2}((x_1, x_2), (0,y_2))$).\footnote{ There is no chance that a sell (buy) market order can cause an increase (decrease, respectively) in the mid-price.} This jump of the state variable happens exactly at the arrival time $\arrivalTimes[1]_j$ (respectively, $\arrivalTimes[2]_j$)  of the sell (buy) market order, and it naturally captures the mechanism responsible for the market-order-induced price change: $p_{-}$ (respectively, $p_{+}$) represents the probability that a sell (buy) market order  walks the book given its submission, and $p_{0}$  represents the probability that it does not. Notice that $p_{-}$ (respectively, $p_{+}$) and $p_{0}$ depend on the state of the limit order book immediately before the arrival of the sell (buy) market order, and in particular they depend on $x_2$. This enriches the description of the orderbook mechanism, acounting for the fact that it is less likely that a sell (buy) market order walks the book when the volumes on the bid (ask) side are high, namely $p_{-}(x_1,x_2) \leq p_{-}(x_1,\tilde{x}_2)$ if $x_2\geq \tilde{x}_2$ (respectively, $p_{+}(x_1,x_2) \leq p_{+}(x_1,\tilde{x}_2)$ if $x_2\leq \tilde{x}_2$).
+
+Moreover, the first component $\stateVariable_1$ of the sate variable $\stateVariable$ enables to write the following proxy for the mid-price:
+\begin{equation*}
+ \midprice_0 + \tickSizeOfLOB \intzerot \stateVariable_1(s) d\groundProc(s),
+\end{equation*}
+where $\tickSizeOfLOB$ is the tick size of the limit order book and $\groundProc = \countingProc[1] + \dots + \countingProc[4]$ is the ground process of $\multiCountingProc$. This proxy for the mid-price  is the same as the one used in \citealp{BM14haw}, albeit obtained via different variables. 
+
+The second component $\stateVariable_2$ of the state variable $\stateVariable$ reproduces the state variable of the queue-imbalance model in \citealp{MP18sta}. It is conceived as the main indicator of the regime in which limit and market orders will arrive to the exchange: in high-frequency markets trading algorithms send their orders in response to observable quantities of the limit order book configuration, and a prominent one is indeed the queue imabalance. It is therefore expected that when $\stateVariable_2$ is positive (negative), the intensities of events of types $e=2,4$ (respectively, $e=1,3$) will be higher, because market participants following the queue imbalance signal will expect the price to increase (decrease). After the price change,  the volumes of deeper queues on the ask (bid) side enter the computation of the queue imbalance, and this will likely reset the signal.  As noted in \citealp{MP18sta}, this interaction can be deemed responsible for the mean-reverting behaviour of price dynamics in high-frequency markets. 
+
+
+\subsubsection{Volume modelling}
+Our measurement of price impact will also require to reproduce the update to the limit order book configuration that happens when an order arrives. The precise mechanics of this update were described in Proposition \ref{prop.lob_update}. In order to reproduce them, a proxy for the volumes $\lbrace (\nthBestAskVolume[i]_t, \nthBestBidVolume[i]_t): \, i=1,2,\dots\rbrace$ in the limit order book at time $t$ needs to be derived from the state variable $\stateVariable(t)$. In this paragraph, we describe how this is done. 
+
+
+
+We fix the number $n$ of levels that the second component $\stateVariable_2$ monitors by keeping track of a $K$-level discretisation of the queue imbalance $\volumeImbalance^n$. We consider normalised volumes up to level $n$, namely we assume that $\sum_{i=1}^{n} (\nthBestBidVolume[i]_t + \nthBestAskVolume[i]_t) \equiv 1$. All volumes in the orderbook and all sizes of market/limit orders are expressed in this unit.  Correspondingly, we consider the $2n$-tuple $(\nthBestAskVolume[1]_t,\nthBestBidVolume[1]_t, \dots, \nthBestAskVolume[n]_t,\nthBestBidVolume[n]_t)$ and we assume that it is distributed as a Dirichlet random variable with $2n$-dimensional parameter $\dirichletParam=\dirichletParam(\stateVariable(t)) \in \R_{+}^{2n}$ that depends on the state variable at time $t$. Given the time evolution of the limit order book in the time window $\timeWindow$, an estimator for $\dirparam(x)$, with $x$ ranging from $1$ to $3K$, can easily be obtained by maximum likelihood estimation. Once $\dirparam$ is known, the mechanics in Proposition \ref{prop.lob_update} can be reproduced by drawing from the conditional distribution $\text{Dir}_{\dirichletParam(\stateVariable(t))}(\cdot \vert \stateVariable_2 (t) )$; this is the Dirichlet distribution of  the $2n$-tuple $(\nthBestAskVolume[1]_t,\nthBestBidVolume[1]_t, \dots, \nthBestAskVolume[n]_t,\nthBestBidVolume[n]_t)$ with parameter $\dirparam(\stateVariable(t))$ conditioned on 
+\begin{equation*}
+ \frac{2\stateVariable_2(t) - K - 1}{2K}
+ \leq 
+ \underbrace{\sum_{i=1}^{n} \left( \nthBestBidVolume[i]_t - \nthBestAskVolume[i]_t \right)}_{= \volumeImbalance^n_t}
+ <
+ \frac{2\stateVariable_2(t) +1}{K}.
+\end{equation*}
+We rely on rejection sampling to perform such drawing. The details of our implementation of this sampling technique will be given in Section \ref{sec.pipest.rejection_sampling}. 
+Here, in Algorithm \ref{algo.lob_update}, we describe how to reproduce the orderbook update in the case of the arrival of a sell market order $(t,q_M, 0, -1)$. This is the case that we will actually use in our measurement of price impact, because we will adopt the perspective of liquidation. The case of buy market orders is analogous. 
+
+\begin{algorithm}[h]
+ \caption{State update via orderbook mechanics (sell market order)}
+ \label{algo.lob_update}
+ \begin{algorithmic}[5]
+  \REQUIRE $\stateVariable(t-)$, $(t,q_M, 0, -1)$
+  \STATE set $\ell := (2\stateVariable_2(t-) - K - 1)/(2K)$
+  \STATE set $u:= (2\stateVariable_2(t-) +1)/K$
+  \STATE sample $V_{t-} = (\nthBestAskVolume[1]_{t-},\nthBestBidVolume[1]_{t-},\dots,\nthBestAskVolume[n]_{t-},\nthBestBidVolume[n]_{t-}) \sim \text{Dir}_{\dirichletParam(\stateVariable(t-))}(\cdot \vert \stateVariable_2 (t-) )$ by setting $V_{t-} \leftarrow $ Algorithm \ref{algo.rejection_sampling}($\ell$,$u$, $(\dirparam_i(\stateVariable(t-)))_{i=0,\dots,2n-1}$)
+  \STATE set $\stateVariable_1(t) := -1$ if $q_M \geq \nthBestBidPrice[1]_{t-}$; $0$ otherwise
+  \STATE initialise $q:=0$
+  \FOR {$i$ in $1,\dots,n$}
+  \STATE set $v:= \min_{+} (\nthBestBidVolume[i]_{t-}, q_M - q )$
+  \STATE set $\nthBestBidVolume[i]_{t} := \nthBestBidVolume[i]_{t-} - v$
+  \STATE update $q\leftarrow q+v$
+  \ENDFOR
+  \STATE set $B:= \sum_{i=1}^{n} \nthBestBidVolume[i]_t$
+  \STATE set $A:= \sum_{i=1}^{n} \nthBestAskVolume[i]_{t-}$
+  \STATE set $I:= (B-A)/(B+A)$ 
+  \STATE set $\stateVariable_2(t):= (2k-K+1)/2$ if $(k-K)/K \leq I < (2k+2 -K)/K$, where $k=0,\dots,K-1$
+  \RETURN $(\stateVariable_1(t),\stateVariable_2(t))$
+ \end{algorithmic}
+\end{algorithm}
+
+Line 4 and Lines 6:10 in Algorithm \ref{algo.lob_update} account for equations \eqref{eq.lob_update_sell_order} in Proposition \ref{prop.lob_update}. Line 4 says that the bid price (and consequently the mid-price) decreases if the size of the sell market order is larger than the available liquidity sitting on the first bid level. Lines 6:10 cancel from the bid queues the orders whose execution has been triggered by the arrival of $(t,q_M,0,-1)$.  On line 7 we used the notation $\min_{+}(a,b) = \max(0,\min(a,b))$ for $a$ and $b$ real numbers. 
+
+\begin{remark}\label{remark.order_size_after_volume_sampling}
+ Algorithm \ref{algo.lob_update} implicitly requires that the size $q_M$ of the market order is known before the volume proportions $(\nthBestAskVolume[1]_{t-},\nthBestBidVolume[1]_{t-},\dots,\nthBestAskVolume[n]_{t-},\nthBestBidVolume[n]_{t-})$. In practice, it might happen that the size of a market participant's order is a function of the volumes observed in the orderbook. We can reproduce this by adding after the sampling of $V_{t-}$ on Line 3 the computation of $q_M$, and then proceed along the same lines.
+\end{remark}
+
+
+\section{Price impact profiles}\label{sec.price_impact_profiles}
+% Describe how the labelled agent (i.e. the liquidator) is introduced in the market model; define the impact profile \`a la Bacry-Muzy and the normalised one-sided impact profile.  
+\subsection{Labelled agent}
+We account for a labelled agent in the market, and we aim to measure her impact on the dynamics of the orderbook. We take the pespective of a liquidation, namely we consider our agent (also referred to as liquidator) to be selling a usually large amount of asset. The case of acquisition is mutatis mutandis the same. 
+
+We assume that the liquidator intervenes in the market only by sending market orders; she will never place a limit order to queue on the ask side, but she will initiate trades with existing offers on the bid side. Consequently, we introduce her presence in the model described in Section \ref{sec.sdHawkes_model} by expanding the dimension of the counting process $\multiCountingProc$: we let the zero-th component $\countingProc[0](t)$ count the liquidator's market orders sent to the exchange by time $t$. In other words, from the overall sequence $(\arrivalTimes[1]_j)_j$ of arrival times of market orders, we extract those sent by the liquidator and we label them as $(\arrivalTimes[0]_j)_j$; we then let 
+\begin{equation*}
+ \countingProc[0](t):=\sum_{j\geq 1}\one \left\lbrace \arrivalTimes[0]_j \leq t \right\rbrace
+\end{equation*}
+count the number of trades initiated by the liquidator that happened before or at time $t$. Notice that the map $t\mapsto \countingProc[0](t)$ represents how the liquidator is splitting in time the execution of her metaorder and thus, in the terminology of Section \ref{sec.BM14_price_impact_profiles}, it is the liquidator's execution schedule, which was there denoted with the symbol $A(t)$.
+
+The pair $(\multiCountingProc, \stateVariable)$ will be a state-dependent Hawkes process where the counting process component $\multiCountingProc$ is five-demensional and has power-law kernels. The following assumpton is in place on the intensities:
+\begin{assumption}\label{assumption.imp_and_dec_coef_from_liquidator}
+ For all $e=1,\dots,4$, the Hawkes kernel $\hawkesKernel_{0,e}$ coincides with  $\hawkesKernel_{1,e}$, namely
+ \begin{equation*}
+  \impCoef_{0,\xone,e}=\impCoef_{1,\xone,e} , \quad \decCoef_{0,\xone,e}= \decCoef_{1,\xone,e}, 
+ \end{equation*}
+for all $e=1,\dots,4$ and all $\xone = 1,\dots, 3K$. 
+\end{assumption}
+
+Assumption \ref{assumption.imp_and_dec_coef_from_liquidator} says that the rates of arrival of market and limit orders to the exchange are modified by the liquidator's interventions in the same way as they are by other participants' market orders. More precisely, for $e=1,\dots,4$ it holds 
+\begin{equation}\label{eq.intensities_when_liquidator_is_present}
+\begin{split}
+\intensity[e](t) =& \baseRate_e 
+ + \sum_{\eone = 0}^{4}\int_{[0,t)} \hawkesKernel_{\eone,e}(t-s,\stateVariable(s))d\countingProc[\eone](s)
+ \\
+ =& \baseRate_e 
+ + \sum_{\eone = 1}^{4}\int_{[0,t)} \hawkesKernel_{\eone,e}(t-s,\stateVariable(s))d\countingProc[\eone](s)
+ + \int_{[0,t)} \hawkesKernel_{1,e}(t-s,\stateVariable(s))d\countingProc[0](s).
+ \end{split}
+\end{equation}
+This is our state-dependent analogue to equation \eqref{eq.BM14_intensity_with_liquidator}, where however the execution schedule $t \mapsto A(t)=\countingProc[0](t)$ is now stochastic. The stochastic behaviour of the liquidator's execution schedule is parametrised by $\baseRate_0$, $\impCoef_{\eone,\xone,0}$ and $\decCoef_{\eone,\xone,0}$ for $\eone = 0,\dots,4$ and $\xone=1,\dots,3K$. These parameters represent decision variables for the liquidator. An important configuration for the execution schedule is given in the following definition. 
+\begin{defi}\label{def.poissonina_liquidation}
+The execution schedule $t \mapsto \countingProc[0](t)$ is said to be of constant intensity if $\impCoef_{\eone,\xone,0} = 0$ for all $\eone = 0,\dots,4$ and all $\xone=1,\dots,3K$. In this case we talk about a Poissonian liquidation with rate $\baseRate_0$. 
+\end{defi}
+
+Assumption \ref{assumption.imp_and_dec_coef_from_liquidator} guarantees consistency in the effect that trades have on the orderbook dynamics. Nonetheless, since none of the components of $\multiCountingProc$ represents price jumps, this consistency assumption does not imply that the number of liquidator's market orders that  walk the book  is proportional to the number of those sent by other participants, as it did in Bacry\&Muzy model. Instead, this proportion is reserved to the liquidator's decision variables, and it will stem from a nuanced interaction between her orders and the volumes of offers on the bid side. 
+
+More precisely, we let $(\arrivalTimes[0]_j, q_{M,j},0,-1)$ be the liquidator's market orders, for $j=1,2,\dots$. As said above, she controls the (stochastic) scheduling of her orders by setting the values of the Hawkes parameters $\baseRate_0$, $\impCoef_{\eone,\xone,0}$ and $\impCoef_{\eone,\xone,0}$, which modulate the sequence of arrival times $\arrivalTimes[0]_j$. Additionally, for every $j$ she sets the size $q_{M,j}$ of her $j$-th market order, satisfying the measurability constraint $q_{M,j} \, \hat{\in} \, $ $ \filtrationF_{\arrivalTimes[0]_j -} = \bigvee_{\epsilon>0}\filtrationF_{\arrivalTimes[0]_j -\epsilon}$, where $\filtrationF$ is a hystory of $(\multiCountingProc,\stateVariable)$.  Then, the evolution of the limit order book is simulated by combining Algorithm \ref{algo.MP18_ogata} and Algorithm \ref{algo.lob_update}, as detailed in Algorithm \ref{algo.lob_with_liquidator}.
+
+\begin{algorithm}[h]
+\caption{Simulation of orderbook in the presence of liquidator}
+\label{algo.lob_with_liquidator}
+ \begin{algorithmic}[5]
+  \REQUIRE $(\arrivalTimes[]_i,\event[i],\stateVariable_i)_{i=1,\dots,n-1}$, $q_M$
+  \STATE \textbf{do} Lines 1:8 of Algorithm \ref{algo.MP18_ogata}
+  \STATE draw $\event[n]$ with probabilities proportional to $\lbrace \intensity[0](\arrivalTimes[]_n),\intensity[1](\arrivalTimes[]_n),\dots,\intensity[4](\arrivalTimes[]_n)\rbrace$
+  \IF {$\event[n] = 0$}
+  \STATE set $\stateVariable_n \leftarrow$ Algorithm \ref{algo.lob_update}($\stateVariable_{n-1}$,$(\arrivalTimes[]_n,q_M,0,-1)$)
+  \ELSE
+  \STATE draw $\stateVariable_n$ in $\lbrace 1,\dots,3K\rbrace$ with probabilities $\lbrace \transProb_{\event}(\stateVariable_{n-1},1), \dots,\transProb_{\event}(\stateVariable_{n-1},3K)\rbrace$
+  \ENDIF
+  \RETURN $(\arrivalTimes[]_n,\event[n],\stateVariable_n)$
+ \end{algorithmic}
+\end{algorithm}
+
+\begin{remark}
+ Notice that Algorithm \ref{algo.lob_with_liquidator} requires the size $q_M$ of the next liquidator's order. Assuming that $j-1$ liquidator's orders have already been executed, then this size is $q_{M,j}$. If this size can be computed beforehand (i.e. $q_{M,j}$ is measurable wihth respect to $\mathcal{H}_{\arrivalTimes[]_{n-1}}$ where $\mathcal{H}$ is the internal history of $(\multiCountingProc,\stateVariable)$), then the algorithm takes  $q_M \leftarrow q_{M,j}$ as a non-negative real number. If instead this is not possible, $q_M$ is passed as a method to compute the $j$-th liquidator's order size. See Remark \ref{remark.order_size_after_volume_sampling}. 
+\end{remark}
+
+
+
+
+
+\newpage 
+
+\section{The python module \texttt{pipest}}\label{sec.the_python_module}
+
+\subsection{Rejection sampling}\label{sec.pipest.rejection_sampling}
+Let $n$ denote the number of levels in the limit order book. Let $\dirparam=(\dirparam_{0},\dots,\dirparam_{2n-1})$ be a $2n$-dimensional vector with strictly positive components; it accounts for the Dirichlet parameter of the distribution of the vector $(\nthBestAskVolume[1],\nthBestBidVolume[1],\dots, \nthBestAskVolume[n],\nthBestBidVolume[n])$ of normalised ask/bid volumes on the first $n$ levels. Hence, $\dirparam_{2k}$ refers to the ask volume on the $k+1$-th level, for $k=0,\dots,n-1$, and 
+$\dirparam_{2k+1}$ refers to the bid volume on the $k+1$-th level, for $k=0,\dots,n-1$. 
+
+Recall that a $2n$-dimensional Dirichlet distribution is concentrated on the set $\lbrace v \in [0,1]^{2n}: \, \, \sum_{i=0}^{2n-1} v_i = 1 \rbrace$. Moreover, given $v=(v_0, \dots,v_{2n-1})$ with  $v_0 + \dots + v_{2n-1} = 1$, the value $\dirichletDensity(v)$ in $v$  of the Dirichlet distirbution with parameter $\dirparam$ is $\dirichletDensity(v) \propto v_{0}^{\dirparam_{0}} \cdot \dots \cdot v_{2n-1}^{\dirparam_{2n-1}}$, where  the normalisation constant is the multivariate beta function $B(\dirparam)$.
+We establish two useful lemma before describing our algorithm for rejection sampling. 
+
+\begin{lemma}\label{lemma.equivalence_expected_constraint}
+ Let $V$ in $\R^{2n}$ be a random vector with Dirichlet distribution $\text{Dir}_{\dirparam}$ of parameter $\dirparam \in \R^{2n}_{+}$. Let  $-1\leq \ell < u \leq 1$. Then, the following are equivalent 
+ \begin{enumerate}[label={\roman{*}.} , ref={\ref{lemma.equivalence_expected_constraint}.\roman{*}}]
+  \item \label{lemma.equivalence_expected_constraint.expectation}$
+  \ell \leq \Expectation_{\dirparam} \sum_{k=0}^{n-1} \left( V_{2k+1} - V_{2k} \right) < u $;
+  \item \label{lemma.equivalence_expected_constraint.parameter} $\ell \sum_{i=0}^{2n-1}\dirparam_i 
+  \leq 
+  \sum_{k=0}^{n-1} (\dirparam_{2k+1} - \dirparam_{2k} ) 
+  < u \sum_{i=0}^{2n-1}\dirparam_i
+  $.
+ \end{enumerate}
+\end{lemma}
+\begin{proof}
+ Straightforward from $\Expectation_{\dirparam}[V_{k}] = \dirparam_{k}/\sum_{i=0}^{2n-1} \dirparam_{i}$.
+\end{proof}
+
+\begin{lemma}\label{lemma.proposal_dirparam}
+ Let  $-1\leq \ell < u \leq 1$. Let $V=(V_0,\dots,V_{2n-1})$ be a $2n$-dimensional Dirichlet random vector. Let $\dirparam$ in $\R_{+}^{2n}$ be the parameter of a Dirichlet distribution $\text{Dir}_{\dirparam}$. Define
+ \begin{equation*}
+  \begin{split}
+   \beta_0 = &
+   \frac{c}{\sum_{k=0}^{n-1}\dirparam_{2k}}
+   \frac{1-\ell}{1+u-l}, 
+ \\
+ \beta_1 = &
+   \frac{c}{\sum_{k=0}^{n-1}\dirparam_{2k+1}}
+   \frac{1+u}{1+u-l}, 
+ \end{split}
+ \end{equation*}
+ for some proportionality constant $c>0$, and set 
+ \begin{equation*}
+  \rho_{2k} = \beta_0 \dirparam_{2k}, \qquad 
+  \rho_{2k+1} = \beta_1 \dirparam_{2k+1}, 
+ \end{equation*}
+for $k=0,\dots,n-1$. Let $\Expectation_\dirparam$ and $\Expectation_\rho$ denote expectation respectively under the law $\text{Dir}_{\dirparam}$ and $\text{Dir}_{\rho}$, and let $\dirichletDensity[\dirparam]$ and $\dirichletDensity[\rho]$ denote their densities. Then,
+\begin{enumerate}[label={\roman{*}.}, ref={\ref{lemma.proposal_dirparam}.\roman{*}}]
+ \item \label{lemma.proposal_dirparam.proportional_even} vectors $(\Expectation_\rho V_{0}, \Expectation_\rho V_{2}, \dots , \Expectation_\rho V_{2n-2} )$ and $(\Expectation_\dirparam V_{0}, \Expectation_\dirparam V_{2}, \dots , \Expectation_\dirparam V_{2n-2} )$ are proportional;
+ \item \label{lemma.proposal_dirparam.proportional_odd}the vectors $(\Expectation_\rho V_{1}, \Expectation_\rho V_{3}, \dots , \Expectation_\rho V_{2n-1} )$ and $(\Expectation_\dirparam V_{1}, \Expectation_\dirparam V_{3}, \dots , \Expectation_\dirparam V_{2n-1} )$ are proportional;
+ \item  \label{lemma.proposal_dirparam.expectation} $\ell \leq \Expectation_{\rho} \sum_{k=0}^{n-1} \left( V_{2k+1} - V_{2k} \right) < u $;
+ \item\label{lemma.proposal_dirparam.maximiser} for every $c$ such that $\beta_0 \vee \beta_1 < 1$, the maximiser $\hat{v}$ of $v\mapsto \dirichletDensity[\dirparam](v)/\dirichletDensity[\rho](v)$ is given by $\hat{v} = (x,\hat{v}_{2n-1})$, where $\hat{v}_{2n-1} = 1- (x_{0} + \dots + x_{2n-2})$ , and $x=(x_0,\dots,x_{2n-2})$ is the solution to the $(2n-1)\times(2n-1)$-linear system $\Gamma x = \underbar{1}$, where $\underbar{1} = (1,\cdots,1)\transpose$ and 
+ \begin{equation*}
+  \Gamma = 
+  \begin{pmatrix}
+   \frac{\alpha_{0} + \alpha_{2n-1}}{\alpha_0}
+   &   1   &   \cdots   &   1
+   \\
+   1 &
+   \frac{\alpha_{1} + \alpha_{2n-1}}{\alpha_1}
+   & \cdots & 1 
+   \\
+   \vdots & & \ddots & \vdots\\
+   1 &\cdots & 1 &
+   \frac{\alpha_{2n-2} + \alpha_{2n-1}}{\alpha_{2n-2}}
+  \end{pmatrix},
+ \end{equation*}
+ where $\alpha_i = \dirparam_i  - \rho_i$ for all $i=0,\dots,2n-1$. 
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Claims i. and ii. are trivial, we prove iii. and iv. 
+ 
+As for iii., notice that 
+\begin{equation*}
+ \sum_{k=0}^{n-1} (\rho_{2k+1} - \rho_{2k}) = \frac{u+\ell}{1+u-\ell}c,
+\end{equation*}
+and 
+\begin{equation*}
+ \sum_{i=0}^{2n-1} \rho_{i}  = \frac{2+u-\ell}{1+u-\ell}c.
+\end{equation*}
+Therefore, in view of Lemma \ref{lemma.equivalence_expected_constraint}, we just need to verify
+\begin{equation*}
+ \frac{2+u-\ell}{1+u-\ell}\ell
+ \leq 
+ \frac{u+\ell}{1+u-\ell}
+ <
+ \frac{2+u-\ell}{1+u-\ell} u ,
+\end{equation*}
+but this condition is equivalent to 
+\begin{equation*}
+ \begin{cases}
+  (1+u)\ell < (1+u)u \\
+  (1-\ell)\ell \leq (1-\ell) u
+ \end{cases},
+\end{equation*}
+which is evidently true.
+
+As for iv., notice that $(\dirichletDensity[\dirparam]/\dirichletDensity[\rho]) (x_0,\dots,x_{2n-2},v_{2n-1})$ is proportional to $\phi:\,  [0,1]^{2n-1} \mapsto \R$ given by 
+\begin{equation*}
+ \phi(x_0,\dots,x_{2n-2}) = 
+ \left( \prod_{i=0}^{2n-2} x_{i}^{\alpha_i}\right)
+ \left( 1-\sum_{i=0}^{2n-2} x_i \right)^{\alpha_{2n-1}}
+ \one\left\lbrace \sum_{i=0}^{2n-2} x_i < 1 \right\rbrace,
+\end{equation*}
+where $\alpha_i = \dirparam_i  - \rho_i$ for all $i=0,\dots,2n-1$. Within the open set $\lbrace x \in [0,1]^{2n-1}: \, \, \sum_{i=0}^{2n-2} x_i < 1 \rbrace$ the $k$-th partial derivative of $\phi$ is 
+\begin{equation*}
+ \partial_k \phi(x) = 
+ x_{k}^{\alpha_k -1 } 
+ \left( \prod_{i\neq k } x_{i}^{\alpha_i}\right)
+ \left( 1-\sum_{i=0}^{2n-2} x_i \right)^{\alpha_{2n-1}-1}
+ \left[
+ \alpha_k \left( 1-\sum_{i=0}^{2n-2} x_i \right) - \alpha_{2n-1} x_k
+ \right],
+\end{equation*}
+and thus $x$ in $[0,1]^{2k-1}$ is stationary for $\phi$ if and only if 
+\begin{equation*}
+ \alpha_k \left( 1-\sum_{i=0}^{2n-2} x_i \right) - \alpha_{2n-1} x_k = 0
+\end{equation*}
+for all $k=0,\dots,2n-2$, or equivalently if and only if  
+\begin{equation*}
+ \sum_{i\neq k} x_i + \frac{\alpha_k + \alpha_{2k-1}}{\alpha_k}x_k = 1
+\end{equation*}
+for all $k=0,\dots,2n-2$. The latter yields the linear system $\Gamma x = \underbar{1}$. 
+\end{proof}
+
+
+
+Let $V=(V_{0}, \dots,V_{2n-1})$ be a Dirichlet random variable with parameter $\dirparam$. Let $\dirichletLaw$ be the law of $V$, and let $\Expectation_{\dirparam}$ denote expectation under this law. Let $\dirichletDensity$ be the Dirichlet density.  Given the lowerbound $\ell$ and the upperbound $u$ in $-1\leq \ell < u \leq 1$, let $Q=Q_{\ell, u}$ be the set 
+\begin{equation}\label{eq.volimb_constraint}
+ Q_{\ell,u}:= \left\lbrace
+ \ell \leq \sum_{k=0}^{n-1} \left( V_{2k+1} - V_{2k} \right)
+ < u
+ \right\rbrace. 
+\end{equation}
+Then, the target distribution for the rejection sampling is $\dirichletLaw(\cdot \vert Q_{\ell,u})$, and the target density is 
+\begin{equation}\label{eq.target_density}
+ \targetDensity(v) = 
+ \frac{\dirichletDensity(v)\one _{Q_{\ell,u}} (v)}{\dirichletLaw\left(Q_{\ell,u}\right)}. 
+\end{equation}
+
+Sampling from a Dirichlet distribution with some parameter $\rho$ can be done efficiently using the Python module \texttt{scipy.stats.dirichlet} from the SciPy library. Hence, we choose the proposal density for the rejection sampling to be a Dirichlet density $\dirichletDensity[\rho]$ close to $\dirichletDensity$ and such that it satisfies the constraint in $Q_{\ell,u}$ on average, namely   $\ell \leq \Expectation_{\rho} \sum_{k=0}^{n-1} \left( V_{2k+1} - V_{2k} \right) < u $, where $\Expectation_{\rho}$ denotes expectation with respect to $\dirichletDensity[\rho]$. Hence, we distinguish two cases. If the given parameter $\dirparam$ appearing in the target density $\targetDensity$ satisfies the condition in Lemma \ref{lemma.equivalence_expected_constraint.parameter}, then we use $\proposalDensity = \dirichletDensity$ as proposal density. Otherwise, we use Lemma \ref{lemma.proposal_dirparam} to define a new Dirichlet parameter $\rho$ such that the conditions Lemma \ref{lemma.proposal_dirparam.proportional_even}, \ref{lemma.proposal_dirparam.proportional_odd} and \ref{lemma.proposal_dirparam.expectation} are satisfied. The first two conditions \ref{lemma.proposal_dirparam.proportional_even} and \ref{lemma.proposal_dirparam.proportional_odd} guarantee that the average proportions among the ask (respectively, bid) volumes sampled under $\dirichletDensity[\rho]$ are the same as those sampled under $\dirichletDensity$; condition \ref{lemma.proposal_dirparam.expectation} reduces the waiting time until the constraint $Q_{\ell,u}$ is met. 
+
+More precisely, the parameter $\rho$ of the proposal density $\proposalDensity = \dirichletDensity[\rho]$ is defined according to Algorithm \ref{algo.set_proposal_param}. This algorithm also returns the maximum value $M$ of $v\mapsto \prod_{i} v_{i}^{\dirparam_i - \rho_i}$ on the set $v_0 +\dots +v_{2n-1} = 1$, which is the crucial bound used in our accept-reject algorithm.
+
+\begin{algorithm}[h]
+ \caption{Definition of the parameter $\rho$ of the proposal density $\proposalDensity = \dirichletDensity[\rho]$}
+ \label{algo.set_proposal_param}
+ \begin{algorithmic}
+  \REQUIRE $\ell$, $u$, $(\dirparam_i)_{i=0,\dots,2n-1}$ 
+  \IF { \begin{equation*}\ell \sum_{i=0}^{2n-1}\dirparam_i \leq \sum_{k=0}^{n-1} (\dirparam_{2k+1} - \dirparam_{2k} ) < u \sum_{i=0}^{2n-1}\dirparam_i
+  \qquad\qquad\qquad\qquad\qquad\qquad
+  \end{equation*} }
+  \STATE \begin{equation*}
+  \begin{split}
+  &\text{set } \quad \rho_i = \dirparam_i \qquad \text{for all } i=0,\dots,2n-1;
+  \qquad\qquad\qquad\qquad\qquad\qquad
+  \\
+  &\text{set } \quad M:=1;
+ \end{split}  
+  \end{equation*}
+  \ELSE
+  \STATE 
+   \begin{equation*}
+   \begin{split}
+  &\text{set } \quad \bar{\beta} : =
+   \max\left(
+   \frac{1}{\sum_{k=0}^{n-1} \dirparam_{2k}}
+   \frac{1-\ell}{1+u-l}, \quad
+   \frac{1}{\sum_{k=0}^{n-1} \dirparam_{2k+1}}
+   \frac{1+u}{1+u-l}
+   \right) + \epsilon;
+  \\
+  &\text{set } \quad 
+   \beta_0: =
+   \frac{1}{\bar{\beta}\sum_{k=0}^{n-1} \dirparam_{2k}}
+   \frac{1-\ell}{1+u-l},
+   \qquad
+   \beta_1 :=
+   \frac{1}{\bar{\beta}\sum_{k=0}^{n-1} \dirparam_{2k+1}}
+   \frac{1+u}{1+u-l};
+  \\
+  &\text{set  } \quad \rho_{2k} = \beta_0 \dirparam_{2k}, \qquad  
+  \rho_{2k+1}= \beta_1 \dirparam_{2k+1}, \qquad
+  \text{for all } k=0,\dots,n-1; 
+  \\
+  &\text{solve } \quad 
+  \begin{pmatrix}
+   \frac{\alpha_{0} + \alpha_{2n-1}}{\alpha_0}
+   &   1   &   \cdots   &   1
+   \\
+   1 &
+   \frac{\alpha_{1} + \alpha_{2n-1}}{\alpha_1}
+   & \cdots & 1 
+   \\
+   \vdots & & \ddots & \vdots\\
+   1 &\cdots & 1 &
+   \frac{\alpha_{2n-2} + \alpha_{2n-1}}{\alpha_{2n-2}}
+  \end{pmatrix}
+  \begin{pmatrix}
+   x_0 \\
+   x_1 \\
+   \vdots \\
+   x_{2n-2}
+  \end{pmatrix}
+  = 
+  \begin{pmatrix}
+   1 \\
+   1 \\
+   \vdots \\
+   1
+  \end{pmatrix},
+  \\
+  & \text{where } \alpha_i = \dirparam_i - \rho_i \text{ for all } i=0,\dots, 2n-1; 
+  \\
+  &\text{set } \quad M:= \prod_{i=0}^{2n-1} \hat{v}_{i}^{\dirparam_i - \rho_i},
+   \qquad \text{where }
+   \hat{v} =
+   \left(x_0,\dots,x_{2n-2}, \,\,  1-\sum_{i=0}^{2n-2}x_i\right)\transpose;
+%    \begin{pmatrix}
+%     x_0 \\
+%     \vdots \\
+%     x_{2n-2} \\
+%     1- \sum_{i=0}^{2n-2} x_i
+%    \end{pmatrix};
+  \end{split}
+  \end{equation*}
+  \ENDIF
+  \RETURN $M$, $(\rho_i)_{i=0,\dots,2n-1}$.
+ \end{algorithmic}
+\end{algorithm}
+
+\newpage
+ 
+
+We are finally in the position to prove the proposition on which our sampling methodology is based (Proposition \ref{prop.rejection_sampling}) and then describe its implementation in Algorithm \ref{algo.rejection_sampling}. 
+
+\begin{prop}\label{prop.rejection_sampling}
+ Let $\dirparam$, $\rho$ in $\R_{+}^{2n}$ and $-1\leq \ell < u \leq 1$ be as above. 
+ Let $\lbrace V(t): \, \, t=1,2,\dots \rbrace$ be a sequence of i.i.d. random variables with distribution $\text{Dir}_{\dirparam}$. Let $\lbrace U(t): \, \, t=1,2,\dots \rbrace$ be a sequence of i.i.d. random variables with uniform distribution on the unit interval. Define the stopping time 
+ \begin{equation*}
+  \tau := \inf \left\lbrace 
+  t=1,2,\dots : \, \, 
+  U(t)<\frac{1}{M} \prod_{i=0}^{2n-1} V_{i}^{\dirparam_i - \rho_i}(t)
+  \one_{Q_{\ell,u}}\left\lbrace V(t)\right\rbrace
+  \right\rbrace,
+ \end{equation*}
+where $Q_{\ell,u}$ is as in equation \eqref{eq.volimb_constraint} and $M:= \prod_i \hat{v}_{i}^{\dirparam_i - \rho_i}$, where $\hat{v} = (\hat{v}_0,\dots,\hat{v}_{2n-1})$ is the maximiser of $\dirichletDensity[\dirparam](v)/\dirichletDensity[\rho](v)$ defined in Lemma \ref{lemma.proposal_dirparam.maximiser}. Then, $V(\tau)$ has absolutely continuous distribution with density $\targetDensity$ given in equation \eqref{eq.target_density}.
+\end{prop}
+\begin{proof}
+ Let $U$ and $V$ be independent random variables such that  $U$ is uniformly distributed in $[0,1]$, and $V \sim \text{Dir}_{\rho}$. Let $A$ be the event 
+ \begin{equation*}
+  A  =
+  \left\lbrace
+  U < \frac{1}{M} \prod_{i=0}^{2n-1} V_{i}^{\dirparam_i - \rho_i} \one_{Q_{\ell,u}}(V)  
+  \right\rbrace,
+ \end{equation*}
+ where $M$ is as in the statement. Let $\tilde{M}:= B(\rho) M / (\Prob_{\dirparam}(Q_{\ell, u}) B(\dirparam) )$, where $B(\dirparam)$ and  $B(\rho)$ are the normalisation constants of $\dirichletDensity[\dirparam]$ and $\dirichletDensity[\rho]$ respectively.  For $0\leq s \leq 1$ and $v=(v_0,\dots,v_{2n-1}) \in (0,1)^{2n}$ such that $v_0 + \dots, + v_{2n-1} = 1 $, the condition $ M s < \prod_i v_{i}^{\dirparam_i - \rho_i} \one_{Q}(v)$ is equivalent to $\dirichletDensity[\rho](v) \tilde{M} s  < \targetDensity(v)$. Hence, 
+ \begin{equation*}
+  \begin{split}
+   \Prob(A) = &
+   \int dv \, \, \dirichletDensity[\rho](v)
+   \int_{0}^{1}ds\, \, 
+   \one\left\lbrace
+   M s < \prod_i v_{i}^{\dirparam_i - \rho_i} \one_{Q_{\ell,u}}(v)
+   \right\rbrace
+   \\
+   = &
+   \int dv \,\, \dirichletDensity[\rho](v)
+   \int_{0}^{1}ds \, \, 
+   \one\left\lbrace
+   \dirichletDensity[\rho](v) \tilde{M} s  < \frac{\dirichletDensity(v)\one _{Q_{\ell,u}} (v)}{\dirichletLaw\left(Q_{\ell,u}\right)}
+   \right\rbrace
+   \\
+   = &
+   \frac{1}{\tilde{M}}.
+  \end{split}
+ \end{equation*}
+Therefore, for any arbitrary continuous and bounded real function $\phi$ defined on $[0,1]^{2n}$, we have
+\begin{equation*}
+ \begin{split}
+  \Expectation\left[ \phi\left( V(\tau) \right)\right]
+  = &
+  \sum_{t=1}^{\infty} \Expectation\left[ \phi\left( V(t)\right) \one \lbrace \tau = t \rbrace \right]
+  \\
+  = & 
+  \sum_{t=1}^{\infty} \big(1-\Prob(A)\big)^{t-1}\Expectation\left[ \phi(V)\one_{A}\right]
+  \\
+  = &
+  \frac{1}{\Prob(A)}
+  \int dv \,\,\phi(v) \dirichletDensity[\rho](v)
+   \int_{0}^{1}ds \, \, 
+   \one\left\lbrace
+   \dirichletDensity[\rho](v) \tilde{M} s  < \targetDensity(v)
+   \right\rbrace
+   \\
+   = &
+   \int dv \,\, \phi(v)  \dirichletDensity[\rho](v).
+ \end{split}
+\end{equation*}
+\end{proof}
+
+
+
+\begin{algorithm}
+ \caption{Accept-reject algorithm for drawing from $\targetDensity$ of equation \eqref{eq.target_density}}
+ \label{algo.rejection_sampling}
+ \begin{algorithmic}[5]
+  \REQUIRE $\ell$, $u$, $(\dirparam_i)_{i=0,\dots,2n-1}$
+  \STATE set $M$, $(\rho_i)_{i=0,\dots,2n-1}$ $\leftarrow$ Algorithm \ref{algo.set_proposal_param}($\ell$, $u$, $(\dirparam_i)_{i=0,\dots,2n-1}$)
+  \STATE set $\xi = 1$
+  \IF {$\rho_i = \dirparam_i$ for all $i=0,\dots,2n-1$}
+  \WHILE{$\xi = 1$}
+  \STATE draw $V\sim\text{Dir}_{\rho}$
+  \IF {$\ell \leq \sum_{k=0}^{n-1} (V_{2k+1} - V_{2k}) < u$}
+  \STATE set $\xi=0$
+  \ENDIF
+  \ENDWHILE
+  \ELSE
+  \WHILE{$\xi = 1$}
+  \STATE draw $V\sim\text{Dir}_{\rho}$
+  \IF {$\ell \leq \sum_{k=0}^{n-1} (V_{2k+1} - V_{2k}) < u$}
+  \STATE draw $U\sim \text{Unif}[0,1]$
+  \IF {$U \leq  \prod_{i} V_{i}^{\dirparam_i-\rho_i}/M$}
+  \STATE set $\xi = 0$
+  \ENDIF
+  \ENDIF
+  \ENDWHILE
+  \ENDIF
+  \RETURN $V$.
+ \end{algorithmic}
+\end{algorithm}
+\begin{remark}
+ Notice that line $1$ in Algorithm \ref{algo.rejection_sampling} does not have to be repeated every time we sample from $\targetDensity$. In fact, in practice we will evaluate  $M$ and $\rho$ using Algorithm \ref{algo.set_proposal_param} beforehand and store them apart; then several samples from the target density $\targetDensity$ can be obtained by performing only lines $2:21$ in Algorithm \ref{algo.rejection_sampling}.
+\end{remark}
+
+
+
+\newpage
+
+\subsection{Performance tests}
+\subsubsection{Execution speed}
+
+\subsubsection*{Evaluation of loglikelihood and gradient on a laptop}
+   \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{2}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{n}{date\PYZus{}time}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{2020\PYZhy{}04\PYZhy{}12\PYZus{}0738}\PY{l+s+s2}{\PYZdq{}}
+\PY{k}{with} \PY{n+nb}{open}\PY{p}{(}\PY{n}{path\PYZus{}saved\PYZus{}tests}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{/perf\PYZhy{}test\PYZus{}}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{/}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{date\PYZus{}time}\PY{p}{)}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{test\PYZus{}model\PYZus{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{+}\PY{n}{date\PYZus{}time}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rb}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)} \PY{k}{as} \PY{n}{source}\PY{p}{:}
+    \PY{n}{model}\PY{o}{=}\PY{n}{pickle}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{source}\PY{p}{)}
+\PY{n}{meas} \PY{o}{=} \PY{n}{measure\PYZus{}exectime}\PY{o}{.}\PY{n}{PerformanceMeasure}\PY{p}{(}\PY{n}{model}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Number of cpus: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{os}\PY{o}{.}\PY{n}{cpu\PYZus{}count}\PY{p}{(}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s2}{Model}\PY{l+s+s2}{\PYZsq{}}\PY{l+s+s2}{s key features:}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{d\PYZus{}E=}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{; d\PYZus{}S=}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{meas}\PY{o}{.}\PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}event\PYZus{}types}\PY{p}{,} \PY{n}{meas}\PY{o}{.}\PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}states}\PY{p}{)}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Number of simulated LOB events: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{meas}\PY{o}{.}\PY{n}{model}\PY{o}{.}\PY{n}{simulated\PYZus{}events}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+PerformanceMeasure is being initialised on
+model.name\_of\_model=test\_model\_2020-04-12\_0738
+posix.uname\_result(sysname='Linux', nodename='claudio-HP-EliteBook-850-G3',
+release='5.3.0-46-generic', version='\#38\textasciitilde{}18.04.1-Ubuntu SMP Tue Mar 31 04:17:56
+UTC 2020', machine='x86\_64')
+Number of cpus: 4
+
+Model's key features:
+d\_E=4; d\_S=15
+Number of simulated LOB events: 19958
+    \end{Verbatim}
+
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{3}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{c+c1}{\PYZsh{}select component of multivariate Hawkes process e=0,...,d\PYZus{}E\PYZhy{}1}
+\PY{n}{e} \PY{o}{=} \PY{l+m+mi}{0}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{4}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{o}{\PYZpc{}\PYZpc{}timeit} \PYZhy{}n 5 \PYZhy{}r 3
+\PY{n}{meas}\PY{o}{.}\PY{n}{target\PYZus{}loglikelihood}\PY{p}{(}\PY{n}{e}\PY{p}{,} \PY{n}{use\PYZus{}prange}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+3.37 s +/- 50.8 ms per loop (mean +/- std. dev. of 3 runs, 5 loops each)
+    \end{Verbatim}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{5}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{o}{\PYZpc{}\PYZpc{}timeit} \PYZhy{}n 5 \PYZhy{}r 3
+\PY{n}{meas}\PY{o}{.}\PY{n}{target\PYZus{}loglikelihood}\PY{p}{(}\PY{n}{e}\PY{p}{,} \PY{n}{use\PYZus{}prange}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+1.26 s +/- 5.1 ms per loop (mean +/- std. dev. of 3 runs, 5 loops each)
+    \end{Verbatim}
+
+\subsubsection*{Evaluation of loglikelihood and gradient on a cluster hpc}    
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+ $python test_perf.py --loglikelihood
+this_test_model_name: test_model_2020-04-12_0738
+date_time of model: 2020-04-12_0738
+Date and time of test: 2020-04-12 at 11:50
+
+PerformanceMeasure is being initialised on model.name_of_model=test_model_2020-04-12_0738
+posix.uname_result(sysname='Linux', nodename='r5i2n0', release='3.10.0-514.26.2.el7.x86_64', version='#1 SMP Tue Jul 4 15:04:05 UTC 2017', machine='x86_64')
+Number of cpus: 8
+
+Model's key features:
+d_E=4; d_S=15
+Number of simulated LOB events: 19958
+
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'plain' for-loops (no prange):
+[3.7853622250258923, 4.9914959750603884, 4.556901058880612, 4.488794992910698]
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'prange' in outermost for-loop:
+[0.25286552612669766, 0.33203633199445903, 0.30347337294369936, 0.2986017200164497]
+
+measure_loglikelihood() terminates on 2020-04-12 at 11:53
+============================================
+        Job resource usage summary 
+                 Memory (GB)    NCPUs
+ Requested  :        10             8
+ Used       :         2 (peak)   1.16 (ave)
+============================================
+\end{Verbatim}
+\end{tcolorbox}
+
+
+\subsubsection{Goodness of fit}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{5}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, , fontsize=\small]
+\PY{n}{date\PYZus{}time} \PY{o}{=} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{2020\PYZhy{}04\PYZhy{}12\PYZus{}0738}\PY{l+s+s2}{\PYZdq{}}
+\PY{n}{name\PYZus{}of\PYZus{}test} \PY{o}{=} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{prange\PYZus{}test\PYZus{}model\PYZus{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{+}\PY{n}{date\PYZus{}time}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{6}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{k}{with} \PY{n+nb}{open}\PY{p}{(}\PY{n}{path\PYZus{}tests}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{/saved\PYZus{}tests/perf\PYZhy{}test\PYZus{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{+}\PY{n}{date\PYZus{}time}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{/}\PY{l+s+s1}{\PYZsq{}}\PY{o}{+}\PY{n}{name\PYZus{}of\PYZus{}test}\PY{p}{,}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rb}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)} \PY{k}{as} \PY{n}{source}\PY{p}{:}
+    \PY{n}{model}\PY{o}{=}\PY{n}{pickle}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{n}{source}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{name\PYZus{}of\PYZus{}model}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Date and time of initilisation: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{datetime\PYZus{}of\PYZus{}initialisation}\PY{p}{)}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{number\PYZus{}of\PYZus{}event\PYZus{}types: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{; number\PYZus{}of\PYZus{}states: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}
+    \PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}event\PYZus{}types}\PY{p}{,} \PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}states}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+prange\_test\_model\_2020-04-12\_0738
+Date and time of initilisation: 2020-04-12 07:38:26.601783
+number\_of\_event\_types: 4; number\_of\_states: 15
+    \end{Verbatim}
+
+    The following three figures will show QQ plots that assess goodness of
+fit. The first figure refers to the coefficients inserted by the user;
+it asseses the reliability of the simulation and it is expected to show
+good results. The second picture refers to the coefficients obtained via
+non-parametric estimation. The results can be mixed since the procedure
+assumes stationarity of the point process and i.i.d. sequences of marks
+(which may not hold). The third figure refers to the parameters obtained
+via maximum likelihood estimation and it is expected to be an
+improvement over the non-parametric estimation; this is because on the
+one hand the mle estimation does not assume stationarity, and on the
+other hand the results of the non-parametric estimations are used as one
+of the initilisations for the gradient descent of the mle estimation.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{7}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{n}{model}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+Anderson-Darling test to check distribution of residuals
+Null hypothesis is "expon"
+Significance levels: [15.  10.   5.   2.5  1. ]
+Critical values: [0.922 1.078 1.341 1.606 1.957]
+event type=0, ad\_stat: 0.2141966471563137
+event type=1, ad\_stat: 0.49801130759806256
+event type=2, ad\_stat: 0.45093652879040746
+event type=3, ad\_stat: 0.8266097663436085
+    \end{Verbatim}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{8}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{n}{model}\PY{o}{.}\PY{n}{nonparam\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{nonparam\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738_nonparam.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+Anderson-Darling test to check distribution of residuals
+Null hypothesis is "expon"
+Significance levels: [15.  10.   5.   2.5  1. ]
+Critical values: [0.922 1.078 1.341 1.606 1.957]
+event type=0, ad\_stat: 120.51717269351502
+event type=1, ad\_stat: 54.94009196285606
+event type=2, ad\_stat: 0.8662745583551441
+event type=3, ad\_stat: 222.09860859998298
+    \end{Verbatim}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{9}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\PY{n}{model}\PY{o}{.}\PY{n}{mle\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{mle\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738_mle.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+Anderson-Darling test to check distribution of residuals
+Null hypothesis is "expon"
+Significance levels: [15.  10.   5.   2.5  1. ]
+Critical values: [0.922 1.078 1.341 1.606 1.957]
+event type=0, ad\_stat: 0.2137307976381635
+event type=1, ad\_stat: 0.8740122294875619
+event type=2, ad\_stat: 1.5654262188509165
+event type=3, ad\_stat: 1.3660949155273556
+    \end{Verbatim}
+
+
+\section{Calibration on LOBSTER data}
+Describe how the lobster dataset is filtered. Report results of calibrationand key findings. 
+
+
+    
+
+\addcontentsline{toc}{section}{References}
+\bibliographystyle{apalike}
+\bibliography{pipest_bib}    
+
+
+\begin{appendices}
+\section{Readouts of \texttt{test 2020-04-12\_0738}}
+\subsection{Execution times and resource usage summaries}
+\subsubsection{Estimation of component e=0}
+ \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+ \input{../readouts/summarye0}
+\end{tcolorbox}
+\subsubsection{Estimation of component e=1}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+ \input{../readouts/summarye1}
+\end{tcolorbox}
+\subsubsection{Estimation of component e=2}
+ \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+ \input{../readouts/summarye2}
+\end{tcolorbox}
+\subsubsection{Estimation of component e=3}
+ \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
+ \input{../readouts/summarye3}
+\end{tcolorbox}
+\end{appendices}
+
+\end{document}
