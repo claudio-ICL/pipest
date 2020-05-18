@@ -167,7 +167,7 @@ class EstimProcedure:
         self.hawkes_kernel.store_parameters(self.fit_powerlaw.imp_coef, self.fit_powerlaw.dec_coef)
         if compute_L1_norm:
             #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
-            self.hawkes_kernel.store_L1_norm(from_param=True)
+            self.hawkes_kernel.store_L1_norm()
     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
         "type_of_input can either be 'simulated' or 'empirical'"
         self.goodness_of_fit=goodness_of_fit.good_fit(

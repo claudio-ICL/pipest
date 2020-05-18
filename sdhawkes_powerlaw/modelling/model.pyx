@@ -1079,6 +1079,8 @@ class SDHawkes:
         self.liquidator.time_start = 0.0 
     def store_calibration(self,calibration):
         self.calibration=calibration    
+    def store_goodness_of_fit(self,goodness_of_fit):
+        self.goodness_of_fit = goodness_of_fit
     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
         "type_of_input can either be 'simulated' or 'empirical'"
         if type_of_input == 'simulated':
@@ -1133,6 +1135,8 @@ class SDHawkes:
         )
     def store_nonparam_estim_class(self,nonparam_estim):
         self.nonparam_estim = copy.copy(nonparam_estim)
+    def store_mle_estim(self,mle_estim):
+        self.mle_estim = mle_estim
     def create_mle_estim(self, str type_of_input = 'simulated', store_trans_prob=True, store_dirichlet_param=False):
         if type_of_input == 'simulated':
             times=self.simulated_times

@@ -1,8 +1,8 @@
 #!/bin/bash
 symbol="INTC"
-date="2019-01-23"
-t_0=34200
-t_1=37800
+date="2019-01-15"
+t_0=41400
+t_1=45000
 
 input="symbol=$symbol, date=$date, t_0=$t_0, t_1=$t_1"
 # a="-r"
@@ -31,6 +31,6 @@ input="symbol=$symbol, date=$date, t_0=$t_0, t_1=$t_1"
 #jobid_m=$(qsub -l walltime=01:00:00 -l select=1:ncpus=4:mem=64gb:mpiprocs=1:ompthreads=4 -N "calibr_main-m" -v "$input, a=$a" wrapper_submission.sh)
 #echo "submission of 'merge' with jobid: $jobid_m"
 a="-uq"
-jobid_uq=$(qsub -l walltime=02:00:00 -l select=1:ncpus=24:mem=16gb:mpiprocs=1:ompthreads=24 -N "calibr-uq" -v "$input, a=$a" wrapper_submission.sh)
+jobid_uq=$(qsub -l walltime=02:00:00 -l select=1:ncpus=32:mem=16gb:mpiprocs=1:ompthreads=32 -N "calibr-uq" -v "$input, a=$a" wrapper_submission.sh)
 echo "submission of 'uncertainty_quant' with jobid: $jobid_uq"
 
