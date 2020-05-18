@@ -764,10 +764,12 @@ def simulate_liquidation(
                             quantity_liquidated += to_subtract_memview[l]
                             volume_memview[n,1+2*l]=volume_memview[n-1,1+2*l]-to_subtract_memview[l]
                             new_tot_bid+=volume_memview[n,1+2*l]
+                            volume_memview[n,2*l]=volume_memview[n-1,2*l]
                         inventory_memview[n:]=max(0.0,inventory_memview[n-1]-quantity_liquidated)
                     if verbose:
                         message+=' to_subtract={}, quantity_liquidated={}'.format(to_subtract,quantity_liquidated)    
-                    volume[n,0::2]=(1.0-new_tot_bid)*volume[n-1,0::2]/tot_ask                 
+                    #if you want to normalise new volumes do:
+                    #volume[n,0::2]=(1.0-new_tot_bid)*volume[n-1,0::2]/tot_ask                 
                     with nogil:
                         st_2=compute_and_classify_volimb_scalar(
                             volume_memview[n,:], volimb_limits, volimb_upto_level, num_of_st2)

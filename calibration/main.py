@@ -43,7 +43,7 @@ add_level_to_messagefile=True
 type_of_preestim='ordinary_hawkes' #'ordinary_hawkes' or 'nonparam'
 max_imp_coef = 20.0
 learning_rate = 0.0001
-maxiter = 50
+maxiter = 80
 num_guesses = 8
 parallel=False
 use_prange=True
@@ -341,7 +341,9 @@ def uncertainty_quantification(input_model_name=''):
         model.store_nonparam_estim_class(input_model.nonparam_estim)
     except:
         pass
+    model.store_mle_estim(input_model.mle_estim)
     model.store_calibration(input_model.calibration)
+    model.store_goodness_of_fit(input_model.goodness_of_fit)
     model.set_hawkes_parameters(input_model.base_rates,
                                 input_model.impact_coefficients,
                                 input_model.decay_coefficients)
@@ -350,7 +352,7 @@ def uncertainty_quantification(input_model_name=''):
     model.create_uq()
     time_start=0.0
     time_end=3600.0
-    max_events=20000
+    max_events=40000
     model.uncertainty_quantification.simulate(
             time_start, time_end, max_number_of_events=max_events)
     model.uncertainty_quantification.create_goodness_of_fit()

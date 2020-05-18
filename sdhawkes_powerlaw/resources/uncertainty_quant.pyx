@@ -203,6 +203,11 @@ class UncertQuant:
         time_start=float(times[0])
         time_end=float(times[len(times)-1])
         cdef list list_init_guesses = []
+        list_init_guesses.append(
+            computation.parameters_to_array(self.base_rates,
+                                            self.impact_coefficients,
+                                            self.decay_coefficients)
+        )
         num_of_random_guesses=max(num_of_random_guesses,2)
         preestim_ordinary_hawkes = (type_of_preestim =='ordinary_hawkes')
         if type_of_preestim == 'nonparam':
