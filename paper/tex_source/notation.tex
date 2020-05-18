@@ -78,8 +78,11 @@
 \newcommand{\positivePartOfMinimum}{\text{min}_{+}}
 
 \newcommand{\dotEta}{\dot{\eta}}
+\newcommand{\Kappa}{\mathfrak{K}}
 
 \newcommand{\intzerot}[1][t]{\int_{0}^{#1}}
+
+\newcommand{\infinity}{\infty}
 
 %notation for derivatives
 \newcommand{\derivative}{^{\prime}}
@@ -143,11 +146,16 @@
 \newcommand{\correlation}{\mathrm{corr}}
 \newcommand{\likelihood}{\mathcal{L}}
 \newcommand{\sigmaAlgebra}{\mathfrak{F}}
+\newcommand{\sigmaAlgebraG}{\mathcal{G}}
+\newcommand{\setAlgebraA}{\mathcal{A}}
+\newcommand{\setAlgebraB}{\mathcal{B}}
+\newcommand{\orthogonal}{^{\perp}}
 \newcommand{\measurableSpace}{\big(\Omega,\sigmaAlgebra \big)}
 \newcommand{\probabilitySpace}{\big(\Omega,\sigmaAlgebra, \Prob \big)}
 \newcommand{\filteredMeasurableSpace}{\big(\Omega,\sigmaAlgebra, (\sigmaAlgebra_t)_t \big)}
 \newcommand{\stochasticBase}{\big(\Omega,\sigmaAlgebra = (\sigmaAlgebra_t)_t , \Prob  \big)}
 \newcommand{\filtrationF}{\mathfrak{F}}
+\newcommand{\internalHistory}{\filtrationF}
 \newcommand{\iid}{\overset{\text{i.i.d.}}{\sim}}
 \newcommand{\gaussian}[2]{\mathcal{N}({#1},{#2})}
 \newcommand{\normalPDF}[3]{p_{\gaussian{#2}{#3}}\left( #1 \right)}
@@ -244,6 +252,7 @@
 \newcommand{\event}[1][n]{E_{#1}}
 \newcommand{\countingProc}[1][e]{N_{#1}}
 \newcommand{\multiCountingProc}{N}
+\newcommand{\sdHawkesPair}{(\multiCountingProc,\stateVariable)}
 \newcommand{\groundProc}{N_{\mathfrak{g}}}
 \newcommand{\hybridHawkes}{\tilde{N}}
 \newcommand{\hybridIntensity}{\tilde{\intensity[]}}
@@ -260,6 +269,17 @@
 \newcommand{\xone}{x\derivative}
 \newcommand{\subscriptexe}{_{\eone,\, \xone,\, e}}
 \newcommand{\stateSpace}{\mathcal{S}}
+\newcommand{\deflationarySpace}{\stateSpace^{-}}
+\newcommand{\weakDeflSpace}{\stateSpace^{o,-}}
+\newcommand{\weakDeflCompensator}{\compensator^{o,-}}
+\newcommand{\weakDeflIntensity}{\intensity[]^{o,-}}
+\newcommand{\inflationarySpace}{\stateSpace^{+}}
+\newcommand{\weakInflSpace}{\stateSpace^{o,+}}
+\newcommand{\intensityDeflationary}{\intensity[]^{-}}
+\newcommand{\intensityInflationary}{\intensity[]^{+}}
+\newcommand{\Nminus}{\countingProc[]^{-}}
+\newcommand{\Nplus}{\countingProc[]^{+}}
+\newcommand{\weakDeflPP}{\countingProc[]^{o,-}}
 \newcommand{\stateVariable}{X}
 \newcommand{\transProb}{\phi}
 \newcommand{\lplus}{\ell_{+}}
@@ -268,6 +288,14 @@
 \newcommand{\ESSEone}{S^{(1)}}
 \newcommand{\ESSEtwo}{S^{(2)}}
 \newcommand{\ESSEthree}{S^{(3)}}
+\newcommand{\directImpact}{\text{Dir}}
+\newcommand{\indirectImpact}{\text{Indir}}
+\newcommand{\transientImpact}{\text{Tra}}
+\newcommand{\liquidatorSigmaAlgebra}{\sigmaAlgebraG_{0}}
+\newcommand{\impactProfile}{\mathtt{imp}}
+\newcommand{\initialTime}{t_{0}}
+\newcommand{\terminationTime}{\tau}
+\newcommand{\metaorderSize}{Q_{0}}
 
 % %Notation peculiar to StaticVsDynamic
 % \newcommand{\spaceInventoryTrajectories}{\mathcal{Q}}
