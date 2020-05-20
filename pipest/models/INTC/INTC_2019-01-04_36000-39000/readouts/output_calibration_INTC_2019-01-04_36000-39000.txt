@@ -1,0 +1,65 @@
+Calibration on INTC_2019-01-04_36000-39000: summary of readouts
+_
+date of run: 2020-04-17 at 11:48
+I am calibrating on lobster
+symbol=INTC, date=2019-01-04, time_window=36000-39000
+event type: 0
+Calibration is being performed on the following machine:
+posix.uname_result(sysname='Linux', nodename='cx3-5-3.cx3.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+stdout is being redirected to pipest/models/INTC/INTC_2019-01-04_36000-39000_partial0_readout.txt
+estimate_hawkes_power_partial, event_type=0, run_time = 2657.7367186546326
+Calibration of event_type 0 terminates on 2020-04-17 at 12:33
+============================================
+        Job resource usage summary 
+                 Memory (GB)    NCPUs
+ Requested  :        16            24
+ Used       :         3 (peak)  23.85 (ave)
+============================================
+_
+date of run: 2020-04-17 at 11:49
+I am calibrating on lobster
+symbol=INTC, date=2019-01-04, time_window=36000-39000
+event type: 1
+Calibration is being performed on the following machine:
+posix.uname_result(sysname='Linux', nodename='cx1-101-6-2.cx1.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+stdout is being redirected to pipest/models/INTC/INTC_2019-01-04_36000-39000_partial1_readout.txt
+estimate_hawkes_power_partial, event_type=1, run_time = 2682.6574807167053
+Calibration of event_type 1 terminates on 2020-04-17 at 12:34
+============================================
+        Job resource usage summary 
+                 Memory (GB)    NCPUs
+ Requested  :        16            24
+ Used       :         3 (peak)  23.93 (ave)
+============================================
+_
+date of run: 2020-04-17 at 18:12
+I am calibrating on lobster
+symbol=INTC, date=2019-01-04, time_window=36000-39000
+event type: 2
+Calibration is being performed on the following machine:
+posix.uname_result(sysname='Linux', nodename='cx3-5-4.cx3.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+stdout is being redirected to pipest/models/INTC/INTC_2019-01-04_36000-39000_partial2_readout.txt
+estimate_hawkes_power_partial, event_type=2, run_time = 40546.20614480972
+Calibration of event_type 2 terminates on 2020-04-18 at 5:28
+============================================
+        Job resource usage summary 
+                 Memory (GB)    NCPUs
+ Requested  :        16            24
+ Used       :         3 (peak)  24.00 (ave)
+============================================
+_
+date of run: 2020-04-17 at 18:27
+I am calibrating on lobster
+symbol=INTC, date=2019-01-04, time_window=36000-39000
+event type: 3
+Calibration is being performed on the following machine:
+posix.uname_result(sysname='Linux', nodename='cx3-5-11.cx3.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+stdout is being redirected to pipest/models/INTC/INTC_2019-01-04_36000-39000_partial3_readout.txt
+estimate_hawkes_power_partial, event_type=3, run_time = 34880.537371873856
+Calibration of event_type 3 terminates on 2020-04-18 at 4:09
+============================================
+        Job resource usage summary 
+                 Memory (GB)    NCPUs
+ Requested  :        16            24
+ Used       :         3 (peak)  24.00 (ave)
+============================================

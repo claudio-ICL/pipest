@@ -1,0 +1,49 @@
+
+date of run: 2020-04-16 at 11:31
+I am calibrating on lobster
+symbol=INTC, date=2019-01-04, time_window=36000-38000
+event type: 0
+Calibration is being performed on the following machine:
+ posix.uname_result(sysname='Linux', nodename='cx3-1-10.cx3.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+Partial calibration for event_type=0
+mle_estimation.EstimProcedure is being initialised
+EstimProcedure has been successfully initialised
+I am setting the estimation of hawkes parameters, with time_start=0.009498990002612118, time_end=1999.966535245003.
+The boundaries of arrival times are 0.009498990002612118-1999.966535245003
+I am estimating hawkes parameters for the component e=0
+MinimisationProcedure is being initialised: event_type=0, learning_rate=0.0001, maxiter=8
+MinimisationProcedure.list_of_batches ready
+mle_estimation.estimate_hawkes_param_partial: event_type 0: MinimisationProcedure has been initialised
+I am launching minimisation. Number of initial guesses=6, use_prange=True, parallel=False
+I am performing gradient descent serially
+descend_along_gradient pid55970 bid19: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid25: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid50: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid55: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid75: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid82: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid21: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid49: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid77: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid78: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid19: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid25: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid47: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid53: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid21: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid27: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid49: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid55: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid78: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid83: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid21: attempt_num 1/2 has failed
+descend_along_gradient pid55970 bid27: attempt_num 1/2 has failed
+MinimisationProcedure: minimisation finished
+estimate_hawkes_power_partial, event_type=0, run_time = 602.781988620758
+mle_estimation.EstimProcedure.estimate_hawkes_param_partial. Estimation terminates for event_type 0
+
+I am dumping the model with name "INTC_2019-01-04_36000-38000_partial0" in the directory: /rds/general/user/cb115/home/pipest/models/INTC/ 
+
+
+Calibration of event_type 0 terminates on 2020-04-16 at 11:41
+

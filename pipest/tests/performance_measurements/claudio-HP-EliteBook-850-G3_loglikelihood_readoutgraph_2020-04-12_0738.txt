@@ -1,0 +1,11 @@
+I am executing test_perf.py --loglikelihood
+Date of run: 2020-05-20 at 08:23
+
+I am drawing a graph using pycallgraph
+grouped: False
+e: 0
+PerformanceMeasure is being initialised on model.name_of_model=test_model_2020-04-12_0738
+posix.uname_result(sysname='Linux', nodename='claudio-HP-EliteBook-850-G3', release='5.3.0-51-generic', version='#44~18.04.2-Ubuntu SMP Thu Apr 23 14:27:18 UTC 2020', machine='x86_64')
+
+measure_loglikelihood() terminates on 2020-05-20 at 08:23
+

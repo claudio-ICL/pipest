@@ -1,7 +1,9 @@
-\documentclass[10pt]{article}
+\documentclass[10pt, article,table]{article}
+        \usepackage[table]{xcolor}
     \usepackage[round,sort,comma,numbers,authoryear]{natbib}
     \setcitestyle{aysep={ },yysep={,}}
     \usepackage[breakable]{tcolorbox}
+
 %     \usepackage{parskip} % Stop auto-indenting (to mimic markdown behaviour)
     \usepackage{algorithm}
     \usepackage{algorithmic}
@@ -32,7 +34,8 @@
     \adjustboxset{max size={0.9\linewidth}{0.9\paperheight}}
     \usepackage{float}
     \floatplacement{figure}{H} % forces figures to be placed at the correct location
-    \usepackage{xcolor} % Allow colors to be defined
+
+%     \usepackage{xcolor} % Allow colors to be defined
     \usepackage{enumerate} % Needed for markdown enumerations to work
     \usepackage{geometry} % Used to adjust the document margins
     \usepackage{amsmath} % Equations
@@ -623,7 +626,7 @@ Let $\impCoef_{\eone,\xone, e}$ and $\decCoef_{\eone,\xone, e}$ be real numbers,
  = \parametricHawkesKernel(t,\, \impCoef_{\eone,\xone,e},\, \decCoef_{\eone,\xone,e}),
 \end{equation}
 for some fixed non-negative function $\parametricHawkesKernel$. The parameters $\impCoef\subscriptexe$ will be used below to modulate the instantaneous impacts on $\intensity[e]$ of events of type $\eone$ after which the state of the system is $\xone$, namely the following update rule will hold $\intensity[e](\arrivalTimes[]_n) - \intensity[e](\arrivalTimes[]_n - ) = \sum_{\eone, \xone} \impCoef\subscriptexe \one \lbrace \delta\groundProc(\arrivalTimes[]_n) = \delta\hybridHawkes_{\eone,\xone}(\arrivalTimes[]_n)\rbrace$. Moreover, the parameters $\decCoef\subscriptexe$ will be usedto modulate the decaying effect on $\intensity[e]$ of events of type $\eone$ after which the state is $\xone$.
-The  following proposition specifies the formulas for the intensities and the log-likelihood in the parametric case of equation \eqref{eq.parametric_hawkes_kernel_general}, and Corollary \ref{corol.complexities} addresses their computational cost. 
+The  following proposition specifies the formulae for the intensities and the log-likelihood in the parametric case of equation \eqref{eq.parametric_hawkes_kernel_general}, and Corollary \ref{corol.complexities} addresses their computational cost. 
 \begin{prop}\label{prop.parametric_hawkes_kernels}
  Let $\lbrace\hawkesKernel^{\impCoef, \decCoef} : \, \, (\impCoef,\decCoef)=:\theta \in \Theta \rbrace$ be a parametric family of bounded Hawkes kernels as in equation \eqref{eq.parametric_hawkes_kernel_general}, for some fixed non-negative function $\parametricHawkesKernel=\parametricHawkesKernel(t,a,b)$. Then, the intensities $\intensity[e]$ in equation \eqref{eq.intensity_of_sdHawkes} are evaluated according to the formula
  \begin{equation}\label{eq.evaluation_of_intensity}
@@ -742,7 +745,7 @@ for some non-negative coefficients $\impCoef\subscriptexe \geq 0$ and $\decCoef\
 This means that with respect to the general expression in \eqref{eq.parametric_hawkes_kernel_general}, we fix the non-negative function $\parametricHawkesKernel$ to be $\parametricHawkesKernel(t,a,b) = a(t+1)^{-b}$.  
 Beside the alignment with the mentioned asymptotic decay, this choice guarantees, on the one hand, the boundedness of the kernels (which implies existence, uniqueness and non-explosiveness of the state-deppendent Hawkes process); on the other hand, it guarantees the interpretation of $\impCoef\subscriptexe$ as the instantaneous impact  that an event of type $\eone$ followed by a state $\xone$ has on the intensity $\intensity[e]$. Both these two properties mirror what we had for the exponential case in equation \eqref{eq.exponentialHawkesKernel}, adopted in the models implebented by \citealp{MP18sta}.
 
-From Proposition \ref{prop.parametric_hawkes_kernels} and from the subsequent discussion on exponential kernels it follows that adopting the power-law kernels in equation \eqref{eq.powerlaw_kernels} poses a computational challenge for the implementation of our model, in particular with regards to the maximum likelihood estimation. In the remaining of this section we present the formulas involved in our algorithms and later in Section \ref{sec.the_python_module} we will take a close look at their implementations, showing how the computational challenge was tackled. 
+From Proposition \ref{prop.parametric_hawkes_kernels} and from the subsequent discussion on exponential kernels it follows that adopting the power-law kernels in equation \eqref{eq.powerlaw_kernels} poses a computational challenge for the implementation of our model, in particular with regards to the maximum likelihood estimation. In the remaining of this section we present the formulae involved in our algorithms and later in Section \ref{sec.the_python_module} we will take a close look at their implementations, showing how the computational challenge was tackled. 
 
 \begin{prop}\label{prop.intensity_and_compensator_powerlaw}
  Let $(\multiCountingProc,\stateVariable)$ be a $\numEventTypes$-dimensional state-dependent Hawkes process on a finite state space of cardinality $\numStates$. Let $\baseRate_1, \dots, \baseRate_{\numEventTypes}$ be the non-negative base rates, and let $\transProb_1, \dots,\transProb_{\numEventTypes}$ be the transition matrices on the state space associated with the event types $e=1, \dots, \numEventTypes$. Assume that the Hawkes kernels $\hawkesKernel\subscriptee$ are given by equation \eqref{eq.powerlaw_kernels} for some non-negative coefficients $\impCoef\subscriptexe \geq 0$ and $\decCoef\subscriptexe > 1$.  For $\eone = 1,\dots,\numEventTypes$, and $\xone=1,\dots,\numStates$, let $\arrivalTimes[\eone,\xone]_j$ be the jump times of $(\eone,\xone)$-th component $\hybridHawkes_{\eone,\xone}$ of the hybrid-MPP counterpart of $(\multiCountingProc,\stateVariable)$, and for $e = 1,\dots,\numEventTypes$ and $s<t\leq u$ define
@@ -877,7 +880,7 @@ We will incorporate proxies for the queue imbalance and the order flow imbalance
 
 When a limit order comes to the market, it modifies the previous configuration of the orderbook. Proposition \ref{prop.lob_update} gives the updating rule for the variables $(\bestAskPrice_t, \bestBidPrice_t, \lbrace (\nthBestAskVolume[i]_t, \nthBestBidVolume[i]_t) : \, \, i=1,2,\dots\rbrace)$.
 \begin{prop}\label{prop.lob_update}
- Let $(t,q,p,-1)$ be a sell limit order that arrives to the market at time $t$. Let $(\bestAskPrice_{t-}, \bestBidPrice_{t-},\lbrace  (\nthBestAskVolume[i]_{t-}, \nthBestBidVolume[i]_{t-}) : \, \, i=1,2,\dots\rbrace )$ represent the limit order book immediately before $t$. Then, prices and volumes are updated according to the following formulas:
+ Let $(t,q,p,-1)$ be a sell limit order that arrives to the market at time $t$. Let $(\bestAskPrice_{t-}, \bestBidPrice_{t-},\lbrace  (\nthBestAskVolume[i]_{t-}, \nthBestBidVolume[i]_{t-}) : \, \, i=1,2,\dots\rbrace )$ represent the limit order book immediately before $t$. Then, prices and volumes are updated according to the following formulae:
  \begin{equation}\label{eq.lob_update_sell_order}
   \begin{split}
    \bestBidPrice_t =& \bestBidPrice_{t-} - (N-1)\tickSizeOfLOB;
@@ -1207,7 +1210,7 @@ Once the liquidator's execution has been simulated together with the whole order
 \begin{equation}\label{eq.transProb_liquidator}
   \transProb_{0}(x,y) = \Prob\left(\stateVariable(t) = y \big\vert \Delta\countingProc[0](t)=1, \, \stateVariable(t-)=x\right) = \frac{\sum_j \one\lbrace\stateVariable(\arrivalTimes[0]_j - )=x, \, \, \stateVariable(\arrivalTimes[0]_j )=y\rbrace} {\sum_j \one\lbrace\stateVariable(\arrivalTimes[0]_j - )=x, \rbrace}.
 \end{equation}
-This matrix $\transProb_0$ will enter our formulas for the price impact profile. We underline that the estimation of this matrix is done \emph{a posteriori}: it is neither a decision variable for the liquidator, nor it is assumed to match the transition matrix corresponding to event type 1, because the sizes of liquidator's orders can differ from the average size of other participants' orders. 
+This matrix $\transProb_0$ will enter our formulae for the price impact profile. We underline that the estimation of this matrix is done \emph{a posteriori}: it is neither a decision variable for the liquidator, nor it is assumed to match the transition matrix corresponding to event type 1, because the sizes of liquidator's orders can differ from the average size of other participants' orders. 
 
 A simple case for the sizing of the liquidator's market orders is given in the following definition. 
 \begin{defi}\label{def.liquidation_with_constant_size}
@@ -1617,6 +1620,233 @@ Integrating in time gives equation \eqref{eq.explicit_numerator_of_impProfile}.
 
 
 \section{The python module \texttt{pipest}}\label{sec.the_python_module}
+
+\subsection{Initialisation and a first simulation}
+   \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{2}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{n\PYZus{}states}\PY{o}{=}\PY{p}{[}\PY{l+m+mi}{3}\PY{p}{,}\PY{l+m+mi}{5}\PY{p}{]} 
+\PY{n}{n\PYZus{}events} \PY{o}{=} \PY{l+m+mi}{4}  \PY{c+c1}{\PYZsh{} number of event types, \PYZdl{}d\PYZus{}E\PYZdl{}}
+\PY{n}{n\PYZus{}levels} \PY{o}{=} \PY{l+m+mi}{2}
+\PY{n}{upto\PYZus{}level} \PY{o}{=} \PY{l+m+mi}{2}
+\PY{n}{time\PYZus{}start}\PY{o}{=}\PY{l+m+mf}{0.0}
+\PY{n}{time\PYZus{}end}\PY{o}{=}\PY{n}{time\PYZus{}start}\PY{o}{+}\PY{l+m+mf}{1.0}\PY{o}{*}\PY{l+m+mi}{60} \PY{c+c1}{\PYZsh{} one minute}
+\PY{n}{model} \PY{o}{=} \PY{n}{sd\PYZus{}hawkes\PYZus{}model}\PY{o}{.}\PY{n}{SDHawkes}\PY{p}{(}
+    \PY{n}{number\PYZus{}of\PYZus{}event\PYZus{}types}\PY{o}{=}\PY{n}{n\PYZus{}events}\PY{p}{,} \PY{n}{list\PYZus{}of\PYZus{}n\PYZus{}states}\PY{o}{=}\PY{n}{n\PYZus{}states}\PY{p}{,}
+    \PY{n}{number\PYZus{}of\PYZus{}lob\PYZus{}levels}\PY{o}{=}\PY{n}{n\PYZus{}levels}\PY{p}{,} \PY{n}{volume\PYZus{}imbalance\PYZus{}upto\PYZus{}level}\PY{o}{=}\PY{n}{upto\PYZus{}level}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{3}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{d\PYZus{}E}\PY{o}{=}\PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}event\PYZus{}types}
+\PY{n}{d\PYZus{}S}\PY{o}{=}\PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}states}
+\PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{d\PYZus{}E=}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{; d\PYZus{}S=}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{d\PYZus{}E}\PY{p}{,}\PY{n}{d\PYZus{}S}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{3}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+d\_E=4; d\_S=15
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{4}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{model}\PY{o}{.}\PY{n}{volume\PYZus{}enc}\PY{o}{.}\PY{n}{volimb\PYZus{}limits}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{4}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+array([-1. , -0.6, -0.2,  0.2,  0.6,  1. ])
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{5}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{model}\PY{o}{.}\PY{n}{state\PYZus{}enc}\PY{o}{.}\PY{n}{df\PYZus{}state\PYZus{}enc}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{5}{\boxspacing}
+\end{tcolorbox}
+\begin{center}
+\begin{scriptsize}
+{\rowcolors{3}{gray!20!white!50}{gray!10!white!40}
+\begin{tabular}{lrrrr}
+ \\
+ \toprule{} 
+ &  \textbf{st\_1} &  \textbf{st\_2} &  \textbf{one\_dim\_label} & \textbf{multidim\_label} 
+ \\
+ \midrule
+ \textbf{0}  &     0 &     0 &  0 &         (0, 0) 
+ \\
+ \textbf{1}  &     0 &     1 &    1 &     (0, 1)
+ \\
+ \textbf{2}  &     0 &     2 &    2 &         (0, 2) 
+ \\
+ \textbf{3}  &     0 &     3 &    3 &         (0, 3) 
+ \\
+ \textbf{4}  &     0 &     4 &    4 &         (0, 4) 
+ \\
+ \textbf{5}  &     1 &     0 &    5 &         (1, 0)
+ \\
+ \textbf{6}  &     1 &     1 &    6 &         (1, 1) 
+ \\ 
+ \textbf{7}  &     1 &     2 &    7 &         (1, 2) 
+ \\
+ \textbf{8}  &     1 &     3 &    8 &         (1, 3)
+ \\
+ \textbf{9}  &     1 &     4 &    9 &         (1, 4) 
+ \\
+ \textbf{10} &     2 &     0 &   10 &         (2, 0) 
+ \\
+ \textbf{11} &     2 &     1 &   11 &         (2, 1) 
+ \\
+ \textbf{12} &     2 &     2 &   12 &         (2, 2) 
+ \\
+ \textbf{13} &     2 &     3 &   13 &         (2, 3) 
+ \\
+ \textbf{14} &     2 &     4 &   14 &         (2, 4) 
+ \\
+ \bottomrule
+ \end{tabular}
+ }
+ \end{scriptsize}
+ \end{center}
+% 
+% \begin{Verbatim}[commandchars=\\\{\}]
+%     st\_1  st\_2  one\_dim\_label multidim\_label
+% 0      0     0              0         (0, 0)
+% 1      0     1              1         (0, 1)
+% 2      0     2              2         (0, 2)
+% 3      0     3              3         (0, 3)
+% 4      0     4              4         (0, 4)
+% 5      1     0              5         (1, 0)
+% 6      1     1              6         (1, 1)
+% 7      1     2              7         (1, 2)
+% 8      1     3              8         (1, 3)
+% 9      1     4              9         (1, 4)
+% 10     2     0             10         (2, 0)
+% 11     2     1             11         (2, 1)
+% 12     2     2             12         (2, 2)
+% 13     2     3             13         (2, 3)
+% 14     2     4             14         (2, 4)
+% \end{Verbatim}
+% \end{tcolorbox}
+        
+    Assign arbitrary values to the Hawkes parameters \(\nu_{e}\),
+\(\alpha_{e',x',e}\) and \(\beta_{e',x',e}\)
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{6}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{nus} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{p}{[}\PY{l+m+mf}{0.0}\PY{p}{,}\PY{l+m+mf}{0.0}\PY{p}{,}\PY{l+m+mf}{1.0}\PY{p}{,}\PY{l+m+mf}{1.0}\PY{p}{]}\PY{p}{,}\PY{n}{dtype}\PY{o}{=}\PY{n}{np}\PY{o}{.}\PY{n}{float}\PY{p}{)}
+\PY{n}{alphas} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{maximum}\PY{p}{(}
+    \PY{n}{np}\PY{o}{.}\PY{n}{concatenate}\PY{p}{(}
+        \PY{p}{[}\PY{l+m+mf}{0.2}\PY{o}{*}\PY{n}{np}\PY{o}{.}\PY{n}{ones}\PY{p}{(}\PY{p}{(}\PY{n}{d\PYZus{}E}\PY{p}{,}\PY{n}{d\PYZus{}S}\PY{p}{,}\PY{n}{d\PYZus{}E}\PY{o}{/}\PY{o}{/}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,}\PY{n}{dtype}\PY{o}{=}\PY{n}{np}\PY{o}{.}\PY{n}{float}\PY{p}{)}\PY{p}{,}\PY{n}{np}\PY{o}{.}\PY{n}{zeros}\PY{p}{(}\PY{p}{(}\PY{n}{d\PYZus{}E}\PY{p}{,}\PY{n}{d\PYZus{}S}\PY{p}{,}\PY{n}{d\PYZus{}E}\PY{o}{\PYZhy{}}\PY{n}{d\PYZus{}E}\PY{o}{/}\PY{o}{/}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,}\PY{n}{dtype}\PY{o}{=}\PY{n}{np}\PY{o}{.}\PY{n}{float}\PY{p}{)}\PY{p}{]}\PY{p}{,}
+        \PY{n}{axis}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,}
+    \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{uniform}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mf}{0.5}\PY{p}{,}\PY{l+m+mf}{0.5}\PY{p}{,}\PY{n}{size}\PY{o}{=}\PY{p}{(}\PY{n}{d\PYZus{}E}\PY{p}{,} \PY{n}{d\PYZus{}S}\PY{p}{,} \PY{n}{d\PYZus{}E}\PY{p}{)}\PY{p}{)}
+\PY{p}{)}
+\PY{n}{betas} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{exp}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{minimum}\PY{p}{(}\PY{l+m+mf}{2.0}\PY{p}{,}\PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{uniform}\PY{p}{(}\PY{l+m+mf}{0.0001}\PY{p}{,}\PY{l+m+mf}{4.0}\PY{p}{,}\PY{n}{size}\PY{o}{=}\PY{p}{(}\PY{n}{d\PYZus{}E}\PY{p}{,} \PY{n}{d\PYZus{}S}\PY{p}{,} \PY{n}{d\PYZus{}E}\PY{p}{)}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+\PY{n}{model}\PY{o}{.}\PY{n}{set\PYZus{}hawkes\PYZus{}parameters}\PY{p}{(}\PY{n}{nus}\PY{p}{,}\PY{n}{alphas}\PY{p}{,}\PY{n}{betas}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    Assign arbitrary values to the transition matrices \(\phi_{e}\), for
+\(e=0,\dots,d_E -1\)
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{7}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{phis} \PY{o}{=} \PY{n}{model}\PY{o}{.}\PY{n}{state\PYZus{}enc}\PY{o}{.}\PY{n}{generate\PYZus{}random\PYZus{}transition\PYZus{}prob}\PY{p}{(}\PY{n}{n\PYZus{}events}\PY{o}{=}\PY{n}{d\PYZus{}E}\PY{p}{)}
+\PY{n}{model}\PY{o}{.}\PY{n}{set\PYZus{}transition\PYZus{}probabilities}\PY{p}{(}\PY{n}{phis}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    Assign arbitrary values to the Dirichlet parameters \(\gamma_{x}\) for
+\(x = 0,\dots,d_{S}-1\)
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{8}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{gammas} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{uniform}\PY{p}{(}\PY{n}{low}\PY{o}{=}\PY{l+m+mf}{1.5}\PY{p}{,} \PY{n}{high} \PY{o}{=} \PY{l+m+mf}{5.6}\PY{p}{,}\PY{n}{size}\PY{o}{=}\PY{p}{(}\PY{n}{d\PYZus{}S}\PY{p}{,}\PY{l+m+mi}{2}\PY{o}{*}\PY{n}{n\PYZus{}levels}\PY{p}{)}\PY{p}{)}
+\PY{n}{model}\PY{o}{.}\PY{n}{set\PYZus{}dirichlet\PYZus{}parameters}\PY{p}{(}\PY{n}{gammas}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+Launch simulation.
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{9}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{model}\PY{o}{.}\PY{n}{simulate}\PY{p}{(}\PY{n}{time\PYZus{}start}\PY{p}{,} \PY{n}{time\PYZus{}end}\PY{p}{,}
+               \PY{n}{max\PYZus{}number\PYZus{}of\PYZus{}events}\PY{o}{=}\PY{l+m+mi}{10000}\PY{p}{,}
+               \PY{n}{add\PYZus{}initial\PYZus{}cond}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,}
+               \PY{n}{store\PYZus{}results}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,}\PY{n}{report\PYZus{}full\PYZus{}volumes}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{9}{\boxspacing}
+\begin{scriptsize}
+\begin{Verbatim}[commandchars=\\\{\}]
+Simulation is being performed on the following machine:
+posix.uname\_result(sysname='Linux', nodename='claudio-HP-EliteBook-850-G3',
+release='5.3.0-51-generic', version='\#44\textasciitilde{}18.04.2-Ubuntu SMP Thu Apr 23 14:27:18
+UTC 2020', machine='x86\_64')
+SDHawkes.simulate: initial conditions have been acknowledged
+time at start: 0.0
+intensities at start: [ 0.00275302 0.00565692 1.0013807  1.0000223 ]
+intensity\_overall at start: 2.0098129325887664
+SDHawkes.simulate: simulation terminates
+time at end: 60.28442720962448
+number of simulated events: 280
+SDHawkes.simulate: run\_time: 0.1 seconds
+\end{Verbatim}
+\end{scriptsize}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{10}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{model}\PY{o}{.}\PY{n}{store\PYZus{}history\PYZus{}of\PYZus{}intensities}\PY{p}{(}\PY{n}{density\PYZus{}of\PYZus{}eval\PYZus{}points}\PY{o}{=}\PY{l+m+mi}{5000}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{11}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{model}\PY{o}{.}\PY{n}{plot\PYZus{}events\PYZus{}and\PYZus{}states}\PY{p}{(}\PY{n}{t\PYZus{}0}\PY{o}{=}\PY{l+m+mf}{28.5}\PY{p}{,}\PY{n}{t\PYZus{}1}\PY{o}{=}\PY{l+m+mf}{35.0}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{11}{\boxspacing}
+\begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{events_and_states_small.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+\end{tcolorbox}    
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{12}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{model}\PY{o}{.}\PY{n}{plot\PYZus{}events\PYZus{}and\PYZus{}states}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{12}{\boxspacing}
+\begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{events_and_states.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{13}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{model}\PY{o}{.}\PY{n}{plot\PYZus{}intensities}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{13}{\boxspacing}
+\begin{center}
+    \adjustimage{max size={0.7\linewidth}{0.7\paperheight}}{intensities.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+\end{tcolorbox}
 
 \subsection{Rejection sampling}\label{sec.pipest.rejection_sampling}
 Let $n$ denote the number of levels in the limit order book. Let $\dirparam=(\dirparam_{0},\dots,\dirparam_{2n-1})$ be a $2n$-dimensional vector with strictly positive components; it accounts for the Dirichlet parameter of the distribution of the vector $(\nthBestAskVolume[1],\nthBestBidVolume[1],\dots, \nthBestAskVolume[n],\nthBestBidVolume[n])$ of normalised ask/bid volumes on the first $n$ levels. Hence, $\dirparam_{2k}$ refers to the ask volume on the $k+1$-th level, for $k=0,\dots,n-1$, and 
@@ -2158,8 +2388,8 @@ As for summand $III$, we follow a computation similar to $II$. Indeed, we first 
 \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Number of simulated LOB events: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{meas}\PY{o}{.}\PY{n}{model}\PY{o}{.}\PY{n}{simulated\PYZus{}events}\PY{p}{)}\PY{p}{)}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{2}{\boxspacing}\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 PerformanceMeasure is being initialised on
 model.name\_of\_model=test\_model\_2020-04-12\_0738
 posix.uname\_result(sysname='Linux', nodename='claudio-HP-EliteBook-850-G3',
@@ -2171,40 +2401,40 @@ Model's key features:
 d\_E=4; d\_S=15
 Number of simulated LOB events: 19958
     \end{Verbatim}
-
-
-    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{3}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 \PY{c+c1}{\PYZsh{}select component of multivariate Hawkes process e=0,...,d\PYZus{}E\PYZhy{}1}
 \PY{n}{e} \PY{o}{=} \PY{l+m+mi}{0}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{4}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 \PY{o}{\PYZpc{}\PYZpc{}timeit} \PYZhy{}n 5 \PYZhy{}r 3
 \PY{n}{meas}\PY{o}{.}\PY{n}{target\PYZus{}loglikelihood}\PY{p}{(}\PY{n}{e}\PY{p}{,} \PY{n}{use\PYZus{}prange}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{4}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 3.37 s +/- 50.8 ms per loop (mean +/- std. dev. of 3 runs, 5 loops each)
     \end{Verbatim}
-
-    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{5}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 \PY{o}{\PYZpc{}\PYZpc{}timeit} \PYZhy{}n 5 \PYZhy{}r 3
 \PY{n}{meas}\PY{o}{.}\PY{n}{target\PYZus{}loglikelihood}\PY{p}{(}\PY{n}{e}\PY{p}{,} \PY{n}{use\PYZus{}prange}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{5}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 1.26 s +/- 5.1 ms per loop (mean +/- std. dev. of 3 runs, 5 loops each)
     \end{Verbatim}
-
+\end{tcolorbox}
 \subsubsection*{Evaluation of loglikelihood and gradient on a cluster hpc}    
 \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colframe=cellborder]    
 \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
@@ -2239,15 +2469,14 @@ measure_loglikelihood() terminates on 2020-04-12 at 11:53
 
 \subsubsection{Goodness of fit}
 
-    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{5}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}, , fontsize=\small]
 \PY{n}{date\PYZus{}time} \PY{o}{=} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{2020\PYZhy{}04\PYZhy{}12\PYZus{}0738}\PY{l+s+s2}{\PYZdq{}}
 \PY{n}{name\PYZus{}of\PYZus{}test} \PY{o}{=} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{prange\PYZus{}test\PYZus{}model\PYZus{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{+}\PY{n}{date\PYZus{}time}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{6}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 \PY{k}{with} \PY{n+nb}{open}\PY{p}{(}\PY{n}{path\PYZus{}tests}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{/saved\PYZus{}tests/perf\PYZhy{}test\PYZus{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{+}\PY{n}{date\PYZus{}time}\PY{o}{+}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{/}\PY{l+s+s1}{\PYZsq{}}\PY{o}{+}\PY{n}{name\PYZus{}of\PYZus{}test}\PY{p}{,}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rb}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)} \PY{k}{as} \PY{n}{source}\PY{p}{:}
@@ -2258,14 +2487,16 @@ measure_loglikelihood() terminates on 2020-04-12 at 11:53
     \PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}event\PYZus{}types}\PY{p}{,} \PY{n}{model}\PY{o}{.}\PY{n}{number\PYZus{}of\PYZus{}states}\PY{p}{)}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{6}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 prange\_test\_model\_2020-04-12\_0738
 Date and time of initilisation: 2020-04-12 07:38:26.601783
 number\_of\_event\_types: 4; number\_of\_states: 15
     \end{Verbatim}
+\end{tcolorbox}
 
-    The following three figures will show QQ plots that assess goodness of
+The following three figures will show QQ plots that assess goodness of
 fit. The first figure refers to the coefficients inserted by the user;
 it asseses the reliability of the simulation and it is expected to show
 good results. The second picture refers to the coefficients obtained via
@@ -2278,15 +2509,16 @@ one hand the mle estimation does not assume stationarity, and on the
 other hand the results of the non-parametric estimations are used as one
 of the initilisations for the gradient descent of the mle estimation.
 
-    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{7}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 \PY{n}{model}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
 \PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{center}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{7}{\boxspacing}
+\begin{center}
     \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738.png}
     \end{center}
     { \hspace*{\fill} \\}
@@ -2301,16 +2533,17 @@ event type=1, ad\_stat: 0.49801130759806256
 event type=2, ad\_stat: 0.45093652879040746
 event type=3, ad\_stat: 0.8266097663436085
     \end{Verbatim}
-
-    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{8}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 \PY{n}{model}\PY{o}{.}\PY{n}{nonparam\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
 \PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{nonparam\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{center}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{8}{\boxspacing}
+\begin{center}
     \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738_nonparam.png}
     \end{center}
     { \hspace*{\fill} \\}
@@ -2325,16 +2558,17 @@ event type=1, ad\_stat: 54.94009196285606
 event type=2, ad\_stat: 0.8662745583551441
 event type=3, ad\_stat: 222.09860859998298
     \end{Verbatim}
-
-    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\end{tcolorbox}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
 \prompt{In}{incolor}{9}{\boxspacing}
 \begin{Verbatim}[commandchars=\\\{\}, fontsize=\small]
 \PY{n}{model}\PY{o}{.}\PY{n}{mle\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{qq\PYZus{}plot\PYZus{}residuals}\PY{p}{(}\PY{n}{index\PYZus{}of\PYZus{}first\PYZus{}event\PYZus{}type}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}
 \PY{n+nb}{print}\PY{p}{(}\PY{n}{model}\PY{o}{.}\PY{n}{mle\PYZus{}estim}\PY{o}{.}\PY{n}{goodness\PYZus{}of\PYZus{}fit}\PY{o}{.}\PY{n}{ad\PYZus{}test\PYZus{}on\PYZus{}residuals}\PY{p}{(}\PY{p}{)}\PY{p}{)}
 \end{Verbatim}
 \end{tcolorbox}
-
-    \begin{center}
+\begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{9}{\boxspacing}
+\begin{center}
     \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{gfit_2020-04-12_0738_mle.png}
     \end{center}
     { \hspace*{\fill} \\}
@@ -2349,7 +2583,7 @@ event type=1, ad\_stat: 0.8740122294875619
 event type=2, ad\_stat: 1.5654262188509165
 event type=3, ad\_stat: 1.3660949155273556
     \end{Verbatim}
-
+\end{tcolorbox}
 
 \section{Empirical analysis of LOBSTER data}
 Describe how the lobster dataset is filtered. Report results of calibrationand key findings. 

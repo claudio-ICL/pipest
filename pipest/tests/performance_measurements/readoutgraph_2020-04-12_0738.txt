@@ -1,0 +1,24 @@
+I am executing test_perf.py --loglikelihood
+Date of run: 2020-05-19 at 19:26
+PerformanceMeasure is being initialised on model.name_of_model=test_model_2020-04-12_0738
+posix.uname_result(sysname='Linux', nodename='claudio-HP-EliteBook-850-G3', release='5.3.0-51-generic', version='#44~18.04.2-Ubuntu SMP Thu Apr 23 14:27:18 UTC 2020', machine='x86_64')
+Number of cpus: 4
+
+Model's key features:
+d_E=4; d_S=15
+Number of simulated LOB events: 19958
+
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'plain' for-loops (no prange):
+[3.389912708999873, 4.498698016999697, 4.1662085519992615, 4.032883607000258]
+Execution times for the function 'computation.compute_event_loglikelihood_partial_and_gradient_partial' with 'prange' in outermost for-loop:
+[1.2625140629997986, 1.685979271999713, 1.5291612060000261, 1.5022823760000392]
+
+Summary of measurements:
+{'e=1': {'plain': 3.389912708999873, 'prange': 1.2625140629997986}, 'e=2': {'plain': 4.498698016999697, 'prange': 1.685979271999713}, 'e=3': {'plain': 4.1662085519992615, 'prange': 1.5291612060000261}, 'e=4': {'plain': 4.032883607000258, 'prange': 1.5022823760000392}}
+
+ I am drawing a graph using pycallgraph
+grouped: False
+e: 0
+
+measure_loglikelihood() terminates on 2020-05-19 at 19:27
+

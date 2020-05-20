@@ -1,0 +1,23 @@
+openmp.omp_get_max_threads(): 32
+openmp.omp_get_max_threads(): 32
+main.py INTC 2019-01-31 43200.0 46800.0 -c
+Initialising an instance of SDHawkes
+
+date of run: 2020-04-19 at 16:05
+I am calibrating on lobster
+symbol=INTC, date=2019-01-31, time_window=43200-46800
+event type: 2
+stdout is being redirected to /rds/general/user/cb115/home/pipest/models/INTC/INTC_2019-01-31_43200-46800_partial2_readout.txt
+
+Calibration of event_type 2 terminates on 2020-04-19 at 19:52
+
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :         8            32
+ Used       :         0 (peak)  31.98 (ave)
+
+============================================

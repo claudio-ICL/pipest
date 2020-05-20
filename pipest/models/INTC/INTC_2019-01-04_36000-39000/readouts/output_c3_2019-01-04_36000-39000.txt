@@ -1,0 +1,22 @@
+openmp.omp_get_max_threads(): 24
+openmp.omp_get_max_threads(): 24
+main.py INTC 2019-01-04 36000.0 39000.0 -c
+
+date of run: 2020-04-17 at 18:27
+I am calibrating on lobster
+symbol=INTC, date=2019-01-04, time_window=36000-39000
+event type: 3
+stdout is being redirected to /rds/general/user/cb115/home/pipest/models/INTC/INTC_2019-01-04_36000-39000_partial3_readout.txt
+
+Calibration of event_type 3 terminates on 2020-04-18 at 4:09
+
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :        16            24
+ Used       :         3 (peak)  24.00 (ave)
+
+============================================

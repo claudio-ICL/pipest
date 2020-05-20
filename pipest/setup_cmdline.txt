@@ -1,0 +1,477 @@
+The following commands were performed on 2020-04-21 at approx 15:35
+
+-bash-4.2$ pwd
+/rds/general/user/cb115/home/pipest
+-bash-4.2$ rm sdhawkes_powerlaw/modelling/*.[c,so]
+-bash-4.2$ rm sdhawkes_powerlaw/resources/*.[c,so]
+-bash-4.2$ cat wrapper_submission_setup 
+
+#PBS -l walltime=00:50:00
+#PBS -l select=1:ncpus=1:mem=2gb
+#PBS -N cython_setup
+
+
+module load anaconda3/personal
+source activate h_impact_env
+
+cd $PBS_O_WORKDIR
+python setup.py build_ext --inplace
+
+conda deactivate
+
+-bash-4.2$ module load anaconda3/personal
+-bash-4.2$ source activate h_impact_env
+(h_impact_env) -bash-4.2$ python setup.py build_ext --inplace
+
+
+I am performing setup of resources.
+Current working directory is /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources
+
+running build_ext
+cythoning computation.pyx to computation.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/computation.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'computation' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c computation.c -o build/temp.linux-x86_64-3.8/computation.o -O3 -ffast-math -fopenmp
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from computation.c:599:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+computation.c: In function ‘__pyx_pf_11computation_50prange_compute_sum_of_S3._omp_fn.0’:
+computation.c:23338:29: warning: ‘__pyx_v_x’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:23161:7: note: ‘__pyx_v_x’ was declared here
+   int __pyx_v_x;
+       ^
+computation.c:23338:29: warning: ‘__pyx_v_power_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:23164:10: note: ‘__pyx_v_power_comp’ was declared here
+   double __pyx_v_power_comp;
+          ^
+computation.c:23338:29: warning: ‘__pyx_v_i’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:23162:7: note: ‘__pyx_v_i’ was declared here
+   int __pyx_v_i;
+       ^
+computation.c:23338:29: warning: ‘__pyx_v_eval_time’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:23163:10: note: ‘__pyx_v_eval_time’ was declared here
+   double __pyx_v_eval_time;
+          ^
+computation.c: In function ‘__pyx_pf_11computation_46prange_compute_sum_of_S2._omp_fn.1’:
+computation.c:22233:29: warning: ‘__pyx_v_x’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:22056:7: note: ‘__pyx_v_x’ was declared here
+   int __pyx_v_x;
+       ^
+computation.c:22233:29: warning: ‘__pyx_v_power_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:22059:10: note: ‘__pyx_v_power_comp’ was declared here
+   double __pyx_v_power_comp;
+          ^
+computation.c:22233:29: warning: ‘__pyx_v_log_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:22060:10: note: ‘__pyx_v_log_comp’ was declared here
+   double __pyx_v_log_comp;
+          ^
+computation.c:22233:29: warning: ‘__pyx_v_i’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:22057:7: note: ‘__pyx_v_i’ was declared here
+   int __pyx_v_i;
+       ^
+computation.c:22233:29: warning: ‘__pyx_v_eval_time’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:22058:10: note: ‘__pyx_v_eval_time’ was declared here
+   double __pyx_v_eval_time;
+          ^
+computation.c: In function ‘__pyx_pf_11computation_34prange_compute_ESSE_three_partial._omp_fn.3’:
+computation.c:17455:29: warning: ‘__pyx_v_x’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:17295:7: note: ‘__pyx_v_x’ was declared here
+   int __pyx_v_x;
+       ^
+computation.c:17455:29: warning: ‘__pyx_v_power_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:17298:10: note: ‘__pyx_v_power_comp’ was declared here
+   double __pyx_v_power_comp;
+          ^
+computation.c:17455:29: warning: ‘__pyx_v_i’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:17296:7: note: ‘__pyx_v_i’ was declared here
+   int __pyx_v_i;
+       ^
+computation.c:17455:29: warning: ‘__pyx_v_eval_time’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:17297:10: note: ‘__pyx_v_eval_time’ was declared here
+   double __pyx_v_eval_time;
+          ^
+computation.c: In function ‘__pyx_pf_11computation_30prange_compute_ESSE_two_partial._omp_fn.4’:
+computation.c:16524:29: warning: ‘__pyx_v_x’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:16354:7: note: ‘__pyx_v_x’ was declared here
+   int __pyx_v_x;
+       ^
+computation.c:16524:29: warning: ‘__pyx_v_power_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:16357:10: note: ‘__pyx_v_power_comp’ was declared here
+   double __pyx_v_power_comp;
+          ^
+computation.c:16524:29: warning: ‘__pyx_v_log_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:16358:10: note: ‘__pyx_v_log_comp’ was declared here
+   double __pyx_v_log_comp;
+          ^
+computation.c:16524:29: warning: ‘__pyx_v_i’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:16355:7: note: ‘__pyx_v_i’ was declared here
+   int __pyx_v_i;
+       ^
+computation.c:16524:29: warning: ‘__pyx_v_eval_time’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:16356:10: note: ‘__pyx_v_eval_time’ was declared here
+   double __pyx_v_eval_time;
+          ^
+computation.c: In function ‘__pyx_pf_11computation_12fast_compute_intensities_given_lt._omp_fn.5’:
+computation.c:7574:29: warning: ‘__pyx_v_x’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e) lastprivate(__pyx_v_e) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:7221:7: note: ‘__pyx_v_x’ was declared here
+   int __pyx_v_x;
+       ^
+computation.c:7574:29: warning: ‘__pyx_v_power_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e) lastprivate(__pyx_v_e) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:7224:10: note: ‘__pyx_v_power_comp’ was declared here
+   double __pyx_v_power_comp;
+          ^
+computation.c:7574:29: warning: ‘__pyx_v_i’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e) lastprivate(__pyx_v_e) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:7222:7: note: ‘__pyx_v_i’ was declared here
+   int __pyx_v_i;
+       ^
+computation.c:7574:29: warning: ‘__pyx_v_eval_time’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e) lastprivate(__pyx_v_e) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:7223:10: note: ‘__pyx_v_eval_time’ was declared here
+   double __pyx_v_eval_time;
+          ^
+computation.c:7574:29: warning: ‘__pyx_v_e1’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e) lastprivate(__pyx_v_e) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:7220:7: note: ‘__pyx_v_e1’ was declared here
+   int __pyx_v_e1;
+       ^
+computation.c: In function ‘__pyx_pf_11computation_6compute_ESSE_partial._omp_fn.6’:
+computation.c:5147:29: warning: ‘__pyx_v_x’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:5005:7: note: ‘__pyx_v_x’ was declared here
+   int __pyx_v_x;
+       ^
+computation.c:5147:29: warning: ‘__pyx_v_power_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:5008:10: note: ‘__pyx_v_power_comp’ was declared here
+   double __pyx_v_power_comp;
+          ^
+computation.c:5147:29: warning: ‘__pyx_v_i’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:5006:7: note: ‘__pyx_v_i’ was declared here
+   int __pyx_v_i;
+       ^
+computation.c:5147:29: warning: ‘__pyx_v_eval_time’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e1) lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_power_comp) lastprivate(__pyx_v_x)
+                             ^
+computation.c:5007:10: note: ‘__pyx_v_eval_time’ was declared here
+   double __pyx_v_eval_time;
+          ^
+computation.c: In function ‘__pyx_pf_11computation_38prange_compute_partial_at_arrival_times._omp_fn.2’:
+computation.c:18684:29: warning: ‘__pyx_v_x’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) firstprivate(__pyx_v_t) lastprivate(__pyx_v_t) lastprivate(__pyx_v_x) schedule(guided)
+                             ^
+computation.c:18521:14: note: ‘__pyx_v_x’ was declared here
+   Py_ssize_t __pyx_v_x;
+              ^
+computation.c:18684:29: warning: ‘__pyx_v_power_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) firstprivate(__pyx_v_t) lastprivate(__pyx_v_t) lastprivate(__pyx_v_x) schedule(guided)
+                             ^
+computation.c:18525:10: note: ‘__pyx_v_power_comp’ was declared here
+   double __pyx_v_power_comp;
+          ^
+computation.c:18684:29: warning: ‘__pyx_v_log_comp’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) firstprivate(__pyx_v_t) lastprivate(__pyx_v_t) lastprivate(__pyx_v_x) schedule(guided)
+                             ^
+computation.c:18526:10: note: ‘__pyx_v_log_comp’ was declared here
+   double __pyx_v_log_comp;
+          ^
+computation.c:18684:29: warning: ‘__pyx_v_i’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) firstprivate(__pyx_v_t) lastprivate(__pyx_v_t) lastprivate(__pyx_v_x) schedule(guided)
+                             ^
+computation.c:18522:14: note: ‘__pyx_v_i’ was declared here
+   Py_ssize_t __pyx_v_i;
+              ^
+computation.c:18684:29: warning: ‘__pyx_v_eval_time’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) firstprivate(__pyx_v_t) lastprivate(__pyx_v_t) lastprivate(__pyx_v_x) schedule(guided)
+                             ^
+computation.c:18524:10: note: ‘__pyx_v_eval_time’ was declared here
+   double __pyx_v_eval_time;
+          ^
+computation.c:18684:29: warning: ‘__pyx_v_e1’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for lastprivate(__pyx_v_e1) lastprivate(__pyx_v_eval_time) lastprivate(__pyx_v_i) lastprivate(__pyx_v_log_comp) lastprivate(__pyx_v_power_comp) firstprivate(__pyx_v_t) lastprivate(__pyx_v_t) lastprivate(__pyx_v_x) schedule(guided)
+                             ^
+computation.c:18520:14: note: ‘__pyx_v_e1’ was declared here
+   Py_ssize_t __pyx_v_e1;
+              ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/computation.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/computation.cpython-38-x86_64-linux-gnu.so -fopenmp
+running build_ext
+cythoning simulation.pyx to simulation.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/simulation.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'simulation' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c simulation.c -o build/temp.linux-x86_64-3.8/simulation.o -O3 -ffast-math -fopenmp
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from simulation.c:598:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+simulation.c:20249:15: warning: ‘__pyx_f_10simulation_compute_volume_imbalance_scalar’ defined but not used [-Wunused-function]
+ static double __pyx_f_10simulation_compute_volume_imbalance_scalar(__Pyx_memviewslice __pyx_v_volumes, struct __pyx_opt_args_10simulation_compute_volume_imbalance_scalar *__pyx_optional_args) {
+               ^
+simulation.c:20381:12: warning: ‘__pyx_f_10simulation_classify_vol_imb_scalar’ defined but not used [-Wunused-function]
+ static int __pyx_f_10simulation_classify_vol_imb_scalar(__pyx_t_10simulation_DTYPEf_t __pyx_v_vol_imb, __Pyx_memviewslice __pyx_v_volimb_limits) {
+            ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/simulation.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/simulation.cpython-38-x86_64-linux-gnu.so -fopenmp
+running build_ext
+cythoning mle_estimation.pyx to mle_estimation.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/mle_estimation.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'mle_estimation' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c mle_estimation.c -o build/temp.linux-x86_64-3.8/mle_estimation.o -O3 -ffast-math -fopenmp
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from mle_estimation.c:598:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+mle_estimation.c:13096:42: warning: ‘__pyx_f_14mle_estimation_count_events_of_type’ defined but not used [-Wunused-function]
+ static __pyx_t_14mle_estimation_DTYPEi_t __pyx_f_14mle_estimation_count_events_of_type(__pyx_t_14mle_estimation_DTYPEi_t __pyx_v_event_type, __Pyx_memviewslice __pyx_v_events) {
+                                          ^
+mle_estimation.c: In function ‘__pyx_pf_14mle_estimation_2estimate_liquidator_transition_prob._omp_fn.0’:
+mle_estimation.c:10333:29: warning: ‘__pyx_v_state_before’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_n) lastprivate(__pyx_v_n) lastprivate(__pyx_v_state_after) lastprivate(__pyx_v_state_before)
+                             ^
+mle_estimation.c:10094:7: note: ‘__pyx_v_state_before’ was declared here
+   int __pyx_v_state_before;
+       ^
+mle_estimation.c:10333:29: warning: ‘__pyx_v_state_after’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_n) lastprivate(__pyx_v_n) lastprivate(__pyx_v_state_after) lastprivate(__pyx_v_state_before)
+                             ^
+mle_estimation.c:10095:7: note: ‘__pyx_v_state_after’ was declared here
+   int __pyx_v_state_after;
+       ^
+mle_estimation.c: In function ‘__pyx_pf_14mle_estimation_estimate_transition_probabilities._omp_fn.1’:
+mle_estimation.c:9295:7: warning: ‘__pyx_v_state_before’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_state_before;
+       ^
+mle_estimation.c:9296:7: warning: ‘__pyx_v_state_after’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_state_after;
+       ^
+mle_estimation.c:9294:7: warning: ‘__pyx_v_event’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_event;
+       ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/mle_estimation.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/mle_estimation.cpython-38-x86_64-linux-gnu.so -fopenmp
+running build_ext
+cythoning nonparam_estimation.pyx to nonparam_estimation.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/nonparam_estimation.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'nonparam_estimation' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c nonparam_estimation.c -o build/temp.linux-x86_64-3.8/nonparam_estimation.o -O3 -ffast-math -fopenmp
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from nonparam_estimation.c:598:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+nonparam_estimation.c:19102:47: warning: ‘__pyx_f_19nonparam_estimation_evaluate_g_hat_from_grid’ defined but not used [-Wunused-function]
+ static __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_f_19nonparam_estimation_evaluate_g_hat_from_grid(int __pyx_v_e1, int __pyx_v_x1, int __pyx_v_e, int __pyx_v_num_gridpnts, __Pyx_memviewslice __pyx_v_g_hat_at_gridpnts, __Pyx_memviewslice __pyx_v_gridpnts, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_t) {
+                                               ^
+nonparam_estimation.c:19307:47: warning: ‘__pyx_f_19nonparam_estimation_integrate_g_hat_at_gridpnts’ defined but not used [-Wunused-function]
+ static __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_f_19nonparam_estimation_integrate_g_hat_at_gridpnts(int __pyx_v_e1, int __pyx_v_x1, int __pyx_v_e, int __pyx_v_num_gridpnts, __Pyx_memviewslice __pyx_v_g_hat_at_gridpnts, __Pyx_memviewslice __pyx_v_gridpnts, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_t_0, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_t_1) {
+                                               ^
+nonparam_estimation.c:19658:47: warning: ‘__pyx_f_19nonparam_estimation_integrate_g_hat_at_gridpnts_one’ defined but not used [-Wunused-function]
+ static __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_f_19nonparam_estimation_integrate_g_hat_at_gridpnts_one(int __pyx_v_e1, int __pyx_v_x1, int __pyx_v_e, int __pyx_v_num_gridpnts, __Pyx_memviewslice __pyx_v_g_hat_at_gridpnts, __Pyx_memviewslice __pyx_v_gridpnts, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_t_0, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_t_1, __pyx_t_19nonparam_estimation_DTYPEf_t __pyx_v_k) {
+                                               ^
+nonparam_estimation.c: In function ‘__pyx_pf_19nonparam_estimation_14EstimProcedure_34set_vector_b_e._omp_fn.2’:
+nonparam_estimation.c:13119:29: warning: ‘__pyx_v_e1’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for lastprivate(__pyx_v_e1) firstprivate(__pyx_v_x1) lastprivate(__pyx_v_x1)
+                             ^
+nonparam_estimation.c:12860:7: note: ‘__pyx_v_e1’ was declared here
+   int __pyx_v_e1;
+       ^
+nonparam_estimation.c: In function ‘__pyx_pf_19nonparam_estimation_14EstimProcedure_32set_matrix_A._omp_fn.3’:
+nonparam_estimation.c:12515:7: warning: ‘__pyx_v_y’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_y;
+       ^
+nonparam_estimation.c:12513:7: warning: ‘__pyx_v_eps’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_eps;
+       ^
+nonparam_estimation.c:12512:7: warning: ‘__pyx_v_e1’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_e1;
+       ^
+nonparam_estimation.c: In function ‘__pyx_pf_19nonparam_estimation_14EstimProcedure_30set_convolution_kernels._omp_fn.4’:
+nonparam_estimation.c:12077:7: warning: ‘__pyx_v_y’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_y;
+       ^
+nonparam_estimation.c:12075:7: warning: ‘__pyx_v_eps’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_eps;
+       ^
+nonparam_estimation.c:12074:7: warning: ‘__pyx_v_e1’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_e1;
+       ^
+nonparam_estimation.c: In function ‘__pyx_pf_19nonparam_estimation_2store_distribution_of_marks._omp_fn.0’:
+nonparam_estimation.c:21336:29: warning: ‘__pyx_v_y’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for firstprivate(__pyx_v_e) lastprivate(__pyx_v_e) lastprivate(__pyx_v_y)
+                             ^
+nonparam_estimation.c:21202:7: note: ‘__pyx_v_y’ was declared here
+   int __pyx_v_y;
+       ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/nonparam_estimation.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/nonparam_estimation.cpython-38-x86_64-linux-gnu.so -fopenmp
+running build_ext
+cythoning goodness_of_fit.pyx to goodness_of_fit.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/goodness_of_fit.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'goodness_of_fit' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c goodness_of_fit.c -o build/temp.linux-x86_64-3.8/goodness_of_fit.o -O3 -ffast-math -fopenmp
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from goodness_of_fit.c:598:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/goodness_of_fit.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/goodness_of_fit.cpython-38-x86_64-linux-gnu.so -fopenmp
+running build_ext
+cythoning impact_profile.pyx to impact_profile.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/impact_profile.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'impact_profile' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c impact_profile.c -o build/temp.linux-x86_64-3.8/impact_profile.o -O3 -ffast-math -fopenmp
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from impact_profile.c:599:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+impact_profile.c: In function ‘__pyx_f_14impact_profile_compute_second_summand_of_numerator._omp_fn.0’:
+impact_profile.c:10913:7: warning: ‘__pyx_v_x1’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_x1;
+       ^
+impact_profile.c:11227:29: warning: ‘__pyx_v_x’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+                     #pragma omp for lastprivate(__pyx_v_e) firstprivate(__pyx_v_idx_weakly_defl_state) lastprivate(__pyx_v_idx_weakly_defl_state) lastprivate(__pyx_v_n) lastprivate(__pyx_v_x) lastprivate(__pyx_v_x1)
+                             ^
+impact_profile.c:10911:37: note: ‘__pyx_v_x’ was declared here
+   __pyx_t_14impact_profile_DTYPEi_t __pyx_v_x;
+                                     ^
+impact_profile.c:10915:7: warning: ‘__pyx_v_n’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_n;
+       ^
+impact_profile.c:10912:7: warning: ‘__pyx_v_e’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   int __pyx_v_e;
+       ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/impact_profile.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/impact_profile.cpython-38-x86_64-linux-gnu.so -fopenmp
+running build_ext
+cythoning minimisation_algo.pyx to minimisation_algo.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/minimisation_algo.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'minimisation_algo' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c minimisation_algo.c -o build/temp.linux-x86_64-3.8/minimisation_algo.o -O3 -ffast-math -fopenmp
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from minimisation_algo.c:598:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+minimisation_algo.c: In function ‘__pyx_pf_17minimisation_algo_2grad_descent_partial.isra.39’:
+minimisation_algo.c:8281:13: warning: ‘__pyx_v_f’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   __pyx_t_5 = PyFloat_FromDouble(__pyx_v_f_min); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 284, __pyx_L1_error)
+             ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/minimisation_algo.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/resources/minimisation_algo.cpython-38-x86_64-linux-gnu.so -fopenmp
+
+
+I am performing setup of modelling.
+Current working directory is /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/modelling
+
+running build_ext
+cythoning model.pyx to model.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/modelling/model.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'model' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c model.c -o build/temp.linux-x86_64-3.8/model.o -O3 -ffast-math
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from model.c:598:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/model.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/modelling/model.cpython-38-x86_64-linux-gnu.so
+running build_ext
+cythoning lob_model.pyx to lob_model.c
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/modelling/lob_model.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+building 'lob_model' extension
+gcc -pthread -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include -I/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/include/python3.8 -c lob_model.c -o build/temp.linux-x86_64-3.8/lob_model.o -O3 -ffast-math
+In file included from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarraytypes.h:1832:0,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from lob_model.c:598:
+/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib/python3.8/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it with " \
+  ^
+gcc -pthread -shared -B /rds/general/user/cb115/home/anaconda3/envs/h_impact_env/compiler_compat -L/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,-rpath=/rds/general/user/cb115/home/anaconda3/envs/h_impact_env/lib -Wl,--no-as-needed -Wl,--sysroot=/ build/temp.linux-x86_64-3.8/lob_model.o -lm -o /rdsgpfs/general/user/cb115/home/pipest/sdhawkes_powerlaw/modelling/lob_model.cpython-38-x86_64-linux-gnu.so
+
+
+I am performing setup of lobster.
+Current working directory is /rdsgpfs/general/user/cb115/home/pipest/lobster_for_sdhawkes/py_scripts
+
+running build_ext
+skipping 'prepare_from_lobster.c' Cython extension (up-to-date)
+
+
+I am performing setup of performance_measurements.
+Current working directory is /rdsgpfs/general/user/cb115/home/pipest/tests/performance_measurements
+
+running build_ext
+skipping 'measure_exectime.c' Cython extension (up-to-date)
+(h_impact_env) -bash-4.2$ conda deactivate
+-bash-4.2$ 
+

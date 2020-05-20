@@ -1,0 +1,27 @@
+
+date of run: 2020-04-18 at 13:52
+I am calibrating on lobster
+symbol=INTC, date=2019-01-07, time_window=39600-43200
+event type: 1
+Calibration is being performed on the following machine:
+ posix.uname_result(sysname='Linux', nodename='cx3-3-29.cx3.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+Partial calibration for event_type=1
+mle_estimation.EstimProcedure is being initialised
+EstimProcedure has been successfully initialised
+I am setting the estimation of hawkes parameters, with time_start=0.055856999999377877, time_end=3599.807130317.
+The boundaries of arrival times are 0.055856999999377877-3599.807130317
+I am estimating hawkes parameters for the component e=1
+MinimisationProcedure is being initialised: event_type=1, learning_rate=0.0001, maxiter=40
+MinimisationProcedure.list_of_batches ready
+mle_estimation.estimate_hawkes_param_partial: event_type 1: MinimisationProcedure has been initialised
+I am launching minimisation. Number of initial guesses=9, use_prange=True, parallel=False
+I am performing gradient descent serially
+MinimisationProcedure: minimisation finished
+estimate_hawkes_power_partial, event_type=1, run_time = 2144.3072164058685
+mle_estimation.EstimProcedure.estimate_hawkes_param_partial. Estimation terminates for event_type 1
+
+I am dumping the model with name "INTC_2019-01-07_39600-43200_partial1" in the directory: /rds/general/user/cb115/home/pipest/models/INTC/ 
+
+
+Calibration of event_type 1 terminates on 2020-04-18 at 14:29
+

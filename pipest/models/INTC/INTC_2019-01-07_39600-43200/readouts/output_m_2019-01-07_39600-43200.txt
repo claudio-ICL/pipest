@@ -1,0 +1,20 @@
+openmp.omp_get_max_threads(): 4
+openmp.omp_get_max_threads(): 4
+main.py INTC 2019-01-07 39600.0 43200.0 -m
+
+date of run: 2020-04-19 at 11:03
+I am merging from partial models
+symbol=INTC, date=2019-01-07, time_window=39600-43200
+stdout is being redirected to /rds/general/user/cb115/home/pipest/models/INTC/INTC_2019-01-07_39600-43200_merge_readout.txt
+
+Merging has been completed  on 2020-04-19 at 11:18
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :        64             4
+ Used       :        55 (peak)   1.83 (ave)
+
+============================================

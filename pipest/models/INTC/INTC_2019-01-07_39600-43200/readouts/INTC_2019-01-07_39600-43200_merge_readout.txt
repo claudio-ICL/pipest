@@ -1,0 +1,47 @@
+
+date of run: 2020-04-19 at 11:03
+I am merging from partial models
+symbol=INTC, date=2019-01-07, time_window=39600-43200
+Initialising an instance of SDHawkes
+I am reading from model number 0, referring to event_type=0
+model name is: INTC_2019-01-07_39600-43200_partial0
+len(mle_estim.results_of_estimation) = 1
+I am reading from model number 1, referring to event_type=1
+model name is: INTC_2019-01-07_39600-43200_partial1
+len(mle_estim.results_of_estimation) = 1
+I am reading from model number 2, referring to event_type=2
+model name is: INTC_2019-01-07_39600-43200_partial2
+len(mle_estim.results_of_estimation) = 1
+I am reading from model number 3, referring to event_type=3
+model name is: INTC_2019-01-07_39600-43200_partial3
+len(mle_estim.results_of_estimation) = 1
+4 mle results have been loaded
+mle_estimation.EstimProcedure is being initialised
+I am storing dirichlet parameters
+Dirichlet parameters have been estimated and store. run_time=0.2003026008605957
+I am storing transition probabilities
+Transition probabilities have been estimated and store. run_time=0.0071523189544677734
+EstimProcedure has been successfully initialised
+I am computing residuals in parallel. num_process: 4
+goodness_of_fit.compute_residuals. component_e: 0; process_id: pid38127
+goodness_of_fit.compute_residuals. component_e: 2; process_id: pid38129
+goodness_of_fit.compute_residuals. component_e: 1; process_id: pid38128
+goodness_of_fit.compute_residuals. component_e: 3; process_id: pid38130
+Computation of residuals terminates. run_time=425.50144052505493
+Hawkes parameters have been set
+SDHawkes: asymmetry in transition_probabilities = 1738.9366545685082
+Transition probabilities have been set
+Dirichlet parameters have been set
+I am computing residuals in parallel. num_process: 4
+goodness_of_fit.compute_residuals. component_e: 1; process_id: pid38207
+goodness_of_fit.compute_residuals. component_e: 2; process_id: pid38208
+goodness_of_fit.compute_residuals. component_e: 0; process_id: pid38206
+goodness_of_fit.compute_residuals. component_e: 3; process_id: pid38209
+Computation of residuals terminates. run_time=427.5050644874573
+Calibration is being performed on the following machine:
+ posix.uname_result(sysname='Linux', nodename='cx3-1-28.cx3.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+
+I am dumping the model with name "INTC_sdhawkes_2019-01-07_39600-43200" in the directory: /rds/general/user/cb115/home/pipest/models/INTC/ 
+
+
+Merging has been completed  on 2020-04-19 at 11:18

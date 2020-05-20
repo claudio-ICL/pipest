@@ -1,0 +1,19 @@
+openmp.omp_get_max_threads(): 1
+openmp.omp_get_max_threads(): 1
+main.py INTC 2019-01-07 39600.0 43200.0 -r
+
+date of run: 2020-04-18 at 12:21
+I am reading from lobster
+symbol=INTC, date=2019-01-07, time_window=39600-43200
+stdout is being redirected to /rdsgpfs/general/user/cb115/home/pipest/lobster_for_sdhawkes/data/INTC/INTC_2019-01-07_39600-43200_readout.txt
+Data is being stored in /rdsgpfs/general/user/cb115/home/pipest/lobster_for_sdhawkes/data/INTC/INTC_2019-01-07_39600-43200
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :         4             1
+ Used       :         0 (peak)   0.32 (ave)
+
+============================================

@@ -1,0 +1,118 @@
+
+date of run: 2020-04-19 at 16:03
+I am reading from lobster
+symbol=INTC, date=2019-01-31, time_window=43200-46800
+Given shape of orderbook: 1021687x40
+I am dropping column 6 of messagefile. Please disregard any Warning about this column
+given shape of messagefile: 1021687x6
+read_from_LOBSTER: time window:
+  initial_time=34200.007032624
+  final_time=57599.991693465
+I am adding 'level' to messagefile
+declare_level: check = True
+
+DATA CLEANING
+
+Initial length of the message file: 140525
+ManipulateMessageFile.aggregate_time_stamp: contraction. only_4_events=False
+  From 15644 lines with same time stamp, same event type and same direction, -->  to 7062 lines: 8582 lines contracted
+  Initial length=140525, contracted length=131943
+  Number of remaining events with same time stamp=1062
+I am dropping events with non-unique time stamp and event type=3, while keeping the_last of the events in every batch
+Numbers of events dropped: 26
+I am dropping events with non-unique time stamp and event type=5, while keeping the_last of the events in every batch
+Numbers of events dropped: 74
+Total number of events dropped: 100
+prepare_from_lobster.separate_41_events: number of occurrencies = 46 
+   After separation, the average time step is 0.3569568197793575, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_34_events: number of occurrencies = 66 
+   After separation, the average time step is 0.3569568197793575, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_43_events: number of occurrencies = 2 
+   After separation, the average time step is 0.35695137462918164, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_directions: number of occurrencies = 170 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+ManipulateMessageFile.aggregate_time_stamp: contraction. only_4_events=False
+  From 724 lines with same time stamp, same event type and same direction, -->  to 121 lines: 603 lines contracted
+  Initial length=131843, contracted length=131240
+  Number of remaining events with same time stamp=12
+I am dropping events with non-unique time stamp and event type=3, while keeping the_last of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=5, while keeping the_last of the events in every batch
+Numbers of events dropped: 0
+Total number of events dropped: 0
+prepare_from_lobster.separate_41_events: number of occurrencies = 0 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_34_events: number of occurrencies = 2 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_43_events: number of occurrencies = 0 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_directions: number of occurrencies = 2 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.equiparate_events_with_same_time_stamp:
+  event_left=4, event_right=5, occurrencies=1
+prepare_from_lobster.drop_events_with_same_time_stamp:
+  event_left=4, event_right=5, occurrencies=0
+ManipulateMessageFile.aggregate_time_stamp: contraction. only_4_events=False
+  From 8 lines with same time stamp, same event type and same direction, -->  to 1 lines: 7 lines contracted
+  Initial length=131240, contracted length=131233
+  Number of remaining events with same time stamp=4
+I am dropping events with non-unique time stamp and event type=3, while keeping the_last of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=5, while keeping the_last of the events in every batch
+Numbers of events dropped: 0
+Total number of events dropped: 0
+prepare_from_lobster.separate_41_events: number of occurrencies = 0 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_34_events: number of occurrencies = 1 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_43_events: number of occurrencies = 0 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_directions: number of occurrencies = 2 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.equiparate_events_with_same_time_stamp:
+  event_left=4, event_right=5, occurrencies=0
+prepare_from_lobster.drop_events_with_same_time_stamp:
+  event_left=4, event_right=5, occurrencies=0
+ManipulateMessageFile.aggregate_time_stamp: contraction. only_4_events=False
+  From 0 lines with same time stamp, same event type and same direction, -->  to 0 lines: 0 lines contracted
+  Initial length=131233, contracted length=131233
+  Number of remaining events with same time stamp=4
+I am dropping events with non-unique time stamp and event type=3, while keeping the_last of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=5, while keeping the_last of the events in every batch
+Numbers of events dropped: 0
+Total number of events dropped: 0
+prepare_from_lobster.separate_41_events: number of occurrencies = 0 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_34_events: number of occurrencies = 1 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_43_events: number of occurrencies = 0 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.separate_directions: number of occurrencies = 2 
+   After separation, the average time step is 0.356624969348716, the smallest time step is 1.4700344763696194e-07.
+prepare_from_lobster.equiparate_events_with_same_time_stamp:
+  event_left=4, event_right=5, occurrencies=0
+prepare_from_lobster.drop_events_with_same_time_stamp:
+  event_left=4, event_right=5, occurrencies=0
+I am dropping events with non-unique time stamp and event type=0, while keeping none of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=1, while keeping none of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=2, while keeping none of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=3, while keeping none of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=4, while keeping none of the events in every batch
+Numbers of events dropped: 4
+I am dropping events with non-unique time stamp and event type=5, while keeping none of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=6, while keeping none of the events in every batch
+Numbers of events dropped: 0
+I am dropping events with non-unique time stamp and event type=7, while keeping none of the events in every batch
+Numbers of events dropped: 0
+Total number of events dropped: 4
+event_encoding: self.n_event_types=4, self.n_levels=2
+I am storing observed_states
+I am storing observed_events
+I am storing observed_times, with 43200.0 as time origin: Notice that this results in a shift in the values of self.observed_times
+Data is being stored in /rdsgpfs/general/user/cb115/home/pipest/lobster_for_sdhawkes/data/INTC/INTC_2019-01-31_43200-46800

@@ -1,0 +1,21 @@
+openmp.omp_get_max_threads(): 1
+openmp.omp_get_max_threads(): 1
+main.py INTC 2019-01-04 36000.0 39000.0 -p
+
+date of run: 2020-04-17 at 10:22
+I am pre-estimating the model using non-parametric procedure
+symbol=INTC, date=2019-01-04, time_window=36000-39000
+stdout is being redirected to /rds/general/user/cb115/home/pipest/models/INTC/INTC_2019-01-04_36000-39000_nonp_readout.txt
+
+Non-parametric pre-estimation terminates on 2020-04-17 at 11:44
+
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :        40             6
+ Used       :        27 (peak)   2.45 (ave)
+
+============================================

@@ -1,0 +1,36 @@
+
+date of run: 2020-04-21 at 19:44
+I am calibrating on lobster
+symbol=INTC, date=2019-01-23, time_window=52200-55800
+event type: 1
+Calibration is being performed on the following machine:
+ posix.uname_result(sysname='Linux', nodename='cx3-1-17.cx3.hpc.ic.ac.uk', release='4.18.0-147.5.1.el8_1.x86_64', version='#1 SMP Wed Feb 5 02:00:39 UTC 2020', machine='x86_64')
+Partial calibration for event_type=1
+mle_estimation.EstimProcedure is being initialised
+EstimProcedure has been successfully initialised
+I am setting the estimation of hawkes parameters, with time_start=0.036296185993705876, time_end=3599.7852092709945.
+The boundaries of arrival times are 0.036296185993705876-3599.7852092709945
+WARNING! In mle_estimation.store_given_list_of_guesses, empty list was passed. I am adding a random initial guess
+MinimisationProcedure is being initialised: batch_size=40000, num_run_per_minibatch=4,  learning_rate=0.0001, maxiter=50
+pre_estimate_ordinary_hawkes: initialisation completed.
+I am launching minimisation. Number of initial guesses=5, use_prange=True, parallel=False
+I am performing gradient descent serially
+MinimisationProcedure: minimisation finished
+pre_estimate_ordinary_hawkes: run_time=1023.8802540302277
+I am estimating hawkes parameters for the component e=1
+MinimisationProcedure is being initialised: batch_size=40000, num_run_per_minibatch=4,  learning_rate=0.0001, maxiter=50
+estimate_hawkes_param_partial: MinimisationProcedure has been initialised
+I am launching minimisation. Number of initial guesses=6, use_prange=True, parallel=False
+I am performing gradient descent serially
+MinimisationProcedure: minimisation finished
+estimate_hawkes_power_partial: run_time=435.6360762119293
+mle_estimation.EstimProcedure.estimate_hawkes_param_partial. Estimation terminates for event_type 1.
+
+I am dumping the model with name "INTC_2019-01-23_52200-55800_partial1" in the directory: /rds/general/user/cb115/home/pipest/models/INTC_2019-01-23/ 
+
+
+I am dumping the model with name "INTC_2019-01-23_52200-55800_partial1" in the directory: /rds/general/user/cb115/home/pipest/models/INTC/ 
+
+
+Calibration of event_type 1 terminates on 2020-04-21 at 20:08
+

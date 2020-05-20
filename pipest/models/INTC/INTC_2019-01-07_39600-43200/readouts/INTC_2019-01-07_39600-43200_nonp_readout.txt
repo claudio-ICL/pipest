@@ -1,0 +1,42 @@
+
+date of run: 2020-04-18 at 12:36
+I am pre-estimating the model using non-parametric procedure
+symbol=INTC, date=2019-01-07, time_window=39600-43200
+Initialising an instance of SDHawkes
+nonparam_estimation.EstimProcedure is being initialised
+I am storing distribution of marks
+I am storing transition probabilities
+I am storing expected intensities
+EstimProcedure has been successfully initialised
+I am preparing estimation of hawkes kernel
+I am filtering non-singular expected jumps in parallel. num_process: 4
+Filter non-singular expected jumps. component_e: 3; process_id: pid138658
+Filter non-singular expected jumps. component_e: 2; process_id: pid138657
+Filter non-singular expected jumps. component_e: 1; process_id: pid138656
+Filter non-singular expected jumps. component_e: 0; process_id: pid138655
+Filtering terminates. run_time=1688.029637336731
+I am storing convolution kernels
+I am storing matrix A
+Estimation of hawkes kernel is now ready
+I am performing estimation of hawkes kernel in parallel. num_processes: 4
+I am solving for the component e=0. process_id: pid139876
+I am solving for the component e=1. process_id: pid139877
+I am solving for the component e=2. process_id: pid139878
+I am solving for the component e=3. process_id: pid139879
+Estimation of hawkes kernel terminates. run_time=87.12772178649902
+I am fitting the powerlaw kernel in parallel on 4 cpus
+Parallel fitting terminates. run_time=0.5019533634185791
+L1_norms have been stored. spectral_radius=365277.7249233654
+Spectral radius of L1 norm of hawkes kernel is greater or equal 1.0: I am setting base rates to the default value of 0.0.
+I am computing residuals in parallel. num_process: 4
+goodness_of_fit.compute_residuals. component_e: 0; process_id: pid139941
+goodness_of_fit.compute_residuals. component_e: 1; process_id: pid139942
+goodness_of_fit.compute_residuals. component_e: 2; process_id: pid139943
+goodness_of_fit.compute_residuals. component_e: 3; process_id: pid139944
+Computation of residuals terminates. run_time=383.6432538032532
+
+I am dumping the model with name "INTC_2019-01-07_39600-43200_nonp" in the directory: /rds/general/user/cb115/home/pipest/models/INTC/ 
+
+
+Non-parametric pre-estimation terminates on 2020-04-18 at 13:15
+
