@@ -1,25 +1,9 @@
 #cython: boundscheck=False, wraparound=False, nonecheck=False 
-
-import os
-
-cdef str path_pipest = os.path.abspath('./')
-n=0
-while (not os.path.basename(path_pipest)=='pipest') and (n<6):
-    path_pipest=os.path.dirname(path_pipest)
-    n+=1 
-if not os.path.basename(path_pipest)=='pipest':
-    raise ValueError("path_pipest not found. Instead: {}".format(path_pipest))
-cdef str path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'
-cdef str path_lobster=path_pipest+'/lobster_for_sdhawkes'
-cdef str path_lobster_pyscripts=path_lobster+'/py_scripts'
-
-    
 import sys
-sys.path.append(path_sdhawkes+'/')
-sys.path.append(path_sdhawkes+'/resources/')
-sys.path.append(path_sdhawkes+'/modelling/')
-sys.path.append(path_lobster_pyscripts+'/')
-
+from pathlib import Path
+sys.path.append(Path(__file__).parent)
+sys.path.append(Path(__file__).parent.parent)
+#import header
 import time
 from cython.parallel import prange
 
@@ -37,7 +21,7 @@ import computation
 import minimisation_algo as minim_algo
 import goodness_of_fit
 import dirichlet
-from sklearn.linear_model import LinearRegression, Ridge
+##from sklearn.linear_model import LinearRegression, Ridge
 
 DTYPEf = np.float
 DTYPEi = np.int
@@ -385,40 +369,40 @@ cdef DTYPEi_t count_events_of_type(DTYPEi_t event_type, DTYPEi_t [:] events):
             count+=1
     return count 
 
-def preguess_ordinary_hawkes_param(int event_index,
-                                   np.ndarray[DTYPEf_t, ndim=3] lt,
-                                   np.ndarray[DTYPEi_t, ndim=2] count,
-                                   DTYPEf_t max_imp_coef = 100.0,
-                                   DTYPEf_t tol = 1.0e-6,
-                                   print_res = False,
-                                  ):
-    assert lt.shape[1]==1
-    assert count.shape[1] ==1
-    cdef int d_E = lt.shape[0]
-    cdef int e = event_index
-    cdef np.ndarray[DTYPEf_t, ndim=1] Y = np.arange(1,1+count[e,0], dtype=DTYPEf)
-    cdef np.ndarray[DTYPEf_t, ndim=2] X = np.zeros((count[e,0],2), dtype=DTYPEf)
-    X[:,0] = np.array(lt[e,0,0:count[e,0]],copy=True)
-    X[:,1] = np.array(lt[e,0,0:count[e,0]],copy=True)-np.log(lt[e,0,0:count[e,0]]+1.0)
-    reg=Ridge(alpha = 0.5, fit_intercept = False).fit(X,Y)
-    cdef DTYPEf_t c_0 = reg.coef_[0]
-    cdef DTYPEf_t c_1 = reg.coef_[1]
-    if c_0 < -tol:
-        print("mle_estimation.preguess_ordinary_hawkes_param: WARNING! c_0 < 0.0 after linear regression")
-        print("  c_0={}, \n c_1={}".format(c_0,c_1))
-#         raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_0 < 0.0 after linear regression")
-    if c_1< -tol:
-        print("mle_estimation.preguess_ordinary_hawkes_param: WARNING! c_1 < 0.0 after linear regression")
-        print("  c_0={}, \n c_1={}".format(c_0,c_1))
-#         raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_1 < 0.0 after linear regression")
-    cdef DTYPEf_t base_rate = max(tol, c_0 )
-    cdef np.ndarray[DTYPEf_t, ndim=2] alphas = tol*np.ones((d_E,1), dtype=DTYPEf)
-    alphas[e,0] = min(max_imp_coef, max(tol, c_1) / base_rate)
-    cdef np.ndarray[DTYPEf_t, ndim=2] betas = 2.0*np.ones((d_E,1), dtype=DTYPEf)
-    if print_res:
-        print("preguess_ordinary_hawkes_param: component e={}, base_rate={}, imp_coef[e,0,e]={}".
-              format(e, base_rate,alphas[e,0]))
-    return base_rate, alphas, betas
+#def preguess_ordinary_hawkes_param(int event_index,
+#                                   np.ndarray[DTYPEf_t, ndim=3] lt,
+#                                   np.ndarray[DTYPEi_t, ndim=2] count,
+#                                   DTYPEf_t max_imp_coef = 100.0,
+#                                   DTYPEf_t tol = 1.0e-6,
+#                                   print_res = False,
+#                                  ):
+#    assert lt.shape[1]==1
+#    assert count.shape[1] ==1
+#    cdef int d_E = lt.shape[0]
+#    cdef int e = event_index
+#    cdef np.ndarray[DTYPEf_t, ndim=1] Y = np.arange(1,1+count[e,0], dtype=DTYPEf)
+#    cdef np.ndarray[DTYPEf_t, ndim=2] X = np.zeros((count[e,0],2), dtype=DTYPEf)
+#    X[:,0] = np.array(lt[e,0,0:count[e,0]],copy=True)
+#    X[:,1] = np.array(lt[e,0,0:count[e,0]],copy=True)-np.log(lt[e,0,0:count[e,0]]+1.0)
+#    reg=Ridge(alpha = 0.5, fit_intercept = False).fit(X,Y)
+#    cdef DTYPEf_t c_0 = reg.coef_[0]
+#    cdef DTYPEf_t c_1 = reg.coef_[1]
+#    if c_0 < -tol:
+#        print("mle_estimation.preguess_ordinary_hawkes_param: WARNING! c_0 < 0.0 after linear regression")
+#        print("  c_0={}, \n c_1={}".format(c_0,c_1))
+##         raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_0 < 0.0 after linear regression")
+#    if c_1< -tol:
+#        print("mle_estimation.preguess_ordinary_hawkes_param: WARNING! c_1 < 0.0 after linear regression")
+#        print("  c_0={}, \n c_1={}".format(c_0,c_1))
+##         raise ValueError("mle_estimation.preguess_ordinary_hawkes_param: Error! c_1 < 0.0 after linear regression")
+#    cdef DTYPEf_t base_rate = max(tol, c_0 )
+#    cdef np.ndarray[DTYPEf_t, ndim=2] alphas = tol*np.ones((d_E,1), dtype=DTYPEf)
+#    alphas[e,0] = min(max_imp_coef, max(tol, c_1) / base_rate)
+#    cdef np.ndarray[DTYPEf_t, ndim=2] betas = 2.0*np.ones((d_E,1), dtype=DTYPEf)
+#    if print_res:
+#        print("preguess_ordinary_hawkes_param: component e={}, base_rate={}, imp_coef[e,0,e]={}".
+#              format(e, base_rate,alphas[e,0]))
+#    return base_rate, alphas, betas
     
 
     
