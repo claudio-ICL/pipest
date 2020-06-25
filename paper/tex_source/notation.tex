@@ -27,6 +27,7 @@
 
 
 
+
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Rd}{\R^{d}}
 \newcommand{\Rn}{\R^{n}}
@@ -44,7 +45,6 @@
 \newcommand{\symmetricPart}{\text{sym}}
 \newcommand{\antisymmetricPart}{\text{antisym}}
 \newcommand{\abs}[1]{\left\lvert {#1} \right\rvert}
-
 \newcommand{\id}[1][ ]{\mathtt{id}_{#1}}
 
 \newcommand{\transpose}{^{\mathsf{T}}}
@@ -55,6 +55,7 @@
 
 \newcommand{\suchThat}{\text{ s.t. }}
 \newcommand{\argmin}{\mathrm{argmin}}
+\newcommand{\argmax}{\mathrm{argmax}}
 \newcommand{\partition}{\pi}
 \newcommand{\timeHorizon}{T}
 \newcommand{\timeWindow}{{[0,\timeHorizon]}}
@@ -145,6 +146,7 @@
 \newcommand{\CoVariance}{\mathrm{Cov}}
 \newcommand{\correlation}{\mathrm{corr}}
 \newcommand{\likelihood}{\mathcal{L}}
+\newcommand{\loglikelihood}{\log \likelihood}
 \newcommand{\sigmaAlgebra}{\mathfrak{F}}
 \newcommand{\sigmaAlgebraG}{\mathcal{G}}
 \newcommand{\setAlgebraA}{\mathcal{A}}
@@ -168,6 +170,7 @@
 \newcommand{\dirichletDensity}[1][\dirparam]{f_{#1}}
 \newcommand{\targetDensity}{f}
 \newcommand{\proposalDensity}{g}
+\newcommand{\dirichlet}[1][\dirparam]{\text{Dir}_{#1}}
 
 %Indicator function%
 \def\one{\mbox{1\hspace{-4.25pt}\fontsize{12}{14.4}\selectfont\textrm{1}}}
@@ -268,6 +271,8 @@
 \newcommand{\subscriptee}{_{\eone,\, e}}
 \newcommand{\xone}{x\derivative}
 \newcommand{\subscriptexe}{_{\eone,\, \xone,\, e}}
+\newcommand{\subscriptdotse}{_{::e}}
+\newcommand{\subscriptdotseone}{_{::\eone}}
 \newcommand{\stateSpace}{\mathcal{S}}
 \newcommand{\deflationarySpace}{\stateSpace^{-}}
 \newcommand{\weakDeflSpace}{\stateSpace^{o,-}}
@@ -284,6 +289,8 @@
 \newcommand{\transProb}{\phi}
 \newcommand{\lplus}{\ell_{+}}
 \newcommand{\lminus}{\ell_{-}}
+\newcommand{\leplus}{\ell_{e,+}}
+\newcommand{\leminus}{\ell_{e,-}}
 \newcommand{\ESSE}{S}
 \newcommand{\ESSEone}{S^{(1)}}
 \newcommand{\ESSEtwo}{S^{(2)}}
@@ -296,6 +303,9 @@
 \newcommand{\initialTime}{t_{0}}
 \newcommand{\terminationTime}{\tau}
 \newcommand{\metaorderSize}{Q_{0}}
+\newcommand{\WHconvkernel}{K}
+\newcommand{\subscriptepsye}{_{\epsilon, y, e}}
+\newcommand{\subscriptellu}{_{\ell,u}}
 
 % %Notation peculiar to StaticVsDynamic
 % \newcommand{\spaceInventoryTrajectories}{\mathcal{Q}}

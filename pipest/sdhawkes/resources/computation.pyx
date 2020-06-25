@@ -10,6 +10,7 @@ This version of the resource "computation.pyx" contains functions called by oher
 import numpy as np
 cimport numpy as np
 from scipy.stats import dirichlet as scipy_dirichlet
+from scipy.optimize import minimize as scipy_minimize
 import bisect
 import copy
 from libc.math cimport pow
@@ -17,7 +18,7 @@ from libc.math cimport exp
 from libc.math cimport log
 from libc.math cimport isnan
 from scipy.special import gamma as scipy_gamma_fun
-# from libc.stdlib cimport rand, RAND_MAX, srand
+from libc.stdlib cimport rand, RAND_MAX, srand
 
 DTYPEf = np.float
 DTYPEi = np.int
@@ -27,6 +28,8 @@ DTYPEfd = np.longdouble
 DTYPEil = np.int64
 ctypedef np.longdouble_t DTYPEfd_t
 ctypedef np.int64_t DTYPEil_t
+
+cdef DTYPEf_t fRANDMAX = float(RAND_MAX)
 
 def distribute_times_per_event_state(
     int n_event_types,
@@ -1432,12 +1435,12 @@ def compute_probability_of_volimb_constraint(
     """
     The volumes are assumed to be reported as in LOBSTER, with the alternation [ask_level_1, bid_level_1, ask_level_2, bid_level_2 ...]    
     """
-    cdef int uplim = 1+2*upto_level
+    cdef int uplim = 1+2*upto_level#This defines the index of the flattened array of volumes to be used in the computation of volume imbalances.  
     cdef np.ndarray[DTYPEf_t, ndim=2] samples = scipy_dirichlet.rvs(dir_param, size=N_samples)
     cdef np.ndarray[DTYPEf_t, ndim=1] vol_imb =\
     (np.sum(samples[:,idx_bid_level_1:uplim:2],axis=1) -
      np.sum(samples[:,idx_ask_level_1:uplim:2],axis=1))
-    idx = np.logical_and(vol_imb>= constraint[0], vol_imb<constraint [1])
+    idx = np.logical_and(vol_imb>= constraint[0], vol_imb<constraint[1])
     return np.sum(idx)/N_samples
 
 def produce_probabilities_of_volimb_constraints(
@@ -1504,6 +1507,59 @@ def compute_maximum_unnormalised_pseudo_dirichlet_density(np.ndarray[DTYPEf_t, n
     maximiser[N]= 1.0 - np.sum(maximiser[:N])
     cdef DTYPEf_t maximum = np.prod(np.power(maximiser,exponents),dtype=DTYPEf)
     return maximum
+
+def compute_optimal_proposal_param( gamma,
+        DTYPEf_t l=-0.2, DTYPEf_t u=0.2, DTYPEf_t c=1.0,
+        int uplim=5, int maxiter=1000):
+    def objfun(rho):
+        return compute_maximum_unnormalised_pseudo_dirichlet_density(gamma-rho)\
+        +c*expectation_constr(rho)
+    def expectation_constr(rho):
+        cdef DTYPEf_t v=np.sum(rho[1:uplim:2]-rho[0:uplim:2])/np.sum(rho)
+        return (max(0.0,v-u)+max(0.0,l-v))**2
+    bounds=[(1.0e-8,gamma[k]) for k in range(len(gamma))]
+    res=scipy_minimize(
+        objfun,0.95*gamma,
+        method='TNC',jac=False,
+        bounds=bounds,options={'maxiter': maxiter})
+    cdef np.ndarray[DTYPEf_t, ndim=1] rho = np.array(res['x'],dtype=DTYPEf)
+    return rho
+def compute_acceptance_prob(long state, np.ndarray[DTYPEf_t, ndim=2] proposal_dir_param,
+    np.ndarray[DTYPEf_t, ndim=2]  difference_of_dir_params,
+    np.ndarray[DTYPEf_t, ndim=1] inverse_bound,
+    long [:] is_target_equal_to_proposal,
+    int num_of_st2, double [:] volimb_limits, int upto_lim = 5, long num_samples = 999999
+):
+#    Notice that upto_lim is the index of the flattened array containing alternating ask/bid-volumes.     This means upto_lim=1+2*volume_imbalance_upto_level, where "volume_imbalance_upto_level" is the leve    l
+    cdef int st_2 = state%num_of_st2
+    cdef DTYPEf_t lower_bound = volimb_limits[st_2]
+    cdef DTYPEf_t upper_bound = volimb_limits[1+st_2]
+    cdef double [:] gamma_tilde = proposal_dir_param[state,:]
+    cdef np.ndarray[DTYPEf_t, ndim=2] delta_gamma = np.zeros((1,len(gamma_tilde)), dtype=DTYPEf)
+    delta_gamma[0,:]=difference_of_dir_params[state,:]
+    cdef DTYPEf_t K = inverse_bound[state]
+    cdef np.ndarray[DTYPEf_t, ndim=1] sample = np.zeros((num_samples,len(gamma_tilde)), dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=1]  vol_imb = np.zeros((num_samples,), dtype=DTYPEf)
+    cdef DTYPEf_t u = 0.0, prob=0.0
+    cdef int count=0, n=0
+    if is_target_equal_to_proposal[state]:
+        sample = scipy_dirichlet.rvs(gamma_tilde,size=num_samples)
+        vol_imb = np.sum(sample[:,1:upto_lim:2] - sample[:,0:upto_lim:2], axis=1)
+        idx=np.logical_and(lower_bound <= vol_imb,vol_imb<=upper_bound)
+        prob=float(np.sum(idx))/num_samples
+    else:
+        sample = scipy_dirichlet.rvs(gamma_tilde, size=num_samples)
+        vol_imb = np.sum(sample[:,1:upto_lim:2] - sample[:,0:upto_lim:2], axis=1)
+        idx=np.logical_and(lower_bound <= vol_imb,vol_imb<=upper_bound)
+        val = K*np.prod(np.power(sample[idx,:],delta_gamma), axis=1)
+        assert len(val)==np.sum(idx)
+        for n in range(len(val)):
+            u = rand()/fRANDMAX#np.random.uniform(low=0.0, high=1.0)
+            if u < val[n]:
+                count+=1
+        prob=float(count)/num_samples
+    return prob
+
     
 def parameters_to_array(np.ndarray[DTYPEf_t,ndim=1]  base_rate,
                         np.ndarray[DTYPEf_t,ndim=3] imp_coef,

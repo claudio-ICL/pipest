@@ -1,6 +1,4 @@
 #cython: boundscheck=False, wraparound=False, nonecheck=False 
-
-
 import os
 cdef str path_pipest = os.path.abspath('./')
 n=0
@@ -9,8 +7,8 @@ while (not os.path.basename(path_pipest)=='pipest') and (n<6):
     n+=1 
 if not os.path.basename(path_pipest)=='pipest':
     raise ValueError("path_pipest not found. Instead: {}".format(path_pipest))
-cdef str path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'
-cdef str path_lobster=path_pipest+'/lobster_for_sdhawkes'
+cdef str path_sdhawkes=path_pipest+'/sdhawkes'
+cdef str path_lobster=path_pipest+'/lobster'
 cdef str path_lobster_pyscripts=path_lobster+'/py_scripts'
 import sys
 sys.path.append(path_sdhawkes+'/')
@@ -22,6 +20,11 @@ import time as clock
 import numpy as np
 cimport numpy as np
 import pandas as pd
+DTYPEf = np.float
+DTYPEi = np.int
+ctypedef np.float_t DTYPEf_t
+ctypedef np.int_t DTYPEi_t
+
 from scipy.stats import dirichlet as scipy_dirichlet 
 from scipy.ndimage.interpolation import shift as array_shift
 import bisect
@@ -29,21 +32,15 @@ import copy
 from libc.math cimport exp
 from libc.math cimport log
 from libc.math cimport ceil
-
+from libc.stdlib cimport rand, RAND_MAX
+cdef DTYPEf_t fRANDMAX=float(RAND_MAX)
 import lob_model
-from lob_model import RejectSampling
+from rejection_sampling import RejectionSampling
 import computation
 
-DTYPEf = np.float
-DTYPEi = np.int
-ctypedef np.float_t DTYPEf_t
-ctypedef np.int_t DTYPEi_t
-
-
-def random_choice(np.ndarray[DTYPEf_t, ndim=1] weights):
+def random_choice(int n, np.ndarray[DTYPEf_t, ndim=1] weights):
     cdef np.ndarray[DTYPEf_t,ndim=1] prob = weights/np.sum(weights)
-    cdef np.ndarray[DTYPEi_t,ndim=1] arr = np.random.multinomial(1,prob).astype(np.int)
-    cdef int choice = arr.argmax().astype(np.int)
+    cdef int choice = np.random.choice(n,p=prob)
     return choice
 
 def compute_volume_imbalance_vector(np.ndarray[DTYPEf_t, ndim=2] volumes, int uplim=5):
@@ -59,94 +56,74 @@ def is_volimb_constraint_satisfied(DTYPEf_t vol_imb, DTYPEf_t low, DTYPEf_t high
         return 1
     else:
         return 0    
-    
 
-def sample_volumes(long state, double [:,:] proposal_dir_param,
-    double [:,:] difference_of_dir_params, double [:] inverse_bound,
-    long [:] is_target_equal_to_proposal,
-    int num_of_st2, double [:] volimb_limits, int upto_lim = 5, long maxiter= 999999
+def sample_volumes(
+    long state, 
+    np.ndarray[DTYPEf_t, ndim=2] proposal_dir_param,
+    np.ndarray[DTYPEf_t, ndim=2] difference_of_dir_params,
+    np.ndarray[DTYPEf_t, ndim=1] M_bound,
+    np.ndarray[DTYPEi_t, ndim=1] is_target_equal_to_proposal,
+    int num_of_st2, int num_levels,
+    np.ndarray[DTYPEf_t, ndim=1] volimb_limits,
+    int upto_lim = 5, int maxiter= 10**9
 ):
+#    Notice that upto_lim is the index of the flattened array containing alternating ask/bid-volumes. This means upto_lim=1+2*volume_imbalance_upto_level, where "volume_imbalance_upto_level" is the level
     cdef int st_2 = state%num_of_st2                      
     cdef DTYPEf_t lower_bound = volimb_limits[st_2]
     cdef DTYPEf_t upper_bound = volimb_limits[1+st_2]
-    cdef double [:] gamma_tilde = proposal_dir_param[state,:]
-    cdef double [:] delta_gamma = difference_of_dir_params[state,:]
-    cdef DTYPEf_t K = inverse_bound[state]
-    cdef np.ndarray[DTYPEf_t, ndim=1] sample = np.zeros((len(gamma_tilde),), dtype=DTYPEf)
-    cdef DTYPEf_t val=0.0, u = 0.0, vol_imb = 0.0
-    cdef int reject = 1
-    cdef long count = 0
-
+    cdef np.ndarray[DTYPEf_t, ndim=1] rho = proposal_dir_param[state,:]
+    cdef np.ndarray[DTYPEf_t, ndim=1] alpha = difference_of_dir_params[state,:]
     if is_target_equal_to_proposal[state]:
-        while (reject) & (count<=maxiter):
-            count += 1
-            sample = scipy_dirichlet.rvs(gamma_tilde)[0,:]
-            vol_imb = np.sum(sample[1:upto_lim:2] - sample[0:upto_lim:2])
-            if (lower_bound <= vol_imb)&(vol_imb<=upper_bound):
+        return naive_sample(num_levels, rho, lower_bound, upper_bound, upto_lim, maxiter)
+    else:
+        return rejection_sample(num_levels, rho, alpha,
+                lower_bound, upper_bound, M_bound[state],
+                upto_lim, maxiter)
+def naive_sample(
+        int num_levels, 
+        np.ndarray[DTYPEf_t, ndim=1] gamma, 
+        DTYPEf_t l, DTYPEf_t u,
+        int upto_lim=5,
+        int maxiter=10**9
+):
+    cdef np.ndarray[DTYPEf_t, ndim=1] sample = np.zeros((2*num_levels,), dtype=DTYPEf)
+    cdef DTYPEf_t vol_imb = 0.0
+    cdef int reject = 1
+    cdef int count = 0
+    while ((reject)&(count<=maxiter)):
+        sample = scipy_dirichlet.rvs(gamma)[0,:]
+        vol_imb = np.sum(sample[1:upto_lim:2] - sample[0:upto_lim:2])
+        if ((l <= vol_imb)&(vol_imb<=u)):
+            reject = 0
+        else:
+            count+=1
+    return sample 
+    #return count       
+def rejection_sample(
+        int num_levels, 
+        np.ndarray[DTYPEf_t, ndim=1] rho, 
+        np.ndarray[DTYPEf_t, ndim=1] alpha,
+        DTYPEf_t l, DTYPEf_t u, DTYPEf_t M,
+        int upto_lim=5,
+        int maxiter=10**9
+):
+    cdef np.ndarray[DTYPEf_t, ndim=1] sample = np.zeros((2*num_levels,), dtype=DTYPEf)
+    cdef DTYPEf_t vol_imb = 0.0, unif=0.0
+    cdef int reject = 1
+    cdef int count = 0
+    while ((reject)&(count<=maxiter)):
+        sample = scipy_dirichlet.rvs(rho)[0,:]
+        vol_imb = np.sum(sample[1:upto_lim:2] - sample[0:upto_lim:2])
+        if ((l<=vol_imb)&(vol_imb<=u)):
+            unif=rand()/fRANDMAX
+            if unif*M < np.prod(np.power(sample,alpha)):
                 reject = 0
             else:
-                pass
-    else:
-        while (reject) & (count<=maxiter):
-            count += 1
-            sample = scipy_dirichlet.rvs(gamma_tilde)[0,:]
-            vol_imb = np.sum(sample[1:upto_lim:2] - sample[0:upto_lim:2])
-            if (lower_bound <= vol_imb)&(vol_imb<=upper_bound):
-                u = np.random.uniform(low=0.0, high=1.0)
-                val = np.prod(np.power(sample,delta_gamma))
-                if u < K*val:
-                    reject = 0                 
-    return sample        
-    
-
-# def sample_volumes_vectorized(long state, double [:,:] proposal_dir_param,
-#     double [:,:] difference_of_dir_params, double [:] prob_constraint, double [:] inverse_bound,
-#     long [:] is_target_equal_to_proposal,
-#     int num_of_st2, double [:] volimb_limits, int upto_lim = 5
-# ):
-#     cdef int st_2 = state%num_of_st2                      
-#     cdef list args = [volimb_limits[st_2], volimb_limits[1+st_2]]
-#     cdef double [:] gamma_tilde = proposal_dir_param[state,:]
-#     cdef double [:] delta_gamma = difference_of_dir_params[state,:]
-#     cdef DTYPEf_t K = inverse_bound[state]
-#     cdef long M = long(ceil(K/max(1.0e-5,prob_constraint[state])))
-#     cdef np.ndarray[DTYPEi_t, ndim=1] idx_constraint = np.zeros(M, dtype=DTYPEi)
-#     cdef np.ndarray[DTYPEf_t, ndim=2] sample = np.zeros((M,len(gamma_tilde)), dtype=DTYPEf)
-#     cdef np.ndarray[DTYPEf_t, ndim=1] u = np.zeros((M,), dtype=DTYPEf)
-#     cdef np.ndarray[DTYPEf_t, ndim=2] vol_imb = np.zeros((M,1),dtype=DTYPEf)
-#     cdef DTYPEf_t val=0.0, 
-#     cdef np.ndarray[DTYPEf_t, ndim=1] result = np.zeros(len(gamma_tilde),dtype=DTYPEf)
-#     cdef int reject = 1, n=0
-
-#     if is_target_equal_to_proposal[state]:
-#         while reject:
-#             sample = scipy_dirichlet.rvs(gamma_tilde, size=M)
-#             vol_imb = compute_volume_imbalance_vector(sample, upto_lim)
-#             idx_constraint = np.apply_along_axis(is_volimb_constraint_satisfied, 1, vol_imb, *args)
-#             if np.any(idx_constraint):
-#                 n = np.argmax(idx_constraint)
-#                 result = sample[n,:]
-#                 reject = 0
-#             else:
-#                 pass
-#     else:
-#         while reject:    
-#             sample = scipy_dirichlet.rvs(gamma_tilde, size=M )
-#             u = np.random.uniform(low=0.0, high=1.0, size=(M,))          
-#             vol_imb = compute_volume_imbalance_vector(sample, upto_lim)
-#             n=0
-#             while ((reject)&(n<M)):
-#                 if (args[0] <= vol_imb[n,0]) & (vol_imb[n,0]  <= args[1]):
-#                     val = np.prod(np.power(sample[n,:],delta_gamma))
-#                     if u[n] < K*val:
-#                         result = sample[n,:]
-#                         reject = 0
-#                 n+=1                     
-#     return result               
-        
-    
-    
-                   
+                count+=1
+        else:
+            count+=1
+    return sample
+    #return count       
 
 def prepare_initial_conditions(int num_event_types,int num_states,int num_levels,
                                np.ndarray[DTYPEf_t, ndim=1] base_rates,
@@ -181,20 +158,15 @@ def prepare_initial_conditions(int num_event_types,int num_states,int num_levels
     times = times_and_labels['times'].values
     events = times_and_labels['events'].values
     states = times_and_labels['states'].values
-    
     cdef np.ndarray[DTYPEf_t, ndim=2] history_of_dirichlet_param = np.zeros(
         (tot_num_preconditions,2*num_levels),dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=2] volumes = np.zeros_like(history_of_dirichlet_param)
     for n in range(states.shape[0]):
         history_of_dirichlet_param[n,:]=dirichlet_param[states[n],:]
-    
     volumes=np.apply_along_axis(
         np.random.dirichlet,1,
         history_of_dirichlet_param)
-    
     return tot_num_preconditions,times,events,states,volumes
-    
-    
 
 def launch_simulation(num_event_types,
                       num_states,
@@ -203,7 +175,7 @@ def launch_simulation(num_event_types,
                       alphas,
                       betas,
                       phis,
-                      kappas,
+                      gammas,
                       init_condition_times,
                       init_condition_events,
                       init_condition_states,
@@ -218,7 +190,6 @@ def launch_simulation(num_event_types,
                       int initialise_intensity_on_history = 1,
                       int report_full_volumes = 0
                      ):
-    
     cdef int number_of_event_types = num_event_types
     cdef int number_of_states = num_states
     cdef int n_levels = num_levels
@@ -232,14 +203,14 @@ def launch_simulation(num_event_types,
     assert not np.any(np.isinf(transition_probabilities))
     assert np.all(np.sum(transition_probabilities,axis=2)<=1.0)
     assert np.all(transition_probabilities>=0.0)
-    cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.array(kappas,copy=True)
+    cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.array(gammas,copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=1] initial_condition_times 
     cdef np.ndarray[DTYPEi_t, ndim=1] initial_condition_events
     cdef np.ndarray[DTYPEi_t, ndim=1] initial_condition_states
     cdef np.ndarray[DTYPEf_t, ndim=2] initial_volumes
     cdef np.ndarray[DTYPEf_t, ndim=2] proposal_dir_param = rejection_sampling.proposal_dir_param
     cdef np.ndarray[DTYPEf_t, ndim=2] difference_of_dir_params = rejection_sampling.difference_of_dir_params
-    cdef np.ndarray[DTYPEf_t, ndim=1] inverse_bound = rejection_sampling.inverse_bound
+    cdef np.ndarray[DTYPEf_t, ndim=1] rejection_bound = rejection_sampling.rejection_bound
     cdef np.ndarray[DTYPEi_t, ndim=1] is_target_equal_to_proposal = rejection_sampling.is_target_equal_to_proposal
     cdef int num_of_st2 = rejection_sampling.num_of_st2,
     cdef np.ndarray[DTYPEf_t, ndim=1] volimb_limits = rejection_sampling.volimb_limits
@@ -287,7 +258,7 @@ def launch_simulation(num_event_types,
                     initial_volumes,
                     proposal_dir_param,
                     difference_of_dir_params,
-                    inverse_bound,
+                    rejection_bound,
                     is_target_equal_to_proposal,
                     num_of_st2, volimb_limits, volimb_upto_level,
                     time_start,
@@ -295,10 +266,6 @@ def launch_simulation(num_event_types,
                     max_number_of_events,
                     initialise_intensity_on_history,
                     report_full_volumes = report_full_volumes)
-
-
-
-
 
 def simulate(int number_of_event_types,
               int number_of_states,
@@ -316,7 +283,7 @@ def simulate(int number_of_event_types,
               np.ndarray[DTYPEf_t, ndim=2] initial_volumes,
               np.ndarray[DTYPEf_t, ndim=2] proposal_dir_param,
               np.ndarray[DTYPEf_t, ndim=2] difference_of_dir_params,
-              np.ndarray[DTYPEf_t, ndim=1] inverse_bound,
+              np.ndarray[DTYPEf_t, ndim=1] rejection_bound,
               np.ndarray[DTYPEi_t, ndim=1] is_target_equal_to_proposal,
               int num_of_st2, np.ndarray[DTYPEf_t, ndim=1] volimb_limits, int volimb_upto_level,
               DTYPEf_t time_start,
@@ -331,7 +298,9 @@ def simulate(int number_of_event_types,
     :param number_of_states:
     :return:
     """
-    print('sd_hawkes_powerlaw_simulation.simulate: start of initialisation')
+    cdef int d_E = number_of_event_types
+    cdef int d_S = number_of_states
+    print('simulate: start of initialisation')
     print('   Number of levels in the order book: {}'.format(n_levels))
     cdef int number_of_initial_events = initial_condition_times.shape[0]
     print('   number_of_initial_events={}'.format(number_of_initial_events))
@@ -355,7 +324,7 @@ def simulate(int number_of_event_types,
         initial_condition_states,
         len_labelled_times = max_size
     )
-    print('sd_hawkes_powerlaw_simulation: simulate: labelled_times and count have been initialised.')
+    print(' simulate: labelled_times and count have been initialised.')
 #     print(' number_of_initial_events={}'.format(number_of_initial_events))
 #     print(' np.sum(count,axis=None)={}'.format(np.sum(count,axis=None)))
     'Compute the initial intensities of events and the total intensity'
@@ -370,7 +339,7 @@ def simulate(int number_of_event_types,
     else:
         intensities = np.random.uniform(low=0,high=1,size=(number_of_event_types,))
     intensity_overall=np.sum(intensities)
-    print('sd_hawkes_powerlaw_simulation: simulate: intensities have been initialised.')
+    print(' simulate: intensities have been initialised.')
     print('  intensities at start: {}'.format(intensities))
     print('  intensity_overall at start: {}'.format(intensity_overall))
 
@@ -393,7 +362,7 @@ def simulate(int number_of_event_types,
     cdef np.ndarray[DTYPEf_t, ndim=1] probabilities_state
     cdef DTYPEf_t r
     n = copy.copy(number_of_initial_events)
-    print('sd_hawkes_powerlaw_simulation.simulate: start of simulation')
+    print('simulate: start of simulation')
     print('  time_start={},  time at start ={}'.format(time_start,time))
     while time < time_end and n < max_size:
         'Generate an exponential random variable with rate parameter intensity_overall'
@@ -414,11 +383,11 @@ def simulate(int number_of_event_types,
             random_uniform =  np.random.uniform(0, intensity_overall)
             if random_uniform < intensity_total:  # then yes, it is an event time
                 'Determine what event occurs'
-                event = random_choice(intensities)
+                event = random_choice(d_E, intensities)
                 'Determine the new state of the system'
                 previous_state=copy.copy(state)
                 probabilities_state = transition_probabilities[previous_state, event, :]
-                state = random_choice(probabilities_state)
+                state = random_choice(d_S, probabilities_state)
                 'Store volume parameter for dirichlet sampling'
                 history_of_dirichlet_param[n,:] = dirichlet_param[state,:]
                 'Update the result'
@@ -436,16 +405,17 @@ def simulate(int number_of_event_types,
             intensity_overall = intensity_total  # the maximum total intensity until the next event
     
     if report_full_volumes:
-        print('sd_hawkes_powerlaw_simulation: I am sampling lob volumes for every state')
-        args_volume_sampling=[proposal_dir_param, difference_of_dir_params, inverse_bound, is_target_equal_to_proposal,
-              num_of_st2, volimb_limits, 1+2*volimb_upto_level]
+        print(' I am sampling lob volumes for every state')
+        args_volume_sampling=[proposal_dir_param, difference_of_dir_params,
+                rejection_bound, is_target_equal_to_proposal,
+                num_of_st2, volimb_limits, 1+2*volimb_upto_level]
         volume[number_of_initial_events:n,:]=np.apply_along_axis(
             sample_volumes,1,
             np.expand_dims(result_states[number_of_initial_events:n],axis=1), *args_volume_sampling)
     cdef int t_0 = num_preconditions
     run_time += clock.time()
     print(' Simulation terminates. time at end ={},  num_of_event={}'.format(time,n))
-    print('sd_hawkes_powerlaw_simulation: simulate. run_time={:.1f} seconds'.format(run_time))
+    print('End of simulation. run_time={:.1f} seconds'.format(run_time))
     return result_times[t_0:n], result_events[t_0:n], result_states[t_0:n], volume[t_0:n,:]
 
 
@@ -462,7 +432,7 @@ def launch_liquidation(state_encoding, volume_encoding,
                       alphas,
                       betas,
                       phis,
-                      kappas,
+                      gammas,
                       init_condition_times,
                       init_condition_events,
                       init_condition_states,
@@ -481,7 +451,6 @@ def launch_liquidation(state_encoding, volume_encoding,
                       int report_history_of_intensities = 0, 
                       int report_full_volumes = 0 
                      ):
-    
     cdef int number_of_event_types = num_event_types
     cdef int number_of_states = num_states
     cdef int n_levels = num_levels
@@ -491,14 +460,14 @@ def launch_liquidation(state_encoding, volume_encoding,
         impact_coefficients.reshape(-1,number_of_event_types), copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=3] decay_coefficients = np.array(betas,copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=3] transition_probabilities = np.array(phis,copy=True)
-    cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.array(kappas,copy=True)
+    cdef np.ndarray[DTYPEf_t, ndim=2] dirichlet_param = np.array(gammas,copy=True)
     cdef np.ndarray[DTYPEf_t, ndim=1] initial_condition_times 
     cdef np.ndarray[DTYPEi_t, ndim=1] initial_condition_events
     cdef np.ndarray[DTYPEi_t, ndim=1] initial_condition_states
     cdef np.ndarray[DTYPEf_t, ndim=2] initial_volumes 
     cdef np.ndarray[DTYPEf_t, ndim=2] proposal_dir_param = rejection_sampling.proposal_dir_param
     cdef np.ndarray[DTYPEf_t, ndim=2] difference_of_dir_params = rejection_sampling.difference_of_dir_params
-    cdef np.ndarray[DTYPEf_t, ndim=1] inverse_bound = rejection_sampling.inverse_bound
+    cdef np.ndarray[DTYPEf_t, ndim=1] rejection_bound = rejection_sampling.rejection_bound
     cdef np.ndarray[DTYPEi_t, ndim=1] is_target_equal_to_proposal = rejection_sampling.is_target_equal_to_proposal
     cdef int num_of_st2 = rejection_sampling.num_of_st2,
     cdef np.ndarray[DTYPEf_t, ndim=1] volimb_limits = rejection_sampling.volimb_limits
@@ -549,7 +518,7 @@ def launch_liquidation(state_encoding, volume_encoding,
                     initial_volumes,
                     proposal_dir_param,
                     difference_of_dir_params,            
-                    inverse_bound,
+                    rejection_bound,
                     is_target_equal_to_proposal,     
                     num_of_st2, volimb_limits, volimb_upto_level,            
                     time_start,
@@ -586,9 +555,11 @@ def simulate_liquidation(
               np.ndarray[DTYPEf_t, ndim=2] initial_volumes,
               np.ndarray[DTYPEf_t, ndim=2] proposal_dir_param,
               np.ndarray[DTYPEf_t, ndim=2] difference_of_dir_params,          
-              np.ndarray[DTYPEf_t, ndim=1] inverse_bound,
+              np.ndarray[DTYPEf_t, ndim=1] rejection_bound,
               np.ndarray[DTYPEi_t, ndim=1] is_target_equal_to_proposal, 
-              int num_of_st2, DTYPEf_t [:] volimb_limits, int volimb_upto_level,           
+              int num_of_st2, 
+              np.ndarray[DTYPEf_t, ndim=1] volimb_limits,
+              int volimb_upto_level,           
               DTYPEf_t time_start,
               DTYPEf_t time_end,
               int max_number_of_events,         
@@ -605,12 +576,14 @@ def simulate_liquidation(
     :param number_of_states:
     :return:
     """
+    cdef int d_E = number_of_event_types
+    cdef int d_S = number_of_states
     liquidator_control=max(0.0,liquidator_control)
     print(('simulate_liquidation. liquidator_control_type: {}\n  initial_invetory:{}').format(liquidator_control_type, initial_inventory))
     cdef int number_of_initial_events = initial_condition_times.shape[0]
     print('   number_of_initial_events={}'.format(number_of_initial_events))
-    cdef int upto_lim = 1+2*volimb_upto_level
-    cdef list args_volume_sampling=[proposal_dir_param, difference_of_dir_params, inverse_bound,
+    cdef int upto_lim = 1+2*volimb_upto_level #Notice that 'volimb_upto_level' is the level, whereas 'upto_lim' is the index of the flattened array containing alternating ask/bid-volumes
+    cdef list args_volume_sampling=[proposal_dir_param, difference_of_dir_params, rejection_bound,
                                     is_target_equal_to_proposal,num_of_st2, volimb_limits, upto_lim]
     cdef int max_size = number_of_initial_events + max_number_of_events
     cdef np.ndarray[DTYPEf_t, ndim=3] labelled_times = -np.ones(
@@ -623,8 +596,7 @@ def simulate_liquidation(
     cdef int state = copy.copy(initial_condition_states[len(initial_condition_states)-1])
     cdef int event = copy.copy(initial_condition_events[len(initial_condition_events)-1])
     cdef DTYPEf_t run_time = -clock.time()
-    print('initial state:{}, last event:{}'.format(state,event))
-    print('initialisation of run_time: {}'.format(run_time))
+    print('initial state:{}, initial event:{}'.format(state,event))
     'Initialise labelled_times and count from the initial conditions'
     labelled_times,count = computation.distribute_times_per_event_state(
         number_of_event_types,number_of_states,
@@ -633,7 +605,7 @@ def simulate_liquidation(
         initial_condition_states,
         len_labelled_times = max_size
     )
-    print('sd_hawkes_powerlaw_simulation: simulate: labelled_times and count have been initialised.')
+    print('simulate: labelled_times and count have been initialised.')
     print(' labelled_times.shape=({},{},{}), count.shape=({},{})'
           .format(labelled_times.shape[0],labelled_times.shape[1],labelled_times.shape[2],
                   count.shape[0],count.shape[1]))
@@ -652,7 +624,7 @@ def simulate_liquidation(
         intensities = np.random.uniform(low=0,high=1,size=(number_of_event_types,))
     intensity_overall=np.sum(intensities)
     cdef np.ndarray[DTYPEf_t, ndim=2] history_of_intensities = np.zeros((max_size,1+number_of_event_types),dtype=DTYPEf)
-    print('sd_hawkes_powerlaw_simulation: simulate: intensities have been initialised.')
+    print('simulate: intensities have been initialised.')
     print('  intensities at start: {}'.format(intensities))
     print('  intensity_overall at start: {}'.format(intensity_overall))
     
@@ -666,6 +638,7 @@ def simulate_liquidation(
     cdef np.ndarray[DTYPEf_t, ndim=2] volume = -np.ones((max_size,2*n_levels),dtype=DTYPEf)
     volume[0:number_of_initial_events,:]=np.array(initial_volumes,dtype=DTYPEf,copy=True)
     cdef DTYPEf_t [:,:] volume_memview = volume
+    cdef DTYPEf_t [:] volimb_limits_memview = volimb_limits
     'Initialise inventory'
     cdef np.ndarray[DTYPEf_t, ndim=1] inventory=initial_inventory*np.ones(max_size, dtype=DTYPEf)
     cdef DTYPEf_t [:] inventory_memview = inventory
@@ -691,11 +664,12 @@ def simulate_liquidation(
     cdef np.ndarray[DTYPEi_t, ndim=1] multidim_new_state = np.zeros(2,dtype=DTYPEi)
     cdef str message=''
     
-    print('sd_hawkes_powerlaw_simulation.simulate: start of simulation')
+    print('start of simulation')
     print('  time_start={},  time at start ={}'.format(time_start,time))
+    clock.sleep(2)
     while time < time_end and n < max_size:
         'Generate an exponential random variable with rate parameter intensity_overall'
-        random_exponential = np.random.exponential(1 / intensity_overall)
+        random_exponential = np.random.exponential(1.0 / intensity_overall)
         'Increase the time'
         time += random_exponential
         if time <= time_end:              
@@ -724,17 +698,19 @@ def simulate_liquidation(
             if random_uniform < intensity_total:  # then yes, it is an event time
                 'Determine what event occurs'
                 if is_liquidation_terminated:
-                    event = 1+random_choice(intensities[1:])
+                    event = 1+random_choice(d_E-1, intensities[1:])
                 else:
-                    event = random_choice(intensities)
+                    event = random_choice(d_E, intensities)
                 
                 if (event == 0) & (inventory[n-1]>0):
                     if verbose:
                         message='simulate_liquidation. At time {}, liquidator intervenes:'.format(time)
                     previous_state=copy.copy(state)
                     previous_volume=sample_volumes(    
-                        previous_state,proposal_dir_param, difference_of_dir_params, inverse_bound,
-                        is_target_equal_to_proposal,num_of_st2, volimb_limits, upto_lim
+                        previous_state,proposal_dir_param, difference_of_dir_params,
+                        rejection_bound,
+                        is_target_equal_to_proposal,
+                        num_of_st2, n_levels, volimb_limits, upto_lim
                     )
                     volume[n-1,:]=copy.copy(previous_volume)
                     tot_ask=0.0
@@ -772,7 +748,8 @@ def simulate_liquidation(
                     #volume[n,0::2]=(1.0-new_tot_bid)*volume[n-1,0::2]/tot_ask                 
                     with nogil:
                         st_2=compute_and_classify_volimb_scalar(
-                            volume_memview[n,:], volimb_limits, volimb_upto_level, num_of_st2)
+                            volume_memview[n,:], volimb_limits_memview,
+                            volimb_upto_level, num_of_st2)
                         delta_price = -indicator_walk_the_book
                         st_1 = 1+delta_price
                     multidim_new_state=np.array([st_1,st_2],dtype=DTYPEi)
@@ -789,7 +766,7 @@ def simulate_liquidation(
                     'Determine the new state of the system'
                     previous_state=copy.copy(state)
                     probabilities_state = copy.copy(transition_probabilities[previous_state, event, :])
-                    state = random_choice(probabilities_state)
+                    state = random_choice(d_S, probabilities_state)
                 'Update the result'
                 result_times[n] = copy.copy(time)  # add the event time to the result
                 result_events[n] = copy.copy(event)  # add the new event to the result
@@ -811,14 +788,14 @@ def simulate_liquidation(
     idx=np.array(array_shift(idx_event,-1,cval=0),dtype=np.bool)
     idx=np.logical_not(np.logical_or(idx_event,idx))
     cdef np.ndarray[DTYPEf_t, ndim=2] result_volumes = volume[number_of_initial_events:n,:]
-    if report_full_volumes:
-        print('sd_hawkes_powerlaw_simulation: I am sampling lob volumes for every state')
-        try:
-            result_volumes[idx,:] = np.apply_along_axis(
-            sample_volumes,1,
-            np.expand_dims(result_states[number_of_initial_events:n][idx],axis=1), *args_volume_sampling)
-        except:
-            print('lob_hawkes_simulation. I could not sample volumes from dirichlet distribution')
+#    if report_full_volumes:
+#        print(' I am sampling lob volumes for every state')
+#        try:
+#            result_volumes[idx,:] = np.apply_along_axis(
+#            sample_volumes,1,
+#            np.expand_dims(result_states[number_of_initial_events:n][idx],axis=1), *args_volume_sampling)
+#        except:
+#            print('lob_hawkes_simulation. I could not sample volumes from dirichlet distribution')
     cdef int idx_liquid_termination = np.argmin(inventory)
     cdef DTYPEf_t liquid_termination_time = copy.copy(result_times[n-1])
     if is_liquidation_terminated:
@@ -830,15 +807,11 @@ def simulate_liquidation(
     else:
         termination_message += "\n liquidation did not terminate"
     print(termination_message)
-    print('sd_hawkes_powerlaw_simulation: simulate. run_time={:.1f} seconds'.format(run_time))
+    print('End of simulation: run_time={:.1f} seconds'.format(run_time))
     if report_history_of_intensities:
         return result_times[t_0:n], result_events[t_0:n], result_states[t_0:n], result_volumes, inventory[t_0:n],liquid_termination_time,history_of_intensities[:idx_of_history,:]
     else:
         return result_times[t_0:n], result_events[t_0:n], result_states[t_0:n], result_volumes, inventory[t_0:n],liquid_termination_time, history_of_intensities[t_0:n,:]
-
-
-
-
 
 cdef long convert_multidim_state_code(
     int num_of_states, DTYPEi_t [:,:] arr_state_enc, DTYPEi_t [:] state) nogil:

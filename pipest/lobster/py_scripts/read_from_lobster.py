@@ -9,8 +9,8 @@ while (not os.path.basename(path_pipest)=='pipest') and (n<6):
     n+=1 
 if not os.path.basename(path_pipest)=='pipest':
     raise ValueError("path_pipest not found. Instead: {}".format(path_pipest))
-path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'
-path_lobster=path_pipest+'/lobster_for_sdhawkes'
+path_sdhawkes=path_pipest+'/sdhawkes'
+path_lobster=path_pipest+'/lobster'
 path_lobster_data=path_lobster+'/data'
 path_lobster_pyscripts=path_lobster+'/py_scripts'
 
@@ -32,9 +32,9 @@ import prepare_from_lobster as from_lobster
 
 
 symbol='INTC'
-date='2019-01-02'
-initial_time=float(11*60*60)
-final_time=float(11.1*60*60)
+date='2019-01-22'
+initial_time=float(9.0*60*60)
+final_time=float(16*60*60)
 time_window=str('{}-{}'.format(int(initial_time),int(final_time)))
 first_read_fromLOBSTER=True
 dump_after_reading=False

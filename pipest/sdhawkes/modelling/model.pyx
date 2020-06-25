@@ -9,8 +9,8 @@ while (not os.path.basename(path_pipest)=='pipest') and (n<6):
 if not os.path.basename(path_pipest)=='pipest':
     raise ValueError("path_pipest not found. Instead: {}".format(path_pipest))
 cdef str path_models=path_pipest+'/models'    
-cdef str path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'
-cdef str path_lobster=path_pipest+'/lobster_for_sdhawkes'
+cdef str path_sdhawkes=path_pipest+'/sdhawkes'
+cdef str path_lobster=path_pipest+'/lobster'
 cdef str path_lobster_pyscripts=path_lobster+'/py_scripts'
 import sys
 sys.path.append(path_sdhawkes+'/')
@@ -533,8 +533,8 @@ class SDHawkes:
         self.hawkes_kernel.compute_L1_norm()
         print('Hawkes parameters have been set')
         
-        
-    def set_dirichlet_parameters(self, dir_param, N_samples_for_prob_constraints = 9999):
+    def set_dirichlet_parameters(self, dir_param,
+            int N_samples_for_prob_constraints = 10**6):
         r"""
         Fixes the parameters :math:`\gamma` that defines the dirichlet distributions of volume proportions.
 
@@ -564,8 +564,9 @@ class SDHawkes:
             raise ValueError('SDHawkes.set_dirichlet_parameters. Given parameters has non-positive components')
         cdef np.ndarray[DTYPEf_t, ndim = 2] dirichlet_param = np.array(dir_param,copy=True,dtype=DTYPEf)   
         self.dirichlet_param = dirichlet_param
-        self.volume_enc.store_dirichlet_param(dirichlet_param, num_of_st2 = self.state_enc.array_of_n_states[1])
-        self.volume_enc.store_param_for_rejection_sampling()
+        self.volume_enc.store_dirichlet_param(dirichlet_param) 
+        self.volume_enc.create_rejection_sampling(N_samples_for_prob_constraints)
+        self.volume_enc.rejection_sampling.store_proposal_parameters(N_samples_for_prob_constraints)
         print('Dirichlet parameters have been set')
     
     def initialise_from_partial(self,list partial_models, 
@@ -920,34 +921,6 @@ class SDHawkes:
                              store_results=True,
                              report_full_volumes=False,
                             ):
-        """
-        Simulates a sample path of the state-dependent Hawkes process.
-        The methods wraps a C implementation that was obtained via Cython.
-
-        :type time_start: float
-        :param time_start: time at which the simulation starts.
-        :type time_end: float
-        :param time_end: time at which the simulation ends.
-        :type initial_inventory: float
-        :param initial_inventory: initial inventory to liquidate
-        :type initial_condition_times: array
-        :param initial_condition_times: times of events before and including `time_start`.
-        :type initial_condition_events: array of int
-        :param initial_condition_events: types of the events that occurred at `initial_condition_times`.
-        :type initial_condition_states: array of int
-        :param initial_condition_states: values of the state process just after the `initial_condition_times`.
-        :type initial_partial_sums: 3D numpy array
-        :param initial_partial_sums: the initial condition can also be given implicitly via the partial sums
-                                     :math:`S_{e',x,e}(-\infty, \mbox{time_start}]`.
-        :type initial_state: int
-        :param initial_state: if there are no event times before `time_start`, this is used as the initial state.
-        :type max_number_of_events: int
-        :param max_number_of_events: the simulation stops when this number of events is reached
-                                     (including the initial condition).
-        :rtype: array, array of int, array of int
-        :return: the times at which the events occur, their types and the values of the state process right after
-                 each event. Note that these include the initial condition as well.
-        """
         os_info = os.uname()
         print('Simulation is being performed on the following machine:\n {}'.format(os_info))
         time_start=self.liquidator.time_start
@@ -1036,7 +1009,8 @@ class SDHawkes:
             self.simulated_states=np.array(states, copy=True)
             if report_intensities:
                 self.history_of_intensities = np.array(history_of_intensities, copy=True)
-        return times, events, states, volumes,inventory, history_of_intensities
+        else:
+            return times, events, states, volumes,inventory, history_of_intensities
     
     
    
@@ -1139,7 +1113,7 @@ class SDHawkes:
         self.nonparam_estim = copy.copy(nonparam_estim)
     def store_mle_estim(self,mle_estim):
         self.mle_estim = mle_estim
-    def create_mle_estim(self, str type_of_input = 'simulated', store_trans_prob=True, store_dirichlet_param=False):
+    def create_mle_estim(self, str type_of_input = 'simulated', store_trans_prob=True, store_dirichlet_param=False, times=None, events=None, states = None, volumes=None):
         if type_of_input == 'simulated':
             times=self.simulated_times
             events=self.simulated_events
@@ -1154,9 +1128,19 @@ class SDHawkes:
             states=self.data.observed_states
             volumes = self.data.observed_volumes
             assert self.n_levels == self.data.n_levels
+        elif type_of_input == 'passed':
+            times = np.array(times, copy=True, dtype=DTYPEf)
+            events = np.array(events, copy=True, dtype=DTYPEi)
+            states = np.array(states, copy=True, dtype=DTYPEi)
+            try:
+                volumes = np.array(volumes, copy=True, dtype=DTYPEf)
+            except:
+                volumes = np.zeros((len(times),2*self.n_levels), dtype=DTYPEf)
+            assert len(times)==len(events)
+            assert len(events)==len(states)
         else:
             print("ERROR: type_of_input = '{}' not recognised".format(type_of_input))
-            raise ValueError("type of input not recognised. It must be either 'simulated' or 'empirical'")
+            raise ValueError("type of input not recognised. It must be either 'simulated', or 'empirical', or 'passed'")
         self.mle_estim=mle_estim.EstimProcedure(
             self.number_of_event_types, self.number_of_states,
             times, events, states,

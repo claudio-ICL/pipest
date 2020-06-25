@@ -39,3 +39,4 @@ pipest/models/*/*readout*.txt
 pipest/models/*/*/*readout*.txt
 pipest/models/*/*/*/*readout*.txt
 pipest/models/*/*/*/*/*readout*.txt
+pipest/lobster/py_scripts/build/temp.linux-x86_64-3.7/prepare_from_lobster.o

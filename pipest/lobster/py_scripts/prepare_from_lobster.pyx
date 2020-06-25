@@ -6,8 +6,8 @@ while (not os.path.basename(path_pipest)=='pipest') and (n<6):
     n+=1 
 if not os.path.basename(path_pipest)=='pipest':
     raise ValueError("path_pipest not found. Instead: {}".format(path_pipest))
-cdef str path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'
-cdef str path_lobster=path_pipest+'/lobster_for_sdhawkes'
+cdef str path_sdhawkes=path_pipest+'/sdhawkes'
+cdef str path_lobster=path_pipest+'/lobster'
 cdef str path_lobster_data=path_lobster+'/data'
 cdef str path_lobster_pyscripts=path_lobster+'/py_scripts'
 

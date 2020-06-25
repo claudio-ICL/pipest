@@ -1,7 +1,6 @@
 #cython: boundscheck=False, wraparound=False, nonecheck=False 
 
 import os
-
 cdef str path_pipest = os.path.abspath('./')
 n=0
 while (not os.path.basename(path_pipest)=='pipest') and (n<6):
@@ -9,11 +8,10 @@ while (not os.path.basename(path_pipest)=='pipest') and (n<6):
     n+=1 
 if not os.path.basename(path_pipest)=='pipest':
     raise ValueError("path_pipest not found. Instead: {}".format(path_pipest))
-cdef str path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'
-cdef str path_lobster=path_pipest+'/lobster_for_sdhawkes'
+cdef str path_sdhawkes=path_pipest+'/sdhawkes'
+cdef str path_lobster=path_pipest+'/lobster'
 cdef str path_lobster_pyscripts=path_lobster+'/py_scripts'
-
-    
+   
 import sys
 sys.path.append(path_sdhawkes+'/')
 sys.path.append(path_sdhawkes+'/resources/')
@@ -45,9 +43,6 @@ DTYPEf = np.float
 DTYPEi = np.int
 ctypedef np.float_t DTYPEf_t
 ctypedef np.int_t DTYPEi_t
-
-
-
 
 class Filter:
     def __init__(self, enforce_positivity=False,
@@ -229,9 +224,10 @@ class EstimProcedure:
             d_E,d_S,self.events,self.states,verbose=v)    
     def store_expected_intensities(self):
         print("I am storing expected intensities")
+        cdef DTYPEf_t [:] times_memview = self.times
         cdef DTYPEi_t [:] events_memview = self.events
         cdef np.ndarray[DTYPEf_t, ndim=1] Lambda = np.zeros(self.num_event_types, dtype=DTYPEf)
-        Lambda=store_expected_intensities(self.num_event_types,events_memview, self.time_horizon)
+        Lambda=store_expected_intensities(self.num_event_types, times_memview, events_memview)
         self.expected_intensities = Lambda
     def store_nonsingular_expected_jumps(self, parallel=True):
         cdef int N = max(1,self.num_event_types)
@@ -313,7 +309,6 @@ class EstimProcedure:
         cdef DTYPEf_t [:] quadpnts_memview = self.quadrature.partition
         cdef DTYPEf_t [:] gridpnts_memview = self.grid.partition
         cdef int e1=0, x1=0
-#         for x1 in prange(d_S, nogil=True):
         for x1 in range(d_S):
             for e1 in range(d_E):
                 estimate_g_hat_at_gridpnts(
@@ -323,14 +318,12 @@ class EstimProcedure:
                     lt_memview, count_memview,
                     gridpnts_memview,
                 )
-#                 print("g_hat_at_gridpoints[{},{},{},:] has been estimated".format(e1,x1,e))
                 set_nonsingular_expected_jumps_from_grid(
                     e1, x1, e, Q, G,
                     g_hat_memview, g_hat_one_memview,
                     g_hat_at_quadpnts_memview, g_hat_at_gridpnts_memview,
                     quadpnts_memview, gridpnts_memview,
                 )
-                
         return g_hat, g_hat_one, g_hat_at_quadpnts, g_hat_at_gridpnts           
 
     def set_convolution_kernels(self,use_filter=False):
@@ -565,7 +558,7 @@ cdef void estimate_g_hat_at_gridpnts(
         if n==0:
             prev_pnt=0.0
         else:
-            prev_pnt=gridpnts[n-1]
+            prev_pnt=gridpnts[n]
         next_pnt=gridpnts[n+1]
         delta_pnt=next_pnt-prev_pnt
         for k1 in range(count[e1,x1]):
@@ -616,13 +609,10 @@ cdef void set_nonsingular_expected_jumps_from_grid(
                     t, t_0, t_1, k)
                 g_hat[e1,x1,e,m,n]=res.integral_0/(quadpnts[n+1]-quadpnts[n])
                 g_hat_one[e1,x1,e,m,n]= - res.integral_1/(quadpnts[n+1]-quadpnts[n])                
-    
-        
 cdef struct result_eval_integr:
     DTYPEf_t value
     DTYPEf_t integral_0
     DTYPEf_t integral_1
-        
 cdef result_eval_integr eval_integr_g_hat_at_gridpnts(
     int e1, int x1, int e, int num_gridpnts,
     DTYPEf_t [:,:,:,:] g_hat_at_gridpnts,
@@ -780,7 +770,6 @@ cdef void produce_matrix_A(
             i+=1
         j+=1
               
-
 cdef void produce_b_e(
     int e1, int x1, int e, int d_S, int Q,
     DTYPEf_t [:,:,:,:] g_hat_at_quadpnts,
@@ -792,27 +781,28 @@ cdef void produce_b_e(
         b_e[i]=g_hat_at_quadpnts[e1,x1,e,m]
         i+=1
         
-        
-
-cdef DTYPEf_t estimate_Lambda_e(DTYPEi_t e,DTYPEi_t [:] events, DTYPEf_t time_horizon) nogil:
+cdef DTYPEf_t estimate_Lambda_e(DTYPEi_t e, DTYPEf_t [:] times, DTYPEi_t [:] events) nogil:
     cdef DTYPEi_t j=0
     cdef DTYPEi_t N_e=0
-    for j in range(len(events)):
+    cdef DTYPEf_t result=0.0
+    for j in range(1,len(events)):
         if (events[j]==e):
             N_e+=1
-    return float(N_e)/time_horizon  
+            result+=float(N_e)/times[j]
+    result/=N_e
+    return result  
 
-def store_expected_intensities(int num_event_types, DTYPEi_t [:] events, DTYPEf_t time_horizon):
+def store_expected_intensities(int num_event_types, DTYPEf_t [:] times, DTYPEi_t [:] events):
     cdef int e=0
     cdef np.ndarray[DTYPEf_t, ndim=1] Lambda = np.zeros(num_event_types, dtype=DTYPEf)
     cdef DTYPEf_t [:] Lambda_memview = Lambda
     for e in prange(num_event_types, nogil=True):
-        Lambda_memview[e] = estimate_Lambda_e(e, events, time_horizon)
+        Lambda_memview[e] = estimate_Lambda_e(e, times, events)
     return Lambda    
 
 cdef DTYPEf_t estimate_mark_prob(int e, int y,
     DTYPEi_t [:] events, DTYPEi_t [:]  states, int len_events) nogil:
-    cdef DTYPEi_t count_e=0,count_y=0
+    cdef DTYPEi_t count_e=0, count_y=0
     cdef DTYPEi_t j=0
     for j in range(len_events):
         if (events[j]==e):
@@ -829,10 +819,8 @@ def store_distribution_of_marks(int num_event_types, int num_states,
     cdef DTYPEf_t [:,:] prob_memview = prob
     for e in prange(num_event_types,nogil=True):
         for y in range(num_states):
-            prob_memview[e,y]=estimate_mark_prob(e,y,events,states, len_events)        
+            prob_memview[e,y]=estimate_mark_prob(e, y, events, states, len_events)        
     return prob        
-
-    
 
 cdef void convolute(
     int e1, int x1, int  e,
@@ -868,8 +856,6 @@ cdef void interpolate(
         else:
             interp_data[e1,x1,e,k]=m*time[k]+q
         
-    
-    
 class FitPowerlaw:
     def __init__(self,
                  int num_event_types, int num_states,
@@ -919,5 +905,3 @@ class FitPowerlaw:
                 imp_coef[e1,x1,e]=np.exp(fitted_model.intercept_)
                 dec_coef[e1,x1,e]=np.maximum(1.0+tol,-fitted_model.coef_)
         return imp_coef, dec_coef        
-        
-    
