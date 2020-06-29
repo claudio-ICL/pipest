@@ -331,7 +331,7 @@ def simulate(int number_of_event_types,
     cdef np.ndarray[DTYPEf_t, ndim=1] intensities = np.ones(number_of_event_types, dtype=DTYPEf)
     cdef DTYPEf_t intensity_overall = 0.0
     if initialise_intensity_on_history:
-        intensities=computation.fast_compute_intensities_given_lt(
+        intensities=computation.compute_intensities_given_lt(
             time_start,labelled_times, count,
             base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
             number_of_event_types, number_of_states,
@@ -372,7 +372,7 @@ def simulate(int number_of_event_types,
         if time <= time_end:  # if we are not out of the considered time window
             
             'Update the intensities of events and compute the total intensity'
-            intensities=computation.fast_compute_intensities_given_lt(
+            intensities=computation.compute_intensities_given_lt(
                 time, labelled_times, count,
                 base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
                 number_of_event_types, number_of_states,           
@@ -615,7 +615,7 @@ def simulate_liquidation(
     cdef np.ndarray[DTYPEf_t, ndim=1] intensities = np.ones(number_of_event_types, dtype=DTYPEf)
     cdef DTYPEf_t intensity_overall = 0.0
     if initialise_intensity_on_history:
-        intensities=computation.fast_compute_intensities_given_lt(
+        intensities=computation.compute_intensities_given_lt(
             time_start, labelled_times, count,
             base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
             number_of_event_types, number_of_states,
@@ -632,8 +632,6 @@ def simulate_liquidation(
     cdef np.ndarray[DTYPEf_t, ndim=1] result_times = -np.ones(max_size, dtype=DTYPEf)
     cdef np.ndarray[DTYPEi_t, ndim=1] result_events = -np.ones(max_size, dtype=DTYPEi)
     cdef np.ndarray[DTYPEi_t, ndim=1] result_states = -np.ones(max_size, dtype=DTYPEi)
-    
-    
     'Initialise history of volumes'
     cdef np.ndarray[DTYPEf_t, ndim=2] volume = -np.ones((max_size,2*n_levels),dtype=DTYPEf)
     volume[0:number_of_initial_events,:]=np.array(initial_volumes,dtype=DTYPEf,copy=True)
@@ -666,7 +664,6 @@ def simulate_liquidation(
     
     print('start of simulation')
     print('  time_start={},  time at start ={}'.format(time_start,time))
-    clock.sleep(2)
     while time < time_end and n < max_size:
         'Generate an exponential random variable with rate parameter intensity_overall'
         random_exponential = np.random.exponential(1.0 / intensity_overall)
@@ -676,13 +673,13 @@ def simulate_liquidation(
             
             'Update the intensities of events and compute the total intensity'
             if is_liquidation_terminated:
-                intensities=computation.fast_compute_intensities_given_lt(
+                intensities=computation.compute_intensities_given_lt(
                     time,labelled_times, count,
                     base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
                     number_of_event_types, number_of_states, first_event_index=1
                 )
             else:
-                intensities=computation.fast_compute_intensities_given_lt(
+                intensities=computation.compute_intensities_given_lt(
                     time, labelled_times, count,
                     base_rates, impact_coefficients, decay_coefficients, reshaped_imp_coef,
                     number_of_event_types, number_of_states, first_event_index=0
@@ -796,6 +793,7 @@ def simulate_liquidation(
 #            np.expand_dims(result_states[number_of_initial_events:n][idx],axis=1), *args_volume_sampling)
 #        except:
 #            print('lob_hawkes_simulation. I could not sample volumes from dirichlet distribution')
+    cdef DTYPEf_t liquid_start_time=time_start
     cdef int idx_liquid_termination = np.argmin(inventory)
     cdef DTYPEf_t liquid_termination_time = copy.copy(result_times[n-1])
     if is_liquidation_terminated:
@@ -809,9 +807,9 @@ def simulate_liquidation(
     print(termination_message)
     print('End of simulation: run_time={:.1f} seconds'.format(run_time))
     if report_history_of_intensities:
-        return result_times[t_0:n], result_events[t_0:n], result_states[t_0:n], result_volumes, inventory[t_0:n],liquid_termination_time,history_of_intensities[:idx_of_history,:]
+        return result_times[t_0:n], result_events[t_0:n], result_states[t_0:n], result_volumes, inventory[t_0:n], liquid_start_time, liquid_termination_time,history_of_intensities[:idx_of_history,:]
     else:
-        return result_times[t_0:n], result_events[t_0:n], result_states[t_0:n], result_volumes, inventory[t_0:n],liquid_termination_time, history_of_intensities[t_0:n,:]
+        return result_times[t_0:n], result_events[t_0:n], result_states[t_0:n], result_volumes, inventory[t_0:n], liquid_start_time, liquid_termination_time, history_of_intensities[t_0:n,:]
 
 cdef long convert_multidim_state_code(
     int num_of_states, DTYPEi_t [:,:] arr_state_enc, DTYPEi_t [:] state) nogil:

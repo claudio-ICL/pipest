@@ -153,8 +153,8 @@ def compute_intensity(double t,
         result+=base_rates_memview[e]+np.dot(alpha_memview[:,e],S_memview[:,e])
     return result
 
-"Use fast_compute_intensities_given_lt to improve performance by utilising less loops"
-def fast_compute_intensities_given_lt(
+"This newer compute_intensities_given_lt improves performance by utilising less loops"
+def compute_intensities_given_lt(
     double t,
     np.ndarray[DTYPEf_t, ndim=3] labelled_times,
     np.ndarray[DTYPEi_t, ndim=2] count,           
@@ -189,26 +189,27 @@ def fast_compute_intensities_given_lt(
         intensities_memview[e]+= base_rates_memview[e]        
     return intensities    
 
-def compute_intensities_given_lt(double t,
-                      np.ndarray[DTYPEf_t, ndim=3] labelled_times,
-                      np.ndarray[DTYPEi_t, ndim=2] count,           
-                      np.ndarray[DTYPEf_t, ndim=1] base_rates,
-                      np.ndarray[DTYPEf_t, ndim=3] impact_coefficients,
-                      np.ndarray[DTYPEf_t, ndim=3] decay_coefficients,
-                      np.ndarray[DTYPEf_t, ndim=2] reshaped_imp_coef,           
-                      int num_event_types,
-                      int num_states,           
-                      int first_event_index = 0           
-                      ):
-    cdef np.ndarray[DTYPEf_t, ndim=1] intensities = np.zeros(num_event_types,dtype=DTYPEf)
-    cdef float s = -1.0 # the input s=-1.0 accounts for summing over all times smaller than t
-    cdef np.ndarray[DTYPEf_t,ndim=2] S = np.ones_like(reshaped_imp_coef)
-    cdef int e = 0
-    for e in range(first_event_index,num_event_types):
-        S[:,e] = compute_ESSE_partial(
-            t,s, num_event_types, num_states, decay_coefficients[:,:,e], labelled_times, count).flatten()
-        intensities[e]=base_rates[e]+np.dot(reshaped_imp_coef[:,e],S[:,e])
-    return intensities 
+#Older compute_intensities_given_lt:
+#def compute_intensities_given_lt(double t,
+#                      np.ndarray[DTYPEf_t, ndim=3] labelled_times,
+#                      np.ndarray[DTYPEi_t, ndim=2] count,           
+#                      np.ndarray[DTYPEf_t, ndim=1] base_rates,
+#                      np.ndarray[DTYPEf_t, ndim=3] impact_coefficients,
+#                      np.ndarray[DTYPEf_t, ndim=3] decay_coefficients,
+#                      np.ndarray[DTYPEf_t, ndim=2] reshaped_imp_coef,           
+#                      int num_event_types,
+#                      int num_states,           
+#                      int first_event_index = 0           
+#                      ):
+#    cdef np.ndarray[DTYPEf_t, ndim=1] intensities = np.zeros(num_event_types,dtype=DTYPEf)
+#    cdef float s = -1.0 # the input s=-1.0 accounts for summing over all times smaller than t
+#    cdef np.ndarray[DTYPEf_t,ndim=2] S = np.ones_like(reshaped_imp_coef)
+#    cdef int e = 0
+#    for e in range(first_event_index,num_event_types):
+#        S[:,e] = compute_ESSE_partial(
+#            t,s, num_event_types, num_states, decay_coefficients[:,:,e], labelled_times, count).flatten()
+#        intensities[e]=base_rates[e]+np.dot(reshaped_imp_coef[:,e],S[:,e])
+#    return intensities 
 
 def compute_intensities(double t,
                       np.ndarray[DTYPEf_t, ndim=1] times,
@@ -311,13 +312,13 @@ def compute_history_of_intensities(int n_event_types,
                                    np.ndarray[DTYPEf_t, ndim=1] base_rates,
                                    np.ndarray[DTYPEf_t, ndim=3] imp_coef,
                                    np.ndarray[DTYPEf_t, ndim=3] dec_coef,
+                                   liquidator_present=False,
                                    DTYPEf_t start_time_zero_event=-1.0,
                                    DTYPEf_t end_time_zero_event=-2.0,
                                    int density_of_eval_points=100,
                                   ):
-    if (start_time_zero_event < 0):
+    if not liquidator_present:
         start_time_zero_event = float(times[0])
-    if end_time_zero_event < start_time_zero_event:
         end_time_zero_event=float(times[len(times)-1])
     cdef np.ndarray[DTYPEf_t, ndim=3] labelled_times =np.zeros((n_event_types,n_states,len(times)),dtype=DTYPEf)
     cdef np.ndarray[DTYPEi_t, ndim=2] count=np.zeros((n_event_types,n_states),dtype=DTYPEi)
@@ -1174,7 +1175,7 @@ def compute_kernel_of_bm_profile_intensity(double t, int num_states,
                     S_memview[x1] += power_comp
     return np.dot(alpha,S)
 
-def compute_intensity_of_bm_profile(#np.ndarray[DTYPEf_t, ndim=1] eval_time,
+def compute_intensity_of_bm_profile(
                                  DTYPEf_t t,
                                  int n_event_types,
                                  int n_states,   
@@ -1192,7 +1193,6 @@ def compute_intensity_of_bm_profile(#np.ndarray[DTYPEf_t, ndim=1] eval_time,
     """
     It is assumed that index 0 refers to liquidator's interventions
     """
-#     cdef DTYPEf_t t = np.squeeze(eval_time[0])
     cdef DTYPEf_t lambda_tilda_0_defl = 0.0
     cdef DTYPEi_t current_state=find_current_state(t,times,states)
     if is_liquidator_active:
@@ -1216,30 +1216,24 @@ def compute_intensity_of_bm_profile(#np.ndarray[DTYPEf_t, ndim=1] eval_time,
             labelled_times,count)
     return lambda_tilda_0_defl+np.dot(time_kernel,state_transition)
         
-def compute_history_of_bm_profile_intensity(int n_event_types,
-                                   int n_states,
-                                   list deflationary_states,
-                                   list inflationary_states,         
-                                   np.ndarray[DTYPEf_t, ndim=1] times,
-                                   np.ndarray[DTYPEi_t, ndim=1] events,
-                                   np.ndarray[DTYPEi_t, ndim=1] states,
-                                   np.ndarray[DTYPEf_t, ndim=1] inventory,        
-                                   np.ndarray[DTYPEf_t, ndim=1] base_rates,
-                                   np.ndarray[DTYPEf_t, ndim=3] imp_coef,
-                                   np.ndarray[DTYPEf_t, ndim=3] dec_coef,
-                                   np.ndarray[DTYPEf_t, ndim=3] trans_prob,
-                                   DTYPEf_t time_liquidation_starts =-1.0,         
-                                   int density_of_eval_points=1000,
-                                  ):
-    if time_liquidation_starts<0:
-        time_liquidation_starts = copy.copy(
-            times[
-                (np.diff(
-                    np.concatenate([[inventory[0]],inventory]))
-                 <0)
-            ][0]
-        )
-    cdef DTYPEf_t time_liquidation_ends = np.argmin(inventory)
+def compute_history_of_bm_profile_intensity(
+        int n_event_types,
+        int n_states,
+        list deflationary_states,
+        list inflationary_states,         
+        DTYPEf_t liquid_start_time,
+        DTYPEf_t liquid_termination_time,
+        np.ndarray[DTYPEf_t, ndim=1] times,
+        np.ndarray[DTYPEi_t, ndim=1] events,
+        np.ndarray[DTYPEi_t, ndim=1] states,
+        np.ndarray[DTYPEf_t, ndim=1] base_rates,
+        np.ndarray[DTYPEf_t, ndim=3] imp_coef,
+        np.ndarray[DTYPEf_t, ndim=3] dec_coef,
+        np.ndarray[DTYPEf_t, ndim=3] trans_prob,
+        int density_of_eval_points=1000,
+       ):
+    cdef DTYPEf_t time_liquidation_starts = liquid_start_time
+    cdef DTYPEf_t time_liquidation_ends = liquid_termination_time
     cdef np.ndarray[DTYPEf_t, ndim=3] labelled_times =np.zeros((n_event_types,n_states,len(times)),dtype=DTYPEf)
     cdef np.ndarray[DTYPEi_t, ndim=2] count=np.zeros((n_event_types,n_states),dtype=DTYPEi)
     labelled_times,count=distribute_times_per_event_state(
@@ -1624,3 +1618,19 @@ def merge_sorted_arrays(np.ndarray[DTYPEf_t, ndim=1] a,np.ndarray[DTYPEf_t, ndim
     result[b_pos] = b
     result[mask] = a
     return result, b_pos        
+
+def select_interval(x, DTYPEf_t t0, DTYPEf_t t1):
+    cdef int ndims=x.ndim
+    if ndims==1:
+        idx0=bisect.bisect_left(x,t0)
+        idx1=bisect.bisect_right(x,t1)
+        return np.array(x[idx0:idx1],copy=True)
+    elif ndims==2:
+        idx0=bisect.bisect_left(x[:,0],t0)
+        idx1=bisect.bisect_right(x[:,0],t1)
+        return np.array(x[idx0:idx1,:],copy=True)
+    else:
+        print("Error: x.ndim expected to be either 1 or 2, but x.ndim={}".format(ndims))
+        raise ValueError("Incorrect shape")
+    return 1
+

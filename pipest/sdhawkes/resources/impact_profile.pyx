@@ -19,7 +19,7 @@ sys.path.append(path_lobster_pyscripts+'/')
 from cython.parallel import prange
 cimport openmp
 #openmp.omp_set_num_threads(min(16,os.cpu_count()))
-print("openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
+#print("openmp.omp_get_max_threads(): {}".format(openmp.omp_get_max_threads()))
 import time
 import numpy as np
 cimport numpy as np
@@ -44,9 +44,10 @@ ctypedef np.int64_t DTYPEil_t
 
 import computation
 import minimisation_algo as minim_algo
+import mle_estimation as mle_estim
 import goodness_of_fit
     
-    
+import matplotlib.pyplot as plt    
 
 class Multivariate_sdHawkesProcess:
     def __init__(self,
@@ -57,14 +58,20 @@ class Multivariate_sdHawkesProcess:
                  np.ndarray[DTYPEf_t, ndim=3] impact_coefficients,
                  np.ndarray[DTYPEf_t, ndim=3] decay_coefficients,
                  np.ndarray[DTYPEf_t, ndim=3] trans_prob):
-        self.sampled_times=times
-        self.sampled_events=events
-        self.sampled_states=states
+        assert len(times)==len(events)
+        assert len(times)==len(states)
+        assert base_rates.shape[0]==impact_coefficients.shape[0]
+        assert impact_coefficients.shape[0]==decay_coefficients.shape[0]
+        assert impact_coefficients.shape[0]==trans_prob.shape[1]
+        assert impact_coefficients.shape[1]==trans_prob.shape[0]
+        self.times=times
+        self.events=events
+        self.states=states
         self.base_rates=base_rates
         self.impact_coefficients=impact_coefficients
         self.decay_coefficients=decay_coefficients
         self.imp_dec_ratio=impact_coefficients/(decay_coefficients-1.0)
-        self.trans_prob=trans_prob
+        self.transition_probabilities=trans_prob
         self.num_event_types=base_rates.shape[0]
         self.num_states=trans_prob.shape[0]
         cdef np.ndarray[DTYPEf_t, ndim=3] labelled_times =\
@@ -80,9 +87,19 @@ class Multivariate_sdHawkesProcess:
 class Univariate_Ordinary_HawkesProcess:
     def __init__(self,
                  np.ndarray[DTYPEf_t, ndim=1] times,
-                 int num_init_guesses = 8,
-                 int maxiter = 100,
-                 time_start=None, time_end=None,):
+                 time_start=None, time_end=None,
+                 int num_init_guesses = 3,
+                 parallel = False,
+                 DTYPEf_t max_imp_coef = 100.0,
+                 DTYPEf_t learning_rate = 0.0005,
+                 int maxiter = 50,
+                 DTYPEf_t tol = 1.0e-07,
+                 use_prange = False,
+                 int number_of_attempts = 3,
+                 int num_processes = 0,
+                 int batch_size = 5000,
+                 int num_run_per_minibatch = 1,
+                ):
         self.sampled_times=times
         cdef DTYPEf_t t_first, t_last
         if time_start == None:
@@ -95,16 +112,29 @@ class Univariate_Ordinary_HawkesProcess:
             t_last=copy.copy(time_end)
         self.time_start=t_first
         self.time_end=t_last
-        cdef DTYPEf_t base_rate, imp_coef, dec_coef
-        base_rate, imp_coef, dec_coef = estimate_ordinary_hawkes(
-            times, self.time_start, self.time_end,
+        cdef np.ndarray[DTYPEi_t, ndim=1] events = np.zeros_like(times, dtype=DTYPEi)
+        base_rate, imp_coef, dec_coef =\
+            mle_estim.estimate_ordinary_hawkes(
+            0,
+            1,
+            times,
+            events,
+            time_start,
+            time_end,
             num_init_guesses = num_init_guesses,
-            maxiter = maxiter, return_minim_proc = 0
-        )
+            parallel = parallel,
+            max_imp_coef = max_imp_coef ,
+            learning_rate = learning_rate ,
+            maxiter =maxiter ,
+            tol = tol,
+            use_prange = use_prange,
+            number_of_attempts = number_of_attempts,
+            num_processes = num_processes,
+            batch_size = batch_size,
+            num_run_per_minibatch = num_run_per_minibatch)
         self.base_rate=base_rate
-        self.imp_coef=imp_coef
-        self.dec_coef=dec_coef
-        
+        self.imp_coef=imp_coef[0,0]
+        self.dec_coef=dec_coef[0,0]
     def compute_expectation(self,DTYPEf_t eval_time):
         cdef DTYPEf_t result = self.base_rate*eval_time
         alpha=self.imp_coef
@@ -117,7 +147,6 @@ class Univariate_Ordinary_HawkesProcess:
                           -alpha/((beta-1)*(beta-2)) + alpha*pow(eval_time+1,2-beta)/((beta-1)*(beta-2))
                          )
         return result
-    
     def create_goodness_of_fit(self,):
         cdef np.ndarray[DTYPEf_t, ndim=3] phi = np.ones((1,1,1),dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=1] nu = np.array(self.base_rate,copy=True,dtype=DTYPEf).reshape((1,))
@@ -128,48 +157,80 @@ class Univariate_Ordinary_HawkesProcess:
             np.zeros(len(self.sampled_times),dtype=DTYPEi), np.zeros(len(self.sampled_times),dtype=DTYPEi))
         
 
-class impact():
+class Impact():
     def __init__(self,liquidator,
-                 list weakly_defl_states,
-                 np.ndarray[DTYPEf_t, ndim=1] times,
-                 np.ndarray[DTYPEi_t, ndim=1] events,
-                 np.ndarray[DTYPEi_t, ndim=1] states,):
+                 state_enc,
+                 ):
         self.liquidator=liquidator
-        self.weakly_defl_states=weakly_defl_states
-        cdef np.ndarray[DTYPEi_t, ndim=1] ar_w_defl = np.array(weakly_defl_states,dtype=DTYPEi)
+        self.state_enc=state_enc
+        self.weakly_defl_states=state_enc.weakly_deflationary_states
+        cdef np.ndarray[DTYPEi_t, ndim=1] ar_w_defl = np.array(
+                state_enc.weakly_deflationary_states,dtype=DTYPEi)
         self.array_weakly_defl_states=ar_w_defl
-        self.times=times
-        self.events=events
-        self.states=states
-        
+    def store_sdhawkes(self,
+        np.ndarray[DTYPEf_t, ndim=1] base_rates,
+        np.ndarray[DTYPEf_t, ndim=3] impact_coefficients,
+        np.ndarray[DTYPEf_t, ndim=3] decay_coefficients,
+        np.ndarray[DTYPEf_t, ndim=3] trans_prob,
+        np.ndarray[DTYPEf_t, ndim=1] times,
+        np.ndarray[DTYPEi_t, ndim=1] events,
+        np.ndarray[DTYPEi_t, ndim=1] states,
+        ):
+        self.sdhawkes = Multivariate_sdHawkesProcess(
+            times,events,states,
+            base_rates, impact_coefficients,
+            decay_coefficients, trans_prob)
     def produce_reduced_weakly_defl_pp(self,
-                 int num_init_guesses = 8,
-                 int maxiter = 100,
-                 time_start=None, time_end=None,):
+                 time_start=None, time_end=None,
+                 int num_init_guesses = 3,
+                 parallel = False,
+                 DTYPEf_t max_imp_coef = 100.0,
+                 DTYPEf_t learning_rate = 0.0005,
+                 int maxiter = 50,
+                 DTYPEf_t tol = 1.0e-07,
+                 use_prange = False,
+                 int number_of_attempts = 3,
+                 int num_processes = 0,
+                 int batch_size = 5000,
+                 int num_run_per_minibatch = 2,
+                ):
+        if time_start==None:
+            time_start=self.times[0]
+        if time_end==None:
+            time_end=self.times[len(self.times)-1]
         idx = np.logical_and(
-            np.isin(self.states,self.weakly_defl_states),
+            np.isin(self.sdhawkes.states,self.weakly_defl_states),
             self.events>=1
         )        
-        cdef np.ndarray[DTYPEf_t, ndim=1] reduced_times = np.array(self.times[idx],copy=True,dtype=DTYPEf)
+        cdef np.ndarray[DTYPEf_t, ndim=1] reduced_times = np.array(self.sdhawkes.times[idx],copy=True,dtype=DTYPEf)
         self.reduced_weakly_defl_pp = Univariate_Ordinary_HawkesProcess(
-            reduced_times, num_init_guesses, maxiter, time_start, time_end)
+            reduced_times, time_start, time_end,
+            num_init_guesses = num_init_guesses,
+            parallel = parallel,
+            max_imp_coef = max_imp_coef ,
+            learning_rate = learning_rate ,
+            maxiter =maxiter ,
+            tol = tol,
+            use_prange = use_prange,
+            number_of_attempts = number_of_attempts,
+            num_processes = num_processes,
+            batch_size = batch_size,
+            num_run_per_minibatch = num_run_per_minibatch)
         print('impact: reduced_weakly_defl_pp has been produced, with the following coefficients')
         message=' nu={}'.format(self.reduced_weakly_defl_pp.base_rate)
         message+=' alpha={}'.format(self.reduced_weakly_defl_pp.imp_coef)
         message+=' beta={}'.format(self.reduced_weakly_defl_pp.dec_coef)
         print(message)
-        
-    def produce_weakly_defl_pp(self,
-        np.ndarray[DTYPEf_t, ndim=1] base_rates,
-        np.ndarray[DTYPEf_t, ndim=3] impact_coefficients,
-        np.ndarray[DTYPEf_t, ndim=3] decay_coefficients,
-        np.ndarray[DTYPEf_t, ndim=3] trans_prob
-    ):
-        self.weakly_defl_pp = Multivariate_sdHawkesProcess(
-            self.times,self.events,self.states,
-            base_rates, impact_coefficients, decay_coefficients, trans_prob)
-        
-        
+#    def weakly_defl_pp(self,
+#        np.ndarray[DTYPEf_t, ndim=1] base_rates,
+#        np.ndarray[DTYPEf_t, ndim=3] impact_coefficients,
+#        np.ndarray[DTYPEf_t, ndim=3] decay_coefficients,
+#        np.ndarray[DTYPEf_t, ndim=3] trans_prob
+#    ):
+#        self.weakly_defl_pp = Multivariate_sdHawkesProcess(
+#            self.times,self.events,self.states,
+#            base_rates, impact_coefficients, decay_coefficients, trans_prob)
+       
     def evaluate_compensator_of_weakly_defl_pp(self, DTYPEf_t eval_time):
         return compute_compensator_of_weakly_defl_pp(
             eval_time,
@@ -242,10 +303,88 @@ class impact():
             self.imp_profile_history = df
         return result
     
+    def store_impact_profile(self,np.ndarray[DTYPEf_t, ndim=2] impact_profile):
+        df=pd.DataFrame({'time': impact_profile[:,0], 'impact': impact_profile[:,1]})
+        self.impact_profile=df    
     def normalise_imp_profile_history(self):
         self.imp_profile_history[:,1] = np.tanh(self.imp_profile_history[:,1])
-        
-        
+
+    def store_bm_impact(self, 
+            int density_of_eval_points=1000):
+        profile, intensity = self.compute_bm_impact(
+                density_of_eval_points=density_of_eval_points)
+        df_1=pd.DataFrame({'time': profile[:,0], 'impact': profile[:,1]})
+        df_2=pd.DataFrame({'time': intensity[:,0], 'intensity': intensity[:,1]})
+        df=df_1.merge(df_2,how='inner',on='time')
+        self.bacrymuzy=df
+        self.bm_impact_profile=profile
+        self.bm_impact_intensity=intensity
+    def compute_bm_impact(self,
+        int density_of_eval_points=1000):
+        cdef np.ndarray[DTYPEf_t, ndim=2] history_of_profile_intensity = \
+        computation.compute_history_of_bm_profile_intensity(
+            self.sdhawkes.num_event_types,
+            self.sdhawkes.num_states,
+            self.state_enc.deflationary_states,
+            self.state_enc.inflationary_states,
+            self.liquidator.start_time,
+            self.liquidator.termination_time,
+            self.sdhawkes.times,
+            self.sdhawkes.events,
+            self.sdhawkes.states,
+            self.sdhawkes.base_rates,
+            self.sdhawkes.impact_coefficients,
+            self.sdhawkes.decay_coefficients,
+            self.sdhawkes.transition_probabilities,
+            density_of_eval_points=density_of_eval_points
+        )
+        cdef np.ndarray[DTYPEf_t, ndim=2] profile =\
+                computation.compute_bm_impact_profile(history_of_profile_intensity)
+        return profile, history_of_profile_intensity
+    def plot_bm_impact(self,
+            time_start=None, time_end=None,
+            plot_intensity=False,
+            plot_events=False,
+            save_fig=False, path=path_pipest, name='bm_impact_profile',
+            plot=True
+            ):
+        if time_start==None:
+            time_start=self.liquidator.start_time
+        if time_end==None:
+            time_end=self.liquidator.termination_time
+        profile=self.bm_impact_profile 
+        idx_start=bisect.bisect_left(profile[:,0], time_start)
+        idx_end=bisect.bisect(profile[:,0],time_end)
+        impact_profile=profile[idx_start:idx_end,:]
+        fig = plt.figure(figsize=(8,4))
+        ax_profile=fig.add_subplot(111)
+        if plot_events:
+            idx=np.logical_and(self.sdhawkes.times>=time_start,
+                    self.sdhawkes.times<=time_end)
+            times=self.sdhawkes.times[idx]
+            events=self.sdhawkes.events[idx]
+
+        if plot_intensity:
+            intensity=self.bm_impact_intensity
+            idx_start_intensity=bisect.bisect_left(intensity[:,0], time_start)
+            idx_end_intensity=bisect.bisect(intensity[:,0], time_end)
+            impact_intensity = intensity[idx_start_intensity:idx_end_intensity,:]
+            ax_intensity=ax_profile.twinx()
+            ax_profile.plot(
+                    impact_intensity[:,0], impact_intensity[:,1],
+                    color=[0,0.4,0.4,0.4],label='profile intensity')
+        ax_profile.plot(impact_profile[:,0], impact_profile[:,1],
+                color='green',label='impact_profile',linewidth=2.0)
+        ax_profile.set_xlabel('time')
+        ax_profile.set_ylabel('impact')
+        #ax_profile.set_yticks([])
+        ax_profile.legend()
+        fig.suptitle('Impact profile a` la Bacry-Muzy')
+        if save_fig:    
+            fname=path+'/'+name
+            plt.savefig(fname)
+        if plot:
+            plt.show()   
         
         
         
@@ -268,7 +407,7 @@ def compute_compensator_of_weakly_defl_pp(
     double [:,:,:] phi,
     DTYPEf_t liquid_termination_time,
 ):
-    cdef int len_times=copy.copy(len(times))
+    cdef int len_times=len(times)
     cdef int n=0, x=0, x1=0, e=1, e1=0, j=0
     cdef DTYPEf_t upper_time=0.0, T_n=copy.copy(times[0]), summand=0.0, total=0.0
     cdef DTYPEf_t result = 0.0
@@ -536,85 +675,6 @@ cdef double compute_gn(DTYPEf_t eval_time,
                 1 - pow(T_np1 - u +1, 1-beta_one_x1_e)
             )
     return base_rate*phi[X_n,0,x1]*phi[X_nm1,e,x]*integral
-
-
-def estimate_ordinary_hawkes(
-    np.ndarray[DTYPEf_t, ndim=1] times,
-    DTYPEf_t time_start,
-    DTYPEf_t time_end,
-    int num_init_guesses = 6,
-    int maxiter = 100,
-    int return_minim_proc = 0
-):
-    cdef np.ndarray[DTYPEf_t, ndim=3] labelled_times = times.reshape(1,1,-1)
-    cdef np.ndarray[DTYPEi_t, ndim=2] count = np.array(len(times),dtype=DTYPEi).reshape(1,1)
-    cdef DTYPEf_t nu = pre_guess_base_rate(times,time_start,time_end)
-    cdef np.ndarray[DTYPEf_t, ndim=1] guess_base_rate =\
-    np.random.uniform(low=max(0.1,0.1*nu),high=1.001*nu,size=(num_init_guesses,))
-    cdef np.ndarray[DTYPEf_t, ndim=1] guess_imp_coef = np.zeros(num_init_guesses, dtype=DTYPEf)
-    cdef np.ndarray[DTYPEf_t, ndim=1] guess_dec_coef =\
-    np.random.uniform(low=1.1, high=2.5,size=(num_init_guesses,))
-    list_initguesses = []
-    for n in range(num_init_guesses):
-        guess_imp_coef[n] = pre_guess_impact_coefficient(times,guess_base_rate[n],guess_dec_coef[n])
-        init_guess = np.concatenate(
-            [
-            np.atleast_1d(guess_base_rate[n]),
-            np.atleast_1d(guess_imp_coef[n]),
-            np.atleast_1d(guess_dec_coef[n])
-            ],axis=0
-        )
-        list_initguesses.append(init_guess)
-    minim = minim_algo.minimisation_procedure(
-        labelled_times,count,
-        time_start,time_end,
-        1,1,0,
-        learning_rate = 0.0001,
-        maxiter = maxiter
-    )
-    print('impact_profile.estimate_ordinary_hawkes: mle estimation.')
-    cdef double run_time = -time.time()
-    minim.parallel_minimisation(list_initguesses,return_results=False)    
-    cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(minim.minimiser,copy=True,dtype=DTYPEf)
-    base_rate,imp_coef,dec_coef=computation.array_to_parameters_partial(1, 1, x_min)
-    run_time += time.time()
-    print('estimate_ordinary_hawkes: run_time={}'.format(run_time))
-    if return_minim_proc:
-        return minim, base_rate,imp_coef,dec_coef
-    else:
-        return base_rate,imp_coef,dec_coef    
-    
-    
-def pre_guess_base_rate(
-    np.ndarray[DTYPEf_t, ndim=1] times,
-    np.float time_start,
-    np.float time_end):
-    cdef DTYPEf_t result =\
-    bisect.bisect_right(times,time_end)-bisect.bisect_left(times,time_start)
-    result /= (time_end - time_start)
-    return result
-
-def pre_guess_impact_coefficient(double [:] times,
-                                 DTYPEf_t nu,
-                                 DTYPEf_t beta
-                                ):
-    cdef DTYPEf_t result = 0.0
-    cdef int n = 0
-    if np.isclose(beta,2.0):
-        with nogil:
-            for n in range(1,len(times)):
-                result += max(0,n/nu - times[n])/(times[n] - log(times[n]+1) )
-    else:
-        with nogil:
-            for n in range(1,len(times)):
-                result += (
-                    max(0,n/nu - times[n])/
-                    (times[n]/(beta -1) - 1/((beta-1)*(beta-2)) 
-                     + pow(times[n]+1,2-beta)/((beta-1)*(beta-2))
-                    )
-                )
-    result/= (len(times)-1)
-    return result
 
 def store_factorials(int n):
     cdef int k =0

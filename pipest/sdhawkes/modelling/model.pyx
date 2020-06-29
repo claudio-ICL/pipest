@@ -53,7 +53,7 @@ import goodness_of_fit
 import uncertainty_quant
 import computation
 import simulation
-import impact_profile
+from impact_profile import Impact
 import dirichlet
 import lob_model
 import plot_tools
@@ -148,7 +148,7 @@ class Liquidator:
                  str type_of_liquid, 
                  DTYPEf_t control,
                  str control_type,
-                 time_start = None,
+                 start_time = None,
                  termination_time = None,
                 ):
         self.initial_inventory = initial_inventory
@@ -158,15 +158,25 @@ class Liquidator:
         self.type_of_liquid = type_of_liquid
         self.control = control
         self.control_type=control_type
-        if not time_start == None:
-            self.store_time_start(time_start)
+        if not start_time == None:
+            self.store_start_time(start_time)
         if not termination_time == None:
             self.store_termination_time(termination_time)
         if type_of_liquid =='constant_intensity':
             if control_type=='fraction_of_inventory':
                 self.num_orders=int(ceil(initial_inventory/control))
-    def store_time_start(self, DTYPEf_t time_start):
-        self.time_start=copy.copy(time_start)
+    def print_info(self,):
+        print("liquidator.initial_inventory: {}".format(self.initial_inventory))
+        print("liquidator.type_of_liquid: {}".format(self.type_of_liquid))
+        print("liquidator.control_type: {}".format(self.control_type))
+        print("liquidator.control: {}".format(self.control))
+        print("liquidator.start_time: {}".format(self.start_time))
+        try:
+            print("liquidator.termination_time: {}".format(self.termination_time))
+        except:
+            pass
+    def store_start_time(self, DTYPEf_t time):
+        self.start_time=time
     def store_termination_time(self, DTYPEf_t termination_time):
         self.termination_time = copy.copy(termination_time)
     def store_inventory_trajectory(self,times,inventory):
@@ -174,16 +184,8 @@ class Liquidator:
         cdef np.ndarray[DTYPEf_t, ndim=2] inv=inventory.reshape(-1,1)
         cdef np.ndarray[DTYPEf_t, ndim=2] trajectory=np.concatenate([t,inv],axis=1)
         self.inventory_trajectory=trajectory
-    def store_bm_impact_profile(self,
-                                np.ndarray[DTYPEf_t, ndim=2] bm_impact_profile,
-                                np.ndarray[DTYPEf_t, ndim=2] history_of_intensity):
-        df_1=pd.DataFrame({'time': bm_impact_profile[:,0], 'impact': bm_impact_profile[:,1]})
-        df_2=pd.DataFrame({'time': history_of_intensity[:,0], 'intensity': history_of_intensity[:,1]})
-        df=df_1.merge(df_2,how='inner',on='time')
-        self.bm_impact_profile=df
-    def store_impact_profile(self,np.ndarray[DTYPEf_t, ndim=2] impact_profile):
-        df=pd.DataFrame({'time': impact_profile[:,0], 'impact': impact_profile[:,1]})
-        self.impact_profile=df    
+    def get_impact(self,impact):
+        self.impact=impact
 
 
 class SDHawkes:
@@ -289,14 +291,79 @@ class SDHawkes:
               .format(name,path))
         with open(path+'/'+name,'wb') as outfile:
             pickle.dump(self,outfile)       
+    def get_configuration(self, model):
+        assert self.number_of_event_types==model.number_of_event_types
+        assert self.number_of_states==model.number_of_states
+        self.set_name_of_model(model.name_of_model)
+        try:
+            self.get_input_data(model.data, copy=True)
+            type_of_preestim=model.calibration.type_of_preestim
+            print('Copying data from given model')
+            self.create_mle_estim(type_of_input='empirical',store_trans_prob=True, store_dirichlet_param=True)
+            self.mle_estim.store_results_of_estimation(model.mle_estim.results_of_estimation)
+            self.mle_estim.store_hawkes_parameters()
+            self.mle_estim.create_goodness_of_fit()
+        except:
+            print("No data or mle_estim found in given model")
+            pass
+        self.set_hawkes_parameters(model.base_rates,
+                model.impact_coefficients, model.decay_coefficients)
+        self.set_transition_probabilities(model.transition_probabilities)
+        self.set_dirichlet_parameters(model.dirichlet_param)
+        try:
+            self.create_goodness_of_fit(type_of_input='empirical')
+        except:
+            print("I couldn't create goodness of fit on empirical data")
+        try:
+            self.calibrate_on_input_data(partial=False, 
+                    type_of_preestim = model.calibration.type_of_preestim,
+                    skip_mle_estim=True,
+                    dump_after_calibration=False, verbose=False)
+        except:
+            print("I couldn't create Calibration")
+
+    def setup_liquidator(self,
+            DTYPEf_t initial_inventory = 0.0,
+            time_start=None,
+            type_of_liquid='with_the_market',
+            liquidator_base_rate=None,
+            self_excitation=False,
+            DTYPEf_t  liquidator_control=0.5,
+            liquidator_control_type='fraction_of_inventory'):
+        try:
+            self.liquidator.print_info()
+            print("\nI am overwriting the above")
+            self.configure_liquidator_param(
+                                   initial_inventory=initial_inventory,
+                                   time_start=time_start,
+                                   liquidator_base_rate=liquidator_base_rate,
+                                   type_of_liquid=type_of_liquid,
+                                   self_excitation=self_excitation,
+                                   liquidator_control=liquidator_control,
+                                   liquidator_control_type=liquidator_control_type)
+        except:
+            self.introduce_liquidator(
+                                   initial_inventory=initial_inventory,
+                                   time_start=time_start,
+                                   liquidator_base_rate=liquidator_base_rate,
+                                   type_of_liquid=type_of_liquid,
+                                   self_excitation=self_excitation,
+                                   liquidator_control=liquidator_control,
+                                   liquidator_control_type=liquidator_control_type)
     def introduce_liquidator(self,
                              DTYPEf_t initial_inventory = 0.0,
                              time_start=None,
                              type_of_liquid='with_the_market',
                              liquidator_base_rate=None,
                              self_excitation=False,
-                             liquidator_control=0.5,
+                             DTYPEf_t  liquidator_control=0.5,
                              liquidator_control_type='fraction_of_inventory'):
+        try:
+            self.liquidator.print_info()
+            print("Liquidator exists. Use method 'setup_liquidator' instead")
+            raise ValueError("Liquidator exists")
+        except:
+            pass
         cdef str control_type = copy.copy(liquidator_control_type)
         cdef DTYPEf_t control=copy.copy(liquidator_control)
         cdef int idx_type = 0 
@@ -341,30 +408,20 @@ class SDHawkes:
         """
         decay_coeff=np.insert(decay_coeff,obj=0,values=decay_coeff[:,:,idx_type],axis=2)
         """
-        impact_decay_ratios updated accordingly
-        """
-        impact_decay_ratios=impact_coeff/(decay_coeff-1)
-        """
         Finally, transition probabilities are updated, but this does not matter since   it will never be used, but it is done to modify the dimension
         """
         trans_prob=np.insert(self.transition_probabilities,
                              obj=0,
                              values=self.transition_probabilities[:,0,:],
                              axis=1)
-        self.base_rates=base_rates
-        self.impact_coefficients=impact_coeff
-        self.decay_coefficients=decay_coeff
-        self.impact_decay_ratios = impact_decay_ratios
-        self.transition_probabilities=trans_prob
         self.number_of_event_types +=1
+        self.hawkes_kernel=HawkesKernel(self.number_of_event_types, self.number_of_states)
+        self.set_hawkes_parameters(base_rates, impact_coeff, decay_coeff)
+        self.set_transition_probabilities(trans_prob)
         if self_excitation:
             with_without_self_excitation='with'
         else:
             with_without_self_excitation='without'
-        print(('SDHawkes.introduce_liquidator:\n  type_of_liquid:{},' 
-               +' {} self excitation.'
-               +'\n new number of event types= {}')
-              .format(type_of_liquid,with_without_self_excitation,self.number_of_event_types))
         self.liquidator = Liquidator(initial_inventory,
                                      self.base_rates[0],
                                      self.impact_coefficients[:,:,0],
@@ -372,9 +429,9 @@ class SDHawkes:
                                      type_of_liquid,
                                      control,
                                      control_type,
-                                     time_start = time_start
+                                     start_time = time_start
                                     )
-
+        self.liquidator.print_info()
     def configure_liquidator_param(self,
                                    initial_inventory=None,
                                    time_start=None,
@@ -384,13 +441,12 @@ class SDHawkes:
                                    liquidator_control=0.5,
                                    liquidator_control_type='fraction_of_inventory'
                                   ):
-        
         "Notice that it is assumed that the liquidator has already been introduced, with event type = 0"
         if initial_inventory==None:
-            initial_inventory=self.liquidator.initial_inventory
+            initial_inventory=self.initial_inventory
         if time_start == None:
             try:
-                time_start=self.liquidator.time_start
+                time_start=self.liquidator.start_time
             except:
                 pass
         cdef str control_type = copy.copy(liquidator_control_type)
@@ -428,18 +484,6 @@ class SDHawkes:
                                      time_start = time_start)
         
     def set_transition_probabilities(self, transition_probabilities):
-        r"""
-        Fixes the transition probabilities :math:`\phi` of the state-dependent Hawkes process.
-        The are used to :py:meth:`~mpoints.hybrid_hawkes_exp.HybridHawkesExp.simulate` and
-        :py:meth:`~mpoints.hybrid_hawkes_exp.HybridHawkesExp.compute_total_residuals`.
-
-        :type transition_probabilities: 3D numpy array
-        :param transition_probabilities: shape should be :math:`(d_x, d_e,d_x)` where :math:`d_e` and :math:`d_x`
-                                         are the number of event types and states, respectively.
-                                         The entry :math:`i, j, k` is the probability of going from state :math:`i`
-                                         to state :math:`k` when an event of type :math:`j` occurs.
-        :return:
-        """
         'Raise ValueError if the given parameters do not have the right shape'
         if np.shape(transition_probabilities) != (self.number_of_states, self.number_of_event_types,
                                                   self.number_of_states):
@@ -463,7 +507,8 @@ class SDHawkes:
             print(phi)
         assert not np.any(np.isnan(phi))
         self.transition_probabilities = phi
-        self.inflationary_pressure, self.deflationary_pressure, asymmetry = computation.assess_symmetry(
+        self.inflationary_pressure, self.deflationary_pressure, asymmetry =\
+            computation.assess_symmetry(
             self.number_of_states,
             self.base_rates,
             self.impact_decay_ratios,
@@ -472,7 +517,6 @@ class SDHawkes:
             self.state_enc.inflationary_states)
         print('SDHawkes: asymmetry in transition_probabilities = {}'.format(asymmetry))
         print('Transition probabilities have been set')
-    
     def enforce_symmetry_in_transition_probabilities(self, int is_liquidator_present = 0):
         cdef int i = is_liquidator_present
         cdef np.ndarray[DTYPEf_t, ndim=3] ratios = copy.copy(self.impact_decay_ratios[i:,:,i:])
@@ -492,26 +536,9 @@ class SDHawkes:
             self.state_enc.deflationary_states,
             self.state_enc.inflationary_states)
         print('SDHawkes: new asymmetry in transition_probabilities = {}'.format(asymmetry))
-        
-
     def set_hawkes_parameters(self, np.ndarray[DTYPEf_t, ndim=1] base_rates,
                               np.ndarray[DTYPEf_t, ndim=3 ]impact_coefficients,
                               np.ndarray[DTYPEf_t, ndim=3] decay_coefficients):
-        r"""
-        Fixes the parameters :math:`(\nu, \alpha, \beta)` that define the intensities (arrival rates) of events.
-        The are used in
-        :py:meth:`~mpoints.hybrid_hawkes_exp.HybridHawkesExp.simulate`,
-        :py:meth:`~mpoints.hybrid_hawkes_exp.HybridHawkesExp.compute_events_residuals`
-        and :py:meth:`~mpoints.hybrid_hawkes_exp.HybridHawkesExp.compute_total_residuals`.
-
-        :type base_rates: 1D numpy array
-        :param base_rates: one base rate :math:`\nu_e` per event type :math:`e`.
-        :type impact_coefficients: 3D numpy array
-        :param impact_coefficients: the alphas :math:`\alpha_{e'xe}`.
-        :type decay_coefficients: 3D numpy array
-        :param decay_coefficients: the betas :math:`\beta_{e'xe}`.
-        :return:
-        """
         'Raise ValueError if the given parameters do not have the right shape'
         if np.shape(base_rates) != (self.number_of_event_types,):
             raise ValueError('given base rates have incorrect shape')
@@ -532,22 +559,12 @@ class SDHawkes:
         self.hawkes_kernel.store_parameters(alphas,betas)
         self.hawkes_kernel.compute_L1_norm()
         print('Hawkes parameters have been set')
-        
     def set_dirichlet_parameters(self, dir_param,
-            int N_samples_for_prob_constraints = 10**6):
-        r"""
-        Fixes the parameters :math:`\gamma` that defines the dirichlet distributions of volume proportions.
-
-        :type dir_param: 3D numpy array
-        :param dir_param: for every event :math:`e` and every state :math:`s`, 
-        the :math:`2n`-dimensional vector dir_param[e,s,:] is the dirichlet parameters of 
-        volume distribution when event is :math:`e` and  state is :math:`s`.
-        The integer :math:`n` denotes number of levels in the order book.
-        :return:
-        """
+            int N_samples_for_prob_constraints = 10**5):
         'Raise ValueError if the given parameters do not have the right shape'
         if dir_param.shape != (self.number_of_states,2*self.n_levels):
-            raise ValueError('given parameter has incorrect shape, given shape={}, expected shape=({},{})'.format(dir_param.shape,self.number_of_states,2*self.n_levels))
+            print('given parameter has incorrect shape, given shape={}, expected shape=({},{})'.format(dir_param.shape,self.number_of_states,2*self.n_levels))
+            raise ValueError("Incorrect shape")
         idx_neg=np.array((dir_param<=0.0), dtype=np.bool) 
         cdef int s=0, l=0
         cdef str side=''
@@ -767,7 +784,7 @@ class SDHawkes:
                 path=self.path_models+'/{}'.format(self.data.symbol)
                 self.dump(name=name,path=path)    
     
-    "Functions to estimate model's parameters"
+    "Methods to estimate model's parameters"
     
     def estimate_dirichlet_parameters(self,np.ndarray[DTYPEf_t, ndim=2] volumes,
                                       np.ndarray[DTYPEi_t, ndim=1] states,
@@ -780,18 +797,6 @@ class SDHawkes:
                                           np.ndarray[DTYPEi_t, ndim=1] events,
                                           np.ndarray[DTYPEi_t, ndim=1] states,
                                           verbose=True):
-        r"""
-        Estimates the transition probabilities :math:`\phi` of the state process from the data.
-        This method returns the maximum likelihood estimate.
-        One can prove that it coincides with the empirical transition probabilities.
-
-        :type events: 1D array of int
-        :param events: the sequence of event types, `events[n]` is the event type of the `n` th event.
-        :type states: 1D array of int
-        :param states: the sequence of states, `states[n]` is the new state of the system following the `n` th event.
-        :rtype: 3D array
-        :return: the estimated transition probabilities :math:`\phi`.
-        """
         print('SDHawkes: I am estimating transition probabilities')
         n_states = self.number_of_states
         n_event_types = self.number_of_event_types
@@ -923,7 +928,7 @@ class SDHawkes:
                             ):
         os_info = os.uname()
         print('Simulation is being performed on the following machine:\n {}'.format(os_info))
-        time_start=self.liquidator.time_start
+        time_start=self.liquidator.start_time
         max_number_of_events=np.array(max_number_of_events,dtype=int)
          # Convert the initial condition to np.arrays if required
         if type(initial_condition_times)!=np.ndarray:
@@ -962,7 +967,7 @@ class SDHawkes:
         print('SDHawkes: simulate_liquidation. initial conditions have been acknowledged')
         cdef int report_intensities = np.array(report_history_of_intensities, dtype=np.intc)
         times, events, states, volumes,\
-        inventory, liquid_termination_time, history_of_intensities = \
+        inventory, liquid_start_time, liquid_termination_time, history_of_intensities = \
         simulation.launch_liquidation(self.state_enc, self.volume_enc,
                                        self.number_of_event_types,
                                        self.number_of_states,
@@ -994,6 +999,7 @@ class SDHawkes:
         "Update the transition prombabilities corresponding to liquidator's interventions"
         self.transition_probabilities[:,0,:] = mle_estim.estimate_liquidator_transition_prob(
             self.number_of_states, events, states, liquidator_index = 0)
+        self.liquidator.store_start_time(liquid_start_time)
         self.liquidator.store_termination_time(liquid_termination_time)
         "Store inventory trajectory"
         self.liquidator.store_inventory_trajectory(times,inventory)
@@ -1007,33 +1013,56 @@ class SDHawkes:
             self.simulated_times=np.array(times, copy=True)
             self.simulated_events=np.array(events, copy=True)
             self.simulated_states=np.array(states, copy=True)
+            self.store_2Dstates(type_of_input='simulated')
             if report_intensities:
                 self.history_of_intensities = np.array(history_of_intensities, copy=True)
         else:
             return times, events, states, volumes,inventory, history_of_intensities
     
-    
-   
     'Miscellaneous tools'
+    def store_price_trajectory(self, type_of_input='simulated', DTYPEf_t initial_price=0.0, DTYPEf_t ticksize=100.0):
+        traj=self.draw_price_trajectory(type_of_input=type_of_input,
+                initial_price=initial_price, ticksize=ticksize)
+        if type_of_input=='simulated':
+            self.simulated_price=traj
+        elif type_of_input=='empirical':
+            self.empirical_price=traj
+    def draw_price_trajectory(self, type_of_input='simulated', DTYPEf_t initial_price=0.0, DTYPEf_t ticksize=100.0):
+        if type_of_input=='simulated':
+            times=self.simulated_times
+            states=self.simulated_states
+        elif type_of_input=='empirical':
+            times=self.empirical_times
+            states=self.empirical_states
+        else:
+            print("type_of_input not recognised")
+            raise ValueError("type_of_input not recognised")
+        df=self.state_enc.translate_labels(states)
+        cdef np.ndarray[DTYPEi_t, ndim=1] price_sign = np.array(df['st_1'].values, dtype=DTYPEi) - self.state_enc.num_of_st1//2
+        cdef np.ndarray[DTYPEf_t, ndim=1] price = initial_price+ticksize*np.cumsum(price_sign) 
+        cdef np.ndarray[DTYPEf_t, ndim=2] price_trajectory = np.concatenate([
+            times.reshape(-1,1), price.reshape(-1,1)
+            ],axis=1)
+        return price_trajectory
     def make_start_liquid_origin_of_times(self,delete_negative_times=False):
-        time_start=copy.copy(self.liquidator.time_start)
+        cdef DTYPEf_t time_start = self.liquidator.start_time
         self.liquidator.termination_time -= time_start
         cdef np.ndarray[DTYPEf_t, ndim=1] times = self.simulated_times - time_start*np.ones_like(self.simulated_times)
         if delete_negative_times:
-            idx = times>=0
+            idx = times>=0.0
             self.simulated_times=np.array(times[idx],copy=True)
             self.simulated_events=np.array(self.simulated_events[idx],copy=True)
             self.simulated_states=np.array(self.simulated_states[idx],copy=True)
-            print('SDHawkes: start_liquidation has been set as origin of times, and negative times have been deleted')
-            message='  self.liquidator.termination_time={}'.format(self.liquidator.termination_time)
-            message+='\n  self.simulated_times.shape={}'.format(self.simulated_times.shape)
-            message+='\n  self.simulated_events.shape={}'.format(self.simulated_events.shape)
-            message+='\n  self.simulated_states.shape={}'.format(self.simulated_states.shape)
-            print(message)
+            print('SDHawkes: liquidator.start_time has been set as origin of times, and negative times have been deleted')
         else:
-            print('SDHawkes: start_liquidation has been set as origin of times')
+            self.simulated_times= np.array(times, copy=True, dtype=DTYPEf)
+            print('SDHawkes: liquidator.start_time has been set as origin of times')
         try:
             self.liquidator.inventory_trajectory[:,0]-=time_start
+            if delete_negative_times:
+                idx=self.liquidator.inventory_trajectory[:,0]>=0.0
+                self.liquidator.inventory_trajectory=\
+                        np.array(self.liquidator.inventory_trajectory[idx,:], copy=True)
         except:
             pass
         try:
@@ -1042,17 +1071,21 @@ class SDHawkes:
                 self.simulated_times,self.simulated_events,self.simulated_states)
             self.labelled_times = lt
             self.count = count
-            print('  self.labelled_times.shape={}'.format(self.labelled_times.shape))
         except:
             pass
         try:
             df=self.liquidator.bm_impact_profile
             df['time']-=time_start
-            idx_row=df.loc[df['time']<0].index
-            df.drop(axis=0,index=idx_row,inplace=True)
+            if delete_negative_times:
+                idx_row=df.loc[df['time']<0].index
+                df.drop(axis=0,index=idx_row,inplace=True)
         except:
             pass
-        self.liquidator.time_start = 0.0 
+        try:
+            self.simulated_intensities[:,0]-=time_start
+        except:
+            pass
+        self.liquidator.start_time = 0.0 
     def store_calibration(self,calibration):
         self.calibration=calibration    
     def store_goodness_of_fit(self,goodness_of_fit):
@@ -1153,32 +1186,39 @@ class SDHawkes:
         
     def store_history_of_intensities(self,type_of_input='simulated',density_of_eval_points=200):
         try:
-            inventory=self.liquidator.inventory_trajectory[:,1]
+            liquid_start=self.liquidator.start_time
+            liquid_end=self.liquidator.termination_time
+            liquidator_present=True
         except:
-            inventory=None
+            liquid_start=None 
+            liquid_end=None 
+            liquidator_present=False
         if type_of_input=='simulated':
             times=self.simulated_times
             events=self.simulated_events
             states=self.simulated_states
             self.simulated_intensities=self.compute_history_of_intensities(
-                    times,events,states,inventory,density_of_eval_points=density_of_eval_points)
+                    times,events,states,
+                    liquidator_present, liquid_start, liquid_end,
+                    density_of_eval_points=density_of_eval_points)
 
-    def compute_history_of_intensities(self,times,events,states,
-                                       inventory=None,
-                                       start_time_zero_event=None,
-                                       end_time_zero_event=-2.0,
-                                       density_of_eval_points=200):
+    def compute_history_of_intensities(self,
+            times,events,states,
+            liquidator_present=False,
+            liquid_start=None, liquid_end=None,
+            density_of_eval_points=200):
         cdef np.ndarray[DTYPEf_t, ndim=1] arrival_times = np.array(times,dtype=DTYPEf,copy=True)
         cdef np.ndarray[DTYPEi_t, ndim=1] history_of_events = np.array(events,dtype=DTYPEi, copy=True)
         cdef np.ndarray[DTYPEi_t, ndim=1] history_of_states = np.array(states,dtype=DTYPEi, copy=True)
-        if not inventory==None:
-            end_time_zero_event=float(np.squeeze(times[np.argmin(inventory)]))
-            if  start_time_zero_event ==  None:
-                idx=(np.diff(np.concatenate([inventory,[0.0]],axis=0,dtype=DTYPEf))<0.0)
-                start_time_zero_event=float(np.squeeze(times[idx][0]))
+        if liquidator_present:
+            if (liquid_start!=None)&(liquid_end!=None):
+                start_time_zero_event=float(liquid_start)
+                end_time_zero_event=float(liquid_end)
+            else:
+                liquidator_present=False
         else:
-            start_time_zero_event=-1.0
-            end_time_zero_event=-2.0
+            start_time_zero_event=float(times[0])
+            end_time_zero_event=float(times[len(times)-1])
         return computation.compute_history_of_intensities(self.number_of_event_types,
                                                        self.number_of_states,
                                                        arrival_times,
@@ -1187,26 +1227,28 @@ class SDHawkes:
                                                        self.base_rates,
                                                        self.impact_coefficients,
                                                        self.decay_coefficients,
+                                                       liquidator_present=liquidator_present,
                                                        start_time_zero_event=start_time_zero_event,
                                                        end_time_zero_event=end_time_zero_event,
                                                        density_of_eval_points=density_of_eval_points
                                                       )
     
     def compute_history_of_tilda_intensities(self,times,events,states,
-                                       inventory=None,
-                                       start_time_zero_event=-1.0,
-                                       end_time_zero_event=-2.0,
-                                       density_of_eval_points=100):
+            liquidator_present=False,
+            liquid_start=None, liquid_end=None,
+            density_of_eval_points=100):
         cdef np.ndarray[DTYPEf_t, ndim=1] arrival_times = np.array(times,dtype=DTYPEf,copy=True)
         cdef np.ndarray[DTYPEi_t, ndim=1] history_of_events = np.array(events,dtype=DTYPEi, copy=True)
         cdef np.ndarray[DTYPEi_t, ndim=1] history_of_states = np.array(states,dtype=DTYPEi, copy=True)
-        if not inventory==None:
-            end_time_zero_event=np.squeeze(times[np.argmin(inventory)])
-            if  start_time_zero_event ==  -1.0:
-                idx=(np.diff(np.concatenate([inventory,[0.0]],axis=0,dtype=DTYPEf))<0.0)
-                start_time_zero_event=np.squeeze(times[idx][0])
-        start_time_zero_event=np.array(start_time_zero_event,dtype=DTYPEf)
-        end_time_zero_event=np.array(end_time_zero_event,dtype=DTYPEf)
+        if liquidator_present:
+            if (liquid_start!=None)&(liquid_end!=None):
+                start_time_zero_event=float(liquid_start)
+                end_time_zero_event=float(liquid_end)
+            else:
+                liquidator_present=False
+        else:
+            start_time_zero_event=float(times[0])
+            end_time_zero_event=float(times[len(times)-1])
         return computation.compute_history_of_tilda_intensities(self.number_of_event_types,
                                                        self.number_of_states,
                                                        arrival_times,
@@ -1221,62 +1263,38 @@ class SDHawkes:
                                                        density_of_eval_points=density_of_eval_points
                                                       )
     
-    def compute_bm_impact_profile(self,times,events,states,
-                                  inventory,
-                                  start_liquidation_time = -1.0,
-                                  int density_of_eval_points=1000,store=True):
-        cdef np.ndarray[DTYPEf_t, ndim=1] arrival_times = np.array(times,dtype=DTYPEf,copy=True)
-        cdef np.ndarray[DTYPEi_t, ndim=1] history_of_events = np.array(events,dtype=DTYPEi, copy=True)
-        cdef np.ndarray[DTYPEi_t, ndim=1] history_of_states = np.array(states,dtype=DTYPEi, copy=True)
-        cdef np.ndarray[DTYPEf_t, ndim=1] history_of_inventory = np.array(inventory,dtype=DTYPEf, copy=True)
-        cdef DTYPEf_t start_liquid_time = np.array(start_liquidation_time, dtype=DTYPEf, copy=True)
-        cdef np.ndarray[DTYPEf_t, ndim=2] history_of_profile_intensity = \
-        computation.compute_history_of_bm_profile_intensity(
-            self.number_of_event_types,
-            self.number_of_states,
-            self.state_enc.deflationary_states,
-            self.state_enc.inflationary_states,
-            arrival_times,
-            history_of_events,
-            history_of_states,
-            history_of_inventory,
+    def store_2Dstates(self,str type_of_input='simulated'):
+        if type_of_input=='simulated':
+            self.simulated_2Dstates = self.state_enc.produce_2Dstates(self.simulated_states)
+    def create_impact_profile(self,
+            delete_negative_times=False,
+            int num_init_guesses = 6,
+            int maxiter = 100,
+            time_start=None, time_end=None, 
+            produce_weakly_defl_pp=False,
+            mle_estim=False):
+        self.make_start_liquid_origin_of_times(delete_negative_times=delete_negative_times)
+        impact=Impact(
+            self.liquidator,
+            self.state_enc)
+        impact.store_sdhawkes(
             self.base_rates,
             self.impact_coefficients,
             self.decay_coefficients,
             self.transition_probabilities,
-            start_liquid_time,
-            density_of_eval_points=density_of_eval_points
-        )
-        cdef np.ndarray[DTYPEf_t, ndim=2] bm_impact_profile = \
-        computation.compute_bm_impact_profile(history_of_profile_intensity)
-        if store:
-            self.liquidator.store_bm_impact_profile(bm_impact_profile,history_of_profile_intensity)
-        return history_of_profile_intensity, bm_impact_profile
-    
-    def store_2Dstates(self,str type_of_input='simulated'):
-        if type_of_input=='simulated':
-            self.simulated_2Dstates = self.state_enc.produce_2Dstates(self.simulated_states)
-
-    
-    def produce_impact_profile(self,
-                               int num_init_guesses = 8,
-                               int maxiter = 100,
-                               time_start=None, time_end=None):
-        self.make_start_liquid_origin_of_times(delete_negative_times=True)
-        impact=impact_profile.impact(
-            self.liquidator,
-            self.state_enc.weakly_deflationary_states,
             self.simulated_times,
             self.simulated_events,
-            self.simulated_states,)
-        impact.produce_weakly_defl_pp(
-            self.base_rates, self.impact_coefficients, self.decay_coefficients,
-            self.transition_probabilities)
-        impact.produce_reduced_weakly_defl_pp(
-            num_init_guesses = num_init_guesses,
-            maxiter = maxiter, time_start=time_start, time_end=time_end)
-        self.impact=impact
-        print('\nSDHawkes: the object "impact" has been initialised\n\n')
+            self.simulated_states)
+        if produce_weakly_defl_pp:
+#            impact.produce_weakly_defl_pp(
+#                self.base_rates, self.impact_coefficients, self.decay_coefficients,
+#                self.transition_probabilities)
+            if mle_estim:
+                impact.produce_reduced_weakly_defl_pp(
+                    num_init_guesses = num_init_guesses,
+                    maxiter = maxiter, time_start=time_start, time_end=time_end)
+        self.liquidator.get_impact(impact)
+        print('\nSDHawkes:  "liquidator.impact" has been initialised\n\n')
         
 
     def generate_base_rates_labels(self):
@@ -1302,8 +1320,7 @@ class SDHawkes:
             times=self.simulated_times[idx]
             events=first_event_index+self.simulated_events[idx]
             states2D=self.simulated_2Dstates[idx,:]
-            idx_=np.logical_and(self.simulated_intensities[:,0]>=t_0, self.simulated_intensities[:,0]<=t_1)
-            intensities=self.simulated_intensities[idx_,:]
+            intensities=computation.select_interval(self.simulated_intensities, t_0, t_1)
             plot_tools.plot_events_and_states(events,times,intensities,states2D,plot=True,save_fig=save_fig,name=name)
     def plot_intensities(self,t_0=None,t_1=None,str type_of_input='simulated',int first_event_index=1,save_fig=False,name='events_and_states_traject'):
         if type_of_input=='simulated':
@@ -1311,9 +1328,33 @@ class SDHawkes:
                 t_0=float(self.simulated_times[0])
             if t_1==None:
                 t_1=float(self.simulated_times[len(self.simulated_times)-1])
-            idx_=np.logical_and(self.simulated_intensities[:,0]>=t_0, self.simulated_intensities[:,0]<=t_1)
-            intensities=self.simulated_intensities[idx_,:]
+            intensities=computation.select_interval(self.simulated_intensities, t_0, t_1)
             plot_tools.plot_intensities(intensities,first_event_index=first_event_index,plot=True,save_fig=save_fig,name=name)
+    def plot_bm_impact_profile(
+            self, 
+            time_start=None, time_end=None,
+            plot_bm_intensity=False,
+            save_fig=False, path=None,name='bm_impact_profile', plot=True
+        ):
+        if time_start==None:
+            time_start=self.liquidator.start_time
+        if time_end==None:
+            time_end=self.liquidator.termination_time
+        plot_tools.plot_bm_impact_profile(
+                self.liquidator.impact.sdhawkes.times,
+                self.liquidator.impact.sdhawkes.events,
+                self.simulated_price,
+                self.liquidator.inventory_trajectory,
+                self.simulated_intensities,
+                self.liquidator.impact.bm_impact_profile,
+                self.liquidator.impact.bm_impact_intensity,
+                time_start, time_end,
+                plot_bm_intensity=plot_bm_intensity,
+                save_fig=save_fig,
+                path=path, name=name, plot=plot)
+
+
+
     
     
 cdef void compute_L1_norm_of_hawkes_kernel(

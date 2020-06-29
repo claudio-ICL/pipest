@@ -80,7 +80,7 @@ def plot_events_colour(events,time=None,n_event_types=0):
     plt.show()
 
     
-def plot_bm_impact_profile(bm_profile,
+def plot_bm_impact(bm_profile,
                            bm_intensity=None,
                            time_start=0.0,time_end=-1.0,
                            save_fig=False,path=path_pipest,name='bm_impact_profile',plot=True
@@ -118,31 +118,31 @@ def plot_bm_impact_profile(bm_profile,
     if plot:
         plt.show()   
         
+def select_interval(arr, t0, t1):
+    arr=np.atleast_2d(arr)
+    if arr.shape[0]<=1:
+        arr=arr.T
+    idx0=bisect.bisect_left(arr[:,0], t0)
+    idx1=bisect.bisect_right(arr[:,0], t1)
+    return np.array(arr[idx0:idx1,:],copy=True)
 
-def plot_bm_impact_profile_full_picture(bm_profile,
-                           times,events,inventory,history_of_intensity,price,
-                           bm_intensity=None,
-                           time_start=0.0,time_end=-1.0,
-                           save_fig=False,path=None,name='bm_impact_profile',plot=True
-                          ):
-    time_start = max(time_start,bm_profile[0,0])
-    if time_end<=time_start:
-        time_end = bm_profile[-1,0]
-    else:
-        time_end = max(time_start,min(time_end,bm_profile[-1,0]))
-    idx_start=bisect.bisect_left(bm_profile[:,0], time_start)
-    idx_end=bisect.bisect(bm_profile[:,0],time_end)
-    time=np.array(bm_profile[idx_start:idx_end,0],copy=True)
-    impact_profile=np.array(bm_profile[idx_start:idx_end,1],copy=True)
-    start_index=bisect.bisect_left(times,time_start)
-    end_index=bisect.bisect(times,time_end)
-    idx_liquidator=(events[start_index:end_index]==0)
-    times=np.array(times[start_index:end_index],copy=True)
-    events=np.array(events[start_index:end_index],copy=True)
-    inventory=np.array(inventory[start_index:end_index],copy=True)
-    price=np.array(price[start_index:end_index],copy=True)
-    idx_history=np.logical_and(history_of_intensity[:,0]>=time_start,history_of_intensity[:,0]<=time_end)
-    history_of_intensity=history_of_intensity[idx_history,:]
+
+def plot_bm_impact_profile(
+        times, events, price, inventory,
+        history_of_intensity,
+        bm_profile, bm_intensity,
+        time_start, time_end,
+        plot_bm_intensity=False,
+        save_fig=False, path=None,name='bm_impact_profile', plot=True
+        ):
+    bm_profile=select_interval(bm_profile,time_start, time_end)
+    bm_intensity=select_interval(bm_intensity,time_start, time_end)
+    history_of_intensity=select_interval(history_of_intensity, time_start, time_end)
+    price=select_interval(price, time_start, time_end)
+    inventory=select_interval(inventory, time_start, time_end)
+    idx=np.logical_and(times>=time_start, times<=time_end)
+    times=np.array(times[idx], copy=True)
+    events=np.array(events[idx], copy=True)
     fig = plt.figure(figsize=(10,8))
     ax_profile=fig.add_subplot(211)
     ax_events=ax_profile.twinx()
@@ -159,30 +159,24 @@ def plot_bm_impact_profile_full_picture(bm_profile,
             np.amax(history_of_intensity[:,1]),num=3))
     ax_2.set_ylim([-4,4])
     ax_2.set_ylabel('liquidator_intensity')
-    if not len(bm_intensity) <=1:
-        idx_start_intensity=bisect.bisect_left(bm_intensity[:,0], time_start)
-        idx_end_intensity=bisect.bisect(bm_intensity[:,0], time_end)
-        time_intensity = np.array(bm_intensity[idx_start_intensity:idx_end_intensity,0],copy=True)
-        impact_intensity = np.array(bm_intensity[idx_start_intensity:idx_end_intensity,1],copy=True)
-        ax_intensity=ax_profile.twinx()
-#         ax_intensity.plot(time_intensity,impact_intensity,color=[0,0.4,0.4,0.4],label='profile_rate')
-        ax_intensity.set_yticks([])
-    ax_profile.plot(time,impact_profile,color='green',label='impact_profile',linewidth=2.0)
-    if not len(bm_intensity) <=1:
-        ax_profile.plot(time_intensity,impact_intensity,color=[0,0.4,0.4,0.4],label='profile_rate')
+    ax_profile.plot(bm_profile[:,0],bm_profile[:,1],
+            color='green',label='impact_profile',linewidth=2.0)
+    if plot_bm_intensity:
+        ax_profile.plot(
+                bm_intensity[:,0],bm_intensity[:,1],color=[0,0.4,0.4,0.4],label='profile intensity')
     ax_profile.set_xlabel('time')
     ax_profile.set_ylabel('impact')
 #     ax_profile.set_yticks([])
     ax_profile.legend()
     
     ax_inventory=fig.add_subplot(212)
-    ax_inventory.plot(times,inventory,color='red',label='inventory')
+    ax_inventory.plot(inventory[:,0],inventory[:,1],color='red',label='inventory')
     ax_price=ax_inventory.twinx()
-    ax_price.step(times,price,where='post',color='blue',label='price')
+    ax_price.step(price[:,0],price[:,1],where='post',color='blue',label='price')
     ax_inventory.set_xlabel('time')
     ax_inventory.set_ylabel('inventory')
-    ax_inventory.set_ylim([-0.1,1.1*inventory[0]])
-    ax_inventory.set_yticks(np.linspace(0,inventory[0],num=10))
+    ax_inventory.set_ylim([-0.1,1.1*inventory[0,1]])
+    ax_inventory.set_yticks(np.linspace(0,inventory[0,1],num=10))
     ax_price.set_ylabel('price')
     ax_price.legend(loc=1)
     ax_inventory.legend(loc=5)
@@ -458,7 +452,7 @@ def plot_events_and_intensities(events,time,history_of_intensities,
         plt.show()
         return fig
     
-def plot_events_and_states(events,time,history_of_intensities,states_2D,
+def plot_events_and_states(events,times,history_of_intensities,states_2D,
                                 transparency=0.5,
                                 plot=True,
                                 save_fig=False,path='/home/claudio/Desktop/',name='events_and_intensities'
@@ -466,8 +460,8 @@ def plot_events_and_states(events,time,history_of_intensities,states_2D,
     """
     it is assumed that history_of_intensities[:,0] represents the time of evaluation, whereas history_of_intensities[:,i], i=1,2,... represents the intensity of the i-th event type
     """
+    assert len(times)==len(states_2D)
     n_event_types=max(1,history_of_intensities.shape[1]-1)
-    times=time
     lowest_event_type=np.amin(events).astype(int)
     lambdas=np.array(history_of_intensities[:,1:],copy=True)
     lambdas=lambdas/(0.1+np.amax(lambdas))
@@ -493,7 +487,7 @@ def plot_events_and_states(events,time,history_of_intensities,states_2D,
         col_2[-1]=transparency
         idx=(events==(e+lowest_event_type))
         if np.any(idx):
-            x=time[idx]
+            x=times[idx]
             y=events[idx]
             ax_1.scatter(x,y,c=col_1)
         ax_2.plot(history_of_intensities[:,0],y0+lambdas[:,e],color=col_2)

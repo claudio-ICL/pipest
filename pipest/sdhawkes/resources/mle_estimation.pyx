@@ -405,7 +405,6 @@ cdef DTYPEi_t count_events_of_type(DTYPEi_t event_type, DTYPEi_t [:] events):
 #    return base_rate, alphas, betas
     
 
-    
 def pre_estimate_ordinary_hawkes(
     int event_index,
     int n_event_types, 
@@ -431,23 +430,66 @@ def pre_estimate_ordinary_hawkes(
     assert event_index<n_event_types
     assert len(times)==len(events)
     assert time_start <= time_end
+    base_rate, imp_coef, dec_coef = estimate_ordinary_hawkes(
+        event_index,
+        n_event_types, 
+        times,
+        events,
+        time_start,
+        time_end,
+        num_init_guesses = num_init_guesses,
+        parallel = parallel, 
+        max_imp_coef = max_imp_coef ,
+        learning_rate = learning_rate ,
+        maxiter =maxiter ,
+        tol = tol, 
+        use_prange = use_prange,
+        number_of_attempts = number_of_attempts,
+        num_processes = num_processes,
+        batch_size = batch_size,
+        num_run_per_minibatch = num_run_per_minibatch)
+    if not reshape_to_sd:
+        n_states = 1
+    cdef DTYPEf_t nu = base_rate    
+    cdef np.ndarray[DTYPEf_t, ndim=2] alphas = np.zeros((n_event_types, n_states),dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=2] betas = np.zeros((n_event_types, n_states),dtype=DTYPEf)
+    if reshape_to_sd:
+        alphas = np.tile(imp_coef,n_states)
+        betas = np.tile(dec_coef,n_states)
+    else:
+        alphas = np.array(imp_coef,copy=True,dtype=DTYPEf)
+        betas = np.array(dec_coef,copy=True,dtype=DTYPEf)
+    if return_as_flat_array:
+        result = computation.parameters_to_array_partial(nu,alphas,betas)
+    else:
+        result = {'base_rate': nu, 'imp_coef': alphas, 'dec_coef': betas}
+    return result
+    
+def estimate_ordinary_hawkes(
+    int event_index,
+    int n_event_types, 
+    np.ndarray[DTYPEf_t, ndim=1] times,
+    np.ndarray[DTYPEi_t, ndim=1] events,
+    DTYPEf_t time_start,
+    DTYPEf_t time_end,
+    int num_init_guesses = 3,
+    parallel = False,
+    DTYPEf_t max_imp_coef = 100.0,
+    DTYPEf_t learning_rate = 0.0005,
+    int maxiter = 50,
+    DTYPEf_t tol = 1.0e-07,
+    use_prange = False,
+    int number_of_attempts = 3,
+    int num_processes = 0,
+    int batch_size = 5000,
+    int num_run_per_minibatch = 1, 
+):
+    assert event_index<n_event_types
+    assert len(times)==len(events)
+    assert time_start <= time_end
     assert num_init_guesses >= 1
     assert number_of_attempts >= 1
     cdef np.ndarray[DTYPEi_t, ndim=1] states = np.zeros_like(events)
-#     cdef np.ndarray[DTYPEf_t, ndim=3] labelled_times = np.zeros((n_event_types,1,len(times)), dtype=DTYPEf) 
-#     cdef np.ndarray[DTYPEi_t, ndim=2] count = np.zeros((n_event_types,1),dtype=DTYPEi)
-#     labelled_times,count=computation.distribute_times_per_event_state(
-#         n_event_types, 1,
-#         times, events, states)
-#     cdef np.ndarray [DTYPEf_t, ndim=3] lt_copy = np.array(labelled_times, copy=True)
-#     cdef np.ndarray [DTYPEi_t, ndim=2] count_copy = np.array(count, copy=True)
-#     preguess_base_rate, preguess_imp_coef, preguess_dec_coef =\
-#     preguess_ordinary_hawkes_param(event_index,
-#                                    lt_copy, count_copy,
-#                                    max_imp_coef = max_imp_coef,
-#                                    tol = tol,
-#                                    print_res = True,
-#                                   )
     cdef DTYPEf_t preguess_base_rate = float(rand())/float(RAND_MAX)
     cdef np.ndarray[DTYPEf_t, ndim=2] preguess_imp_coef = np.random.uniform(low=0.0, high=2.0, size=(n_event_types, 1))
     cdef np.ndarray[DTYPEf_t, ndim=2] preguess_dec_coef = np.random.uniform(low=1.5, high=2.5, size=(n_event_types, 1))
@@ -479,30 +521,14 @@ def pre_estimate_ordinary_hawkes(
         num_run_per_minibatch = num_run_per_minibatch,  
     )
     minim.prepare_batches()
-    print('pre_estimate_ordinary_hawkes: initialisation completed.'.format(event_index))
+    print('estimate_ordinary_hawkes: initialisation completed.'.format(event_index))
     cdef double run_time = -time.time()
     minim.launch_minimisation(use_prange=use_prange, parallel=parallel, num_processes = num_processes)    
     cdef np.ndarray[DTYPEf_t, ndim=1] x_min = np.array(minim.minimiser, copy=True, dtype=DTYPEf)
     base_rate,imp_coef,dec_coef=computation.array_to_parameters_partial(n_event_types, 1, x_min)
     run_time += time.time()
-    if not reshape_to_sd:
-        n_states = 1
-    cdef DTYPEf_t nu = base_rate    
-    cdef np.ndarray[DTYPEf_t, ndim=2] alphas = np.zeros((n_event_types, n_states),dtype=DTYPEf)
-    cdef np.ndarray[DTYPEf_t, ndim=2] betas = np.zeros((n_event_types, n_states),dtype=DTYPEf)
-    if reshape_to_sd:
-        alphas = np.tile(imp_coef,n_states)
-        betas = np.tile(dec_coef,n_states)
-    else:
-        alphas = np.array(imp_coef,copy=True,dtype=DTYPEf)
-        betas = np.array(dec_coef,copy=True,dtype=DTYPEf)
-    if return_as_flat_array:
-        result = computation.parameters_to_array_partial(nu,alphas,betas)
-    else:
-        result = {'base_rate': nu, 'imp_coef': alphas, 'dec_coef': betas}
-    print('pre_estimate_ordinary_hawkes: run_time={}'.format(run_time))
-    return result
-    
+    print("estimate_ordinary_hawkes ends. run_time={}".format(run_time))
+    return base_rate, imp_coef, dec_coef
     
 def estimate_hawkes_param_partial(
     int event_index,
