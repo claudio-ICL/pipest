@@ -718,7 +718,10 @@ def simulate_liquidation(
                         multidim_previous_state=arr_state_enc[state,1:]
                         message+='\n  previous state={}, previous_volume={}'.format(multidim_previous_state,previous_volume)
                     if liquidator_control_type=='fraction_of_bid_side':
+                        for l in range(n_levels):
+                            tot_bid+=volume_memview[n-1,1+2*l]
                         quantity_to_liquidate=min(inventory[n-1],tot_bid*liquidator_control)
+                        tot_bid=0.0#because in the loop below it is calculated again, and requires initialisation to zero
                     elif liquidator_control_type=='fraction_of_inventory':
                         quantity_to_liquidate=min(inventory[n-1],liquidator_control)
                     if verbose:

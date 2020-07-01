@@ -8,7 +8,7 @@ while (not os.path.basename(path_pipest)=='pipest') and (n<6):
     n+=1 
 if not os.path.basename(path_pipest)=='pipest':
     raise ValueError("path_pipest not found. Instead: {}".format(path_pipest))
-cdef str path_sdhawkes=path_pipest+'/sdhawkes'     
+cdef str path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'     
 import sys
 sys.path.append(path_sdhawkes+'/')
 sys.path.append(path_sdhawkes+'/resources/')
@@ -21,7 +21,6 @@ cimport numpy as np
 import pandas as pd
 
 import computation
-from rejection_sampling import RejectionSampling
 
 DTYPEf = np.float
 DTYPEi = np.int
@@ -589,14 +588,75 @@ class volume_encoding:
             classified_vi[k] =  -1+bisect.bisect_left(self.volimb_limits, vol_imb[k])
         assert np.all(classified_vi>=0)    
         return classified_vi    
-    def store_dirichlet_param(self, np.ndarray[DTYPEf_t, ndim=2] dirichlet_param):                              
+    
+#     def classify_vol_imb(self,np.ndarray[DTYPEf_t, ndim=1] vol_imb, n_categories=5):
+#         """
+#         volume imbalance is expected as a one dimensional vector with values between -1 and 1
+#         categories are sorted from the most negative volume imbalance to the most positive
+#         """
+#         cdef np.ndarray[DTYPEf_t, ndim=1] vi=np.array(vol_imb,copy=True)
+#         vi=np.minimum(np.maximum(vi,-1),1)
+#         vi=np.minimum(np.maximum(0,0.5*(vi+1.0)),1)
+#         vi=np.trunc(n_categories*vi)
+#         cdef np.ndarray[DTYPEi_t, ndim=1] classified_vi = np.array(np.minimum(vi,n_categories-1),dtype=DTYPEi)
+#         classified_vi=np.trunc(np.mod(vi,n_categories)).astype(DTYPEi)
+#         return classified_vi
+    
+    def store_dirichlet_param(self,
+                              np.ndarray[DTYPEf_t, ndim=2] dirichlet_param,
+                              int num_of_st2 = 5, int N_samples_for_prob_constraints=9999):
         self.dirichlet_param = dirichlet_param
+        upto_level = self.volume_imbalance_upto_level
+        cdef int n_states = dirichlet_param.shape[0]
+        cdef np.ndarray[DTYPEf_t, ndim=1] masses = np.zeros(n_states,dtype=DTYPEf)
+        masses = computation.produce_dirichlet_masses(dirichlet_param)
+        self.dirichlet_masses = masses
+        cdef np.ndarray[DTYPEf_t, ndim=1] probs =\
+        computation.produce_probabilities_of_volimb_constraints(
+            upto_level,n_states,num_of_st2,
+            self.volimb_limits, dirichlet_param, N_samples = N_samples_for_prob_constraints
+        )
+        self.prob_volimb_constraint = probs
+        
     def store_volimb_limits(self,np.ndarray[DTYPEf_t, ndim=1] volimb_limits):
         self.volimb_limits = volimb_limits
-    def create_rejection_sampling(self,int N_samples=10**6):
-        self.rejection_sampling=RejectionSampling(self.dirichlet_param,
-                self.volimb_limits, self.volume_imbalance_upto_level, N_samples_for_prob_constraints=N_samples)
+   
+    
+    def store_param_for_rejection_sampling(self,DTYPEf_t epsilon = 0.1):
+        upto_level = self.volume_imbalance_upto_level
+        cdef int uplim = 1+2*upto_level
+        dir_param=self.dirichlet_param
+        volimb_limits = self.volimb_limits
+        cdef int num_of_st2 = len(volimb_limits)-1
+        cdef np.ndarray[DTYPEf_t, ndim=2] multiplier = np.ones_like(dir_param,dtype=DTYPEf)
+        cdef DTYPEf_t sum_bid=0.0, sum_ask=0.0, l=0.0, h=0.0, imb = 0.0, tot_param=0.0
+        cdef DTYPEf_t coef_ask = 1.0, coef_bid = 1.0, beta_bar = 1.0
+        cdef int j=0, st_2=0
+        for j in range(dir_param.shape[0]):
+            st_2= j%num_of_st2
+            l = volimb_limits[st_2]
+            h = volimb_limits[st_2+1]
+            sum_bid = np.sum(dir_param[j,1:uplim:2])
+            sum_ask = np.sum(dir_param[j,0:uplim:2])
+            imb = sum_bid - sum_ask
+            tot_param = sum_bid+sum_ask
+            if (imb < l*tot_param) or (imb > h* tot_param):
+                coef_ask = (1-l)/((1+h-l)*(sum_ask))
+                coef_bid = (1+h)/((1+h-l)*(sum_bid))
+                beta_bar = max(coef_ask,coef_bid) + min(epsilon, np.amin(dir_param))
+                multiplier[j,1:uplim:2]= coef_bid/beta_bar
+                multiplier[j,0:uplim:2]= coef_ask/beta_bar
+        cdef np.ndarray[DTYPEf_t, ndim=2] dir_param_rs = multiplier*dir_param
+        cdef np.ndarray[DTYPEf_t, ndim=1] bound = np.ones(dir_param.shape[0])
+        bound = np.apply_along_axis(
+            computation.compute_maximum_unnormalised_pseudo_dirichlet_density,1,
+            dir_param - dir_param_rs,
+        )
+        self.rejection_sampling = RejectSampling(
+            dir_param, dir_param_rs, self.prob_volimb_constraint, bound, volimb_limits, upto_level)
         
+        
+
         
 cdef long convert_multidim_state_code(
     int num_of_states, DTYPEi_t [:,:] arr_state_enc, DTYPEi_t [:] state) nogil:
@@ -623,25 +683,7 @@ cdef int classify_vol_imb_scalar(DTYPEf_t vol_imb, DTYPEf_t [:] volimb_limits):
     """
     return int(max(0,-1+bisect.bisect_left(volimb_limits, vol_imb)))
         
-def correct_null_transition_prob(transition_probabilities):
-    n_events=transition_probabilities.shape[1]
-    n_states=transition_probabilities.shape[0]
-    if not n_states==transition_probabilities.shape[2]:
-        print('shape of transition probabilities = {}'.transition_probabilities.shape)
-        raise ValueError('shape of inserted transition_probabilities is incorrect')
-    Q=np.array(transition_probabilities,copy=True)
-    Q=np.reshape(Q,(-1,n_states))
-    idx=Q==0
-    idx_0=np.apply_along_axis(np.all,1,idx)
-    idx_1=(np.squeeze(np.argwhere(idx_0))//n_events)
-    Q[idx_0,idx_1]=1
-    Q=Q.reshape((n_states,n_events,n_states))
-    return Q        
-        
-        
-           
-
-#Old class (do not use)
+    
 class RejectSampling:    
     def __init__(self, np.ndarray[DTYPEf_t, ndim=2] gamma,
                  np.ndarray[DTYPEf_t, ndim=2] gamma_tilde,
@@ -664,3 +706,24 @@ class RejectSampling:
         self.volimb_upto_level = volimb_upto_level
         cdef int num_of_st2 = len(volimb_limits)-1
         self.num_of_st2 = num_of_st2
+                
+                
+        
+        
+def correct_null_transition_prob(transition_probabilities):
+    n_events=transition_probabilities.shape[1]
+    n_states=transition_probabilities.shape[0]
+    if not n_states==transition_probabilities.shape[2]:
+        print('shape of transition probabilities = {}'.transition_probabilities.shape)
+        raise ValueError('shape of inserted transition_probabilities is incorrect')
+    Q=np.array(transition_probabilities,copy=True)
+    Q=np.reshape(Q,(-1,n_states))
+    idx=Q==0
+    idx_0=np.apply_along_axis(np.all,1,idx)
+    idx_1=(np.squeeze(np.argwhere(idx_0))//n_events)
+    Q[idx_0,idx_1]=1
+    Q=Q.reshape((n_states,n_events,n_states))
+    return Q        
+        
+        
+            

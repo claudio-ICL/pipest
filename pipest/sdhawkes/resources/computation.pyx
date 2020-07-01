@@ -31,6 +31,30 @@ ctypedef np.int64_t DTYPEil_t
 
 cdef DTYPEf_t fRANDMAX = float(RAND_MAX)
 
+def compute_avgrate(int e,
+        np.ndarray[DTYPEf_t, ndim=1] times,
+        np.ndarray[DTYPEi_t, ndim=1] events,
+    ):
+    assert len(times)==len(events)
+    cdef np.ndarray[DTYPEf_t, ndim=1] t = np.array(times, copy=True)
+    t-=t[0]
+    return np.mean(np.cumsum(np.array(events[1:]==e,dtype=DTYPEi))/t[1:])
+def avg_rates(int d_E,
+        np.ndarray[DTYPEf_t, ndim=1] times,
+        np.ndarray[DTYPEi_t, ndim=1] events,
+        int e=0, partial=True
+    ):
+    assert len(times)==len(events)
+    cdef np.ndarray[DTYPEf_t, ndim=1] t = np.array(times, copy=True)
+    t-=t[0]
+    if partial:
+        return np.mean(np.cumsum(np.array(events[1:]==e,dtype=DTYPEi))/t[1:])
+    else:
+        return np.array(
+            [np.mean(np.cumsum(np.array(events[1:]==e1,dtype=DTYPEi))/t[1:]) 
+                for e1 in range(d_E)],
+            dtype=DTYPEf)
+
 def distribute_times_per_event_state(
     int n_event_types,
     int n_states,

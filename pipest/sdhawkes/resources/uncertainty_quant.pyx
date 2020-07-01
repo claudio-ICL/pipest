@@ -49,35 +49,25 @@ class UncertQuant:
                  np.ndarray[DTYPEf_t, ndim=3] dec_coef,
                  np.ndarray[DTYPEf_t, ndim=3] trans_prob,
                  np.ndarray[DTYPEf_t, ndim=2] dirichlet_param,
+                 copy=True
                 ):
         self.number_of_event_types = number_of_event_types
         self.number_of_states = number_of_states
         self.n_levels = n_levels
         self.state_enc = state_enc
         self.volume_enc = volume_enc
-        cdef np.ndarray[DTYPEf_t, ndim=3] transition_probabilities = \
-        np.zeros((number_of_states, number_of_event_types, number_of_states),dtype=DTYPEf)
-        self.transition_probabilities = trans_prob
-        cdef np.ndarray[DTYPEf_t, ndim=1] base_rates = np.zeros(number_of_event_types,dtype=DTYPEf)
-        self.base_rates = br
-        cdef np.ndarray[DTYPEf_t, ndim=3] impact_coefficients =\
-        np.zeros((number_of_event_types, number_of_states, number_of_event_types),dtype=DTYPEf)
-        self.impact_coefficients = imp_coef
-        cdef np.ndarray[DTYPEf_t, ndim=3] decay_coefficients = np.ones(
-            (number_of_event_types, number_of_states, number_of_event_types),dtype=DTYPEf)
-        self.decay_coefficients = dec_coef
-        cdef np.ndarray[DTYPEf_t, ndim=3] impact_decay_ratios = \
-        np.zeros((number_of_event_types, number_of_states, number_of_event_types),dtype=DTYPEf)
+        self.transition_probabilities = np.array(trans_prob, copy=copy)
+        self.base_rates =  np.array(br, copy=copy)
+        self.impact_coefficients =  np.array(imp_coef, copy=copy)
+        self.decay_coefficients =  np.array(dec_coef, copy=copy)
         impact_decay_ratios = imp_coef/(dec_coef-1.0)
         self.impact_decay_ratios = impact_decay_ratios
         self.dirichlet_param=dirichlet_param
     def simulate(self, DTYPEf_t time_start, DTYPEf_t time_end, 
                  initial_condition_times=[], initial_condition_events=[],
                  initial_condition_states=[], initial_condition_volumes=[], 
-                 int max_number_of_events=10**4,add_initial_cond=False,
+                 int max_number_of_events=10**5,add_initial_cond=False,
                 ):
-        os_info = os.uname()
-        print('Simulation is being performed on the following machine:\n {}'.format(os_info))
          # Convert the initial condition to np.arrays if required
         if type(initial_condition_times)!=np.ndarray:
             initial_condition_times = np.asarray(initial_condition_times, dtype=np.float)
@@ -112,7 +102,6 @@ class UncertQuant:
                 0,
                 np.random.dirichlet(np.ones(2*self.n_levels)),
                 axis=0)            
-        print('UQ.simulate: initial conditions have been acknowledged')   
         times, events, states, volumes =  simulation.launch_simulation(
                                               self.number_of_event_types,
                                               self.number_of_states,
@@ -133,7 +122,7 @@ class UncertQuant:
                                               add_initial_cond,
                                               num_preconditions = 1,         
                                               largest_negative_time = -100.0,
-                                              initialise_intensity_on_history = 0, 
+                                              initialise_intensity_on_history = 1, 
                                               report_full_volumes=False)
         lt,count=computation.distribute_times_per_event_state(
                 self.number_of_event_types,
@@ -232,5 +221,29 @@ class UncertQuant:
         self.mle_estim.launch_estimation_of_hawkes_param(partial=False)
         self.mle_estim.store_hawkes_parameters()
         self.mle_estim.create_goodness_of_fit()
+    def adjust_baserates(self, 
+            np.ndarray[DTYPEf_t, ndim=1] target_avgrates,
+            DTYPEf_t adj_coef=1.0e-3, int num_iter=5,
+            DTYPEf_t t0=0.0, DTYPEf_t t1=2.0*60*60, int max_number_of_events=10**4):
+        cdef int d_E = self.number_of_event_types
+        assert len(target_avgrates)==d_E
+        print("target_avgrates: {}". format(target_avgrates))
+        print("Original base_rates: {}". format(self.base_rates))
+        cdef int i=0
+        while i<num_iter:
+            i+=1
+            self.simulate(t0, t1, max_number_of_events=max_number_of_events)
+            avgrates=computation.avg_rates(d_E, self.simulated_times, self.simulated_events, partial=False)
+            self.base_rates*=np.exp(adj_coef*(target_avgrates-avgrates))
+        avgrates=computation.avg_rates(d_E, self.simulated_times, self.simulated_events, partial=False)
+        print("Adjusted base_rates: {}".format(self.base_rates))
+        print("target_avgrates: {}". format(target_avgrates))
+        print("Adjusted average rates: {}".format(avgrates))
+
+
+
+
+
+
 
 

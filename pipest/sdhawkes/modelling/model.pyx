@@ -57,7 +57,7 @@ from impact_profile import Impact
 import dirichlet
 import lob_model
 import plot_tools
-
+import matplotlib.pyplot as plt
 class HawkesKernel:
     def __init__(self, int num_event_types=1,int num_states=1, 
                  int num_quadpnts = 100, two_scales=False, DTYPEf_t quad_tmax=10.0, DTYPEf_t quad_tmin = 1.0e-2):
@@ -291,7 +291,7 @@ class SDHawkes:
               .format(name,path))
         with open(path+'/'+name,'wb') as outfile:
             pickle.dump(self,outfile)       
-    def get_configuration(self, model):
+    def get_configuration(self, model, create_goodness_of_fit=False):
         assert self.number_of_event_types==model.number_of_event_types
         assert self.number_of_states==model.number_of_states
         self.set_name_of_model(model.name_of_model)
@@ -302,7 +302,7 @@ class SDHawkes:
             self.create_mle_estim(type_of_input='empirical',store_trans_prob=True, store_dirichlet_param=True)
             self.mle_estim.store_results_of_estimation(model.mle_estim.results_of_estimation)
             self.mle_estim.store_hawkes_parameters()
-            self.mle_estim.create_goodness_of_fit()
+            #self.mle_estim.create_goodness_of_fit()
         except:
             print("No data or mle_estim found in given model")
             pass
@@ -310,10 +310,11 @@ class SDHawkes:
                 model.impact_coefficients, model.decay_coefficients)
         self.set_transition_probabilities(model.transition_probabilities)
         self.set_dirichlet_parameters(model.dirichlet_param)
-        try:
-            self.create_goodness_of_fit(type_of_input='empirical')
-        except:
-            print("I couldn't create goodness of fit on empirical data")
+        if create_goodness_of_fit:
+            try:
+                self.create_goodness_of_fit(type_of_input='empirical')
+            except:
+                print("I couldn't create goodness of fit on empirical data")
         try:
             self.calibrate_on_input_data(partial=False, 
                     type_of_preestim = model.calibration.type_of_preestim,
@@ -494,11 +495,18 @@ class SDHawkes:
         cdef np.ndarray[DTYPEf_t, ndim=2] masses = np.ones((self.number_of_states, self.number_of_event_types), dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=3] normalisation = np.ones((self.number_of_states, self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
         masses = np.sum(phi, axis=2)
-        tol=1.0e-10
+        tol=1.0e-12
+        if np.any(masses<=tol):
+            print("{} state-event pairs are not associated with a distribution of state updates".format(np.sum(masses<=tol)))
         normalisation=(1.0+tol)*np.repeat(np.expand_dims(masses,axis=2),self.number_of_states,axis=2)
-        idx_zero_mass = (normalisation<=0.0)
-        phi[idx_zero_mass]=tol/float(self.number_of_states)
-        normalisation=np.maximum(tol,normalisation)
+        idx_zero_mass = (normalisation<=tol)
+        for x in range(self.number_of_states):
+            for e in range(self.number_of_event_types):
+                if idx_zero_mass[x,e,0]:
+                    st2=x%self.state_enc.num_of_st2 #st2 corresponding to same volume
+                    x_next=self.state_enc.num_of_st2+st2 #one_label of state with same volume and no price change
+                    phi[x,e,x_next]=1.0# by default if no information is given, the state remains such that volumes are the same and there is no pric change
+                    normalisation[x,e,:]=1.0
         phi/=normalisation
         if not np.all(np.sum(phi,axis=2)<=1.0):
             print(np.sum(phi,axis=2))
@@ -536,6 +544,34 @@ class SDHawkes:
             self.state_enc.deflationary_states,
             self.state_enc.inflationary_states)
         print('SDHawkes: new asymmetry in transition_probabilities = {}'.format(asymmetry))
+    def reduce_price_volatility(self,DTYPEf_t reduction_coef=0.66):
+        cdef DTYPEf_t coef=min(1.0,max(0.0,reduction_coef))
+        cdef np.ndarray[DTYPEf_t, ndim=3] phi = np.array(self.transition_probabilities, copy=True)
+        cdef int num_of_st1= self.state_enc.num_of_st1
+        cdef int num_of_st2= self.state_enc.num_of_st2
+        for e in range(self.number_of_event_types):
+            for x1 in range(self.number_of_states):
+                for st2 in range(num_of_st2):
+                    x=0*num_of_st2+st2
+                    y=1*num_of_st2+st2
+                    z=2*num_of_st2+st2
+                    less=min(phi[x1,e,z],min(phi[x1,e,x],phi[x1,e,y]))
+                    more=max(phi[x1,e,z],max(phi[x1,e,x],phi[x1,e,y]))
+                    phi[x1,e,x]=coef*less+(1.0-coef)*phi[x1,e,x]
+                    phi[x1,e,z]=coef*less+(1.0-coef)*phi[x1,e,z]
+                    if phi[x1,e,y]<more:
+                        phi[x1,e,y]=coef*more+(1.0-coef)*phi[x1,e,y]
+        self.set_transition_probabilities(phi)
+
+
+
+
+    def set_base_rates(self, np.ndarray[DTYPEf_t, ndim=1] base_rates):
+        'Raise ValueError if the given parameters do not have the right shape'
+        if np.shape(base_rates) != (self.number_of_event_types,):
+            raise ValueError('given base rates have incorrect shape')
+        cdef np.ndarray[DTYPEf_t, ndim=1] nu = np.array(base_rates,copy=True,dtype=DTYPEf)    
+        self.base_rates = nu
     def set_hawkes_parameters(self, np.ndarray[DTYPEf_t, ndim=1] base_rates,
                               np.ndarray[DTYPEf_t, ndim=3 ]impact_coefficients,
                               np.ndarray[DTYPEf_t, ndim=3] decay_coefficients):
@@ -998,7 +1034,8 @@ class SDHawkes:
                                     )
         "Update the transition prombabilities corresponding to liquidator's interventions"
         self.transition_probabilities[:,0,:] = mle_estim.estimate_liquidator_transition_prob(
-            self.number_of_states, events, states, liquidator_index = 0)
+            self.number_of_states, events, states,
+            self.state_enc.weakly_deflationary_states, liquidator_index=0)
         self.liquidator.store_start_time(liquid_start_time)
         self.liquidator.store_termination_time(liquid_termination_time)
         "Store inventory trajectory"
@@ -1026,24 +1063,63 @@ class SDHawkes:
         if type_of_input=='simulated':
             self.simulated_price=traj
         elif type_of_input=='empirical':
-            self.empirical_price=traj
+            self.reconstructed_empirical_price=traj
     def draw_price_trajectory(self, type_of_input='simulated', DTYPEf_t initial_price=0.0, DTYPEf_t ticksize=100.0):
         if type_of_input=='simulated':
             times=self.simulated_times
             states=self.simulated_states
         elif type_of_input=='empirical':
-            times=self.empirical_times
-            states=self.empirical_states
+            times=self.data.observed_times
+            states=self.data.observed_states
         else:
             print("type_of_input not recognised")
             raise ValueError("type_of_input not recognised")
         df=self.state_enc.translate_labels(states)
         cdef np.ndarray[DTYPEi_t, ndim=1] price_sign = np.array(df['st_1'].values, dtype=DTYPEi) - self.state_enc.num_of_st1//2
-        cdef np.ndarray[DTYPEf_t, ndim=1] price = initial_price+ticksize*np.cumsum(price_sign) 
+        cdef np.ndarray[DTYPEf_t, ndim=1] price = initial_price+0.5*ticksize*np.cumsum(price_sign) 
         cdef np.ndarray[DTYPEf_t, ndim=2] price_trajectory = np.concatenate([
             times.reshape(-1,1), price.reshape(-1,1)
             ],axis=1)
         return price_trajectory
+    def plot_price_trajectories(self, DTYPEf_t T = 100.0, 
+            save_fig=False, path=None, name='prices', plot=True):
+        def prepare_traj(np.ndarray[DTYPEf_t, ndim=2] x):
+            cdef np.ndarray[DTYPEf_t, ndim=2] price = np.array(x, copy=True)
+            price[:,0]-=price[0,0]
+            return computation.select_interval(price,0.0,T)
+        fig=plt.figure(figsize=(10,8))
+        ax=fig.add_subplot(111)
+        try:
+            p=prepare_traj(self.simulated_price)
+            ax.plot(p[:,0],p[:,1], label='simulation')
+        except:
+            print("I could not plot simulated price")
+            pass
+        try:
+            p=prepare_traj(self.data.mid_price.values)
+            ax.plot(p[:,0],p[:,1], label='data')
+        except:
+            print("I could not plot data")
+            pass
+        try:
+            p=prepare_traj(self.reconstructed_empirical_price)
+            ax.plot(p[:,0],p[:,1], label='reconstruction', linestyle='--')
+        except:
+            print("I could not plot reconstructed_empirical_price")
+            pass
+        ax.set_ylabel('price')
+        ax.set_xlabel('time')
+        ax.legend()
+        fig.suptitle('Price trajectories')
+        if save_fig:    
+            if path==None:
+                path='/home/claudio/Desktop/'
+            fname=path+name
+            plt.savefig(fname)
+        if plot:
+            plt.show()   
+
+
     def make_start_liquid_origin_of_times(self,delete_negative_times=False):
         cdef DTYPEf_t time_start = self.liquidator.start_time
         self.liquidator.termination_time -= time_start
@@ -1108,7 +1184,7 @@ class SDHawkes:
             self.base_rates,self.impact_coefficients,self.decay_coefficients,self.transition_probabilities,
             times,events,states,type_of_input=type_of_input, parallel = parallel
         )
-    def create_uq(self,):
+    def create_uq(self,copy_parameters=False,):
         self.uncertainty_quantification=uncertainty_quant.UncertQuant(
             self.number_of_event_types, self.number_of_states,
             self.n_levels, self.state_enc, self.volume_enc,
@@ -1117,6 +1193,7 @@ class SDHawkes:
             self.decay_coefficients,
             self.transition_probabilities,
             self.dirichlet_param,
+            copy=copy_parameters,
         )
     def create_nonparam_estim(self, str type_of_input = 'simulated',
                               int num_quadpnts = 100, DTYPEf_t quad_tmax=1.0, DTYPEf_t quad_tmin=1.0e-04,
