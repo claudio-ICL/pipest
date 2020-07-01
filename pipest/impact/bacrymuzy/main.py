@@ -184,6 +184,8 @@ def measure_impact(
     redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
 
 def main():
+    print(sys.argv)
+    print("\n python {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
     symbol=str(sys.argv[1])
     date=str(sys.argv[2])
     time_window=str(sys.argv[3])

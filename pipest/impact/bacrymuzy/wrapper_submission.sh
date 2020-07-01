@@ -2,11 +2,11 @@
 module load anaconda3/personal
 source activate h_impact_env
 cd $PBS_O_WORKDIR
-if [ "$a" = "-c" ] || [ "$a" = "--calibrate" ]
-then 
-  python main.py $symbol $date $t_0 $t_1 $a "-e" $e
+if [ "$action" = "-r" ] || [ "$action" = "--read" ]
+then
+   python main.py  $symbol $date $timewindow $action
 else
-  python main.py $symbol $date $t_0 $t_1 $a
-fi    
+   python main.py  $symbol $date $timewindow $action $br $liquidtype $controltype $control
+fi
 conda deactivate
 

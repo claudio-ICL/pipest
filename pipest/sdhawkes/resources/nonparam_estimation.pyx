@@ -21,7 +21,7 @@ sys.path.append(path_lobster_pyscripts+'/')
 import time
 from cython.parallel import prange
 import multiprocessing as mp
-from sklearn.linear_model import Ridge
+#from sklearn.linear_model import Ridge
 
 from scipy import linalg
 import numpy as np
@@ -152,17 +152,17 @@ class EstimProcedure:
         self.hawkes_kernel.store_values_at_quadpnts(kappa)
         if store_L1_norm:
             self.hawkes_kernel.store_L1_norm(from_param=False)
-    def fit_powerlaw(self,compute_L1_norm=False,DTYPEf_t ridge_param=1.0, DTYPEf_t tol=1.0e-9):
-        fit_powerlaw=FitPowerlaw(self.num_event_types, self.num_states,
-              self.quadrature,
-              self.hawkes_kernel.values_at_quadpnts,
-              ridge_param=ridge_param, tol=tol)
-        fit_powerlaw.fit()
-        self.fit_powerlaw = fit_powerlaw
-        self.hawkes_kernel.store_parameters(self.fit_powerlaw.imp_coef, self.fit_powerlaw.dec_coef)
-        if compute_L1_norm:
-            #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
-            self.hawkes_kernel.store_L1_norm()
+#    def fit_powerlaw(self,compute_L1_norm=False,DTYPEf_t ridge_param=1.0, DTYPEf_t tol=1.0e-9):
+#        fit_powerlaw=FitPowerlaw(self.num_event_types, self.num_states,
+#              self.quadrature,
+#              self.hawkes_kernel.values_at_quadpnts,
+#              ridge_param=ridge_param, tol=tol)
+#        fit_powerlaw.fit()
+#        self.fit_powerlaw = fit_powerlaw
+#        self.hawkes_kernel.store_parameters(self.fit_powerlaw.imp_coef, self.fit_powerlaw.dec_coef)
+#        if compute_L1_norm:
+#            #self.hawkes_kernel.compute_values_at_quadpnts_from_parametric_kernel()
+#            self.hawkes_kernel.store_L1_norm()
     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):
         "type_of_input can either be 'simulated' or 'empirical'"
         self.goodness_of_fit=goodness_of_fit.good_fit(
@@ -856,52 +856,52 @@ cdef void interpolate(
         else:
             interp_data[e1,x1,e,k]=m*time[k]+q
         
-class FitPowerlaw:
-    def __init__(self,
-                 int num_event_types, int num_states,
-                 quadrature,
-                 np.ndarray[DTYPEf_t, ndim=4] hawkes_kernel_at_quadpnts,
-                 DTYPEf_t ridge_param=1.0, DTYPEf_t tol=1.0e-9):
-        self.num_event_types = num_event_types
-        self.num_states = num_states
-        self.quadrature = quadrature
-        self.hawkes_kernel_at_quadpnts = hawkes_kernel_at_quadpnts
-        self.ridge_param = ridge_param
-        self.tol=tol
-        self.regression_model=Ridge(alpha=ridge_param,normalize=True)
-    def fit(self):
-        cdef int N = max(1,min(self.num_event_types,mp.cpu_count()))
-        print("I am fitting the powerlaw kernel in parallel on {} cpus".format(N))
-        cdef DTYPEf_t run_time = -time.time()
-        pool=mp.Pool(N)
-        results=pool.map_async(self.fit_partial,list(range(self.num_event_types))).get()
-        pool.close()
-        run_time+=time.time()
-        print("Parallel fitting terminates. run_time={}".format(run_time))
-        cdef int d_E = self.num_event_types
-        cdef int d_S = self.num_states
-        cdef np.ndarray[DTYPEf_t, ndim=3] imp_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
-        cdef np.ndarray[DTYPEf_t, ndim=3] dec_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
-        cdef int e=0
-        for e in range(d_E):
-            imp_coef+=results[e][0]
-            dec_coef+=results[e][1]
-        self.imp_coef=imp_coef
-        self.dec_coef=dec_coef
-    def fit_partial(self,int e):
-        cdef DTYPEf_t tol=self.tol
-        cdef int d_E = self.num_event_types
-        cdef int d_S = self.num_states
-        cdef int Q = self.quadrature.num_pnts
-        cdef np.ndarray[DTYPEf_t, ndim=2] X = np.log(1.0+self.quadrature.partition[:Q]).reshape(Q,1)
-        cdef np.ndarray[DTYPEf_t, ndim=1] y = np.zeros(Q,dtype=DTYPEf)
-        cdef np.ndarray[DTYPEf_t, ndim=3] imp_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
-        cdef np.ndarray[DTYPEf_t, ndim=3] dec_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
-        cdef int e1=0, x1=0
-        for e1 in range(d_E):
-            for x1 in range(d_S):
-                y=np.log(np.maximum(tol,self.hawkes_kernel_at_quadpnts[e1,x1,e,:]))
-                fitted_model=self.regression_model.fit(X,y)
-                imp_coef[e1,x1,e]=np.exp(fitted_model.intercept_)
-                dec_coef[e1,x1,e]=np.maximum(1.0+tol,-fitted_model.coef_)
-        return imp_coef, dec_coef        
+#class FitPowerlaw:
+#    def __init__(self,
+#                 int num_event_types, int num_states,
+#                 quadrature,
+#                 np.ndarray[DTYPEf_t, ndim=4] hawkes_kernel_at_quadpnts,
+#                 DTYPEf_t ridge_param=1.0, DTYPEf_t tol=1.0e-9):
+#        self.num_event_types = num_event_types
+#        self.num_states = num_states
+#        self.quadrature = quadrature
+#        self.hawkes_kernel_at_quadpnts = hawkes_kernel_at_quadpnts
+#        self.ridge_param = ridge_param
+#        self.tol=tol
+#        self.regression_model=Ridge(alpha=ridge_param,normalize=True)
+#    def fit(self):
+#        cdef int N = max(1,min(self.num_event_types,mp.cpu_count()))
+#        print("I am fitting the powerlaw kernel in parallel on {} cpus".format(N))
+#        cdef DTYPEf_t run_time = -time.time()
+#        pool=mp.Pool(N)
+#        results=pool.map_async(self.fit_partial,list(range(self.num_event_types))).get()
+#        pool.close()
+#        run_time+=time.time()
+#        print("Parallel fitting terminates. run_time={}".format(run_time))
+#        cdef int d_E = self.num_event_types
+#        cdef int d_S = self.num_states
+#        cdef np.ndarray[DTYPEf_t, ndim=3] imp_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
+#        cdef np.ndarray[DTYPEf_t, ndim=3] dec_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
+#        cdef int e=0
+#        for e in range(d_E):
+#            imp_coef+=results[e][0]
+#            dec_coef+=results[e][1]
+#        self.imp_coef=imp_coef
+#        self.dec_coef=dec_coef
+#    def fit_partial(self,int e):
+#        cdef DTYPEf_t tol=self.tol
+#        cdef int d_E = self.num_event_types
+#        cdef int d_S = self.num_states
+#        cdef int Q = self.quadrature.num_pnts
+#        cdef np.ndarray[DTYPEf_t, ndim=2] X = np.log(1.0+self.quadrature.partition[:Q]).reshape(Q,1)
+#        cdef np.ndarray[DTYPEf_t, ndim=1] y = np.zeros(Q,dtype=DTYPEf)
+#        cdef np.ndarray[DTYPEf_t, ndim=3] imp_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
+#        cdef np.ndarray[DTYPEf_t, ndim=3] dec_coef = np.zeros((d_E,d_S,d_E), dtype=DTYPEf)
+#        cdef int e1=0, x1=0
+#        for e1 in range(d_E):
+#            for x1 in range(d_S):
+#                y=np.log(np.maximum(tol,self.hawkes_kernel_at_quadpnts[e1,x1,e,:]))
+#                fitted_model=self.regression_model.fit(X,y)
+#                imp_coef[e1,x1,e]=np.exp(fitted_model.intercept_)
+#                dec_coef[e1,x1,e]=np.maximum(1.0+tol,-fitted_model.coef_)
+#        return imp_coef, dec_coef        
