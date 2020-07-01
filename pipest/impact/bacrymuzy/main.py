@@ -183,8 +183,51 @@ def measure_impact(
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
     redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
 
+def panmeasure(
+    symbol="INTC",
+    date="2019-01-23",
+    time_window="41400-45000",
+    liquidator_base_rate=0.150,
+    liquidator_control=0.2
+    ):    
+    count=0
+    for type_of_liquid in ['constant_intensity', 'with_the_market', 'against_the_market']:
+        for liquidator_control_type in ['fraction_of_inventory', 'fraction_of_bid_side']:
+            array_index=int(os.environ['PBS_ARRAY_INDEX'])
+            if count==array_index:
+                measure_impact(symbol, date, time_window,
+                        liquidator_base_rate,
+                        type_of_liquid,
+                        liquidator_control_type,
+                        liquidator_control)
+            count+=1
+
+
+def collect_results(
+        symbol='INTC', date='2019-01-23', time_window="41400-45000"):
+    message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
+    with open(path_impact+'/models/{}/{}_{}_{}/{}_sdhawkes_{}_{}'\
+            .format(symbol, symbol, date, time_window, symbol, date, time_window), 'rb') as source:
+        model=pickle.load(source)
+    now=datetime.datetime.now()
+    print(message)
+    model.create_archive()
+    for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window)):
+        with open(path, 'rb') as source:
+            bm=pickle.load(source)
+        model.stack_to_archive(bm.name_of_model)
+        model.stack_to_archive(bm.liquidator, name_of_item='liquidator', idx=bm.name_of_model)
+        model.stack_to_archive(bm.simulated_times, name_of_item='simulated_times', idx=bm.name_of_model)
+        model.stack_to_archive(bm.simulated_events, name_of_item='simulated_events', idx=bm.name_of_model)
+        model.stack_to_archive(bm.simulated_states, name_of_item='simulated_states', idx=bm.name_of_model)
+        model.stack_to_archive(bm.simulated_intensities, name_of_item='simulated_intensities', idx=bm.name_of_model)
+    model.dump(path=path_impact+'/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
+    now=datetime.datetime.now()
+    message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
+    print(message)
+
+
 def main():
-    print(sys.argv)
     print("\n python {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
     symbol=str(sys.argv[1])
     date=str(sys.argv[2])
@@ -202,6 +245,15 @@ def main():
                 type_of_liquid,
                 liquidator_control_type,
                 liquidator_control)
+    elif action=='-pm' or action=='--panmeasure':
+        liquidator_base_rate=float(sys.argv[5])
+        liquidator_control=float(sys.argv[6])
+        panmeasure(symbol, date, time_window,
+                liquidator_base_rate,
+                liquidator_control)
+    elif action=='-c' or action=='--collect':
+        collect_results(symbol, date, time_window)
+
     else:
         print("action: {}".format(action))
         print("Error: action not recognised")

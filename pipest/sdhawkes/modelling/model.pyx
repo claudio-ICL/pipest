@@ -1164,6 +1164,19 @@ class SDHawkes:
         self.liquidator.start_time = 0.0 
     def store_calibration(self,calibration):
         self.calibration=calibration    
+    def create_archive(self,):
+        self.archive={'n_items': 0}
+    def stack_to_archive(self,item, str name_of_item= '', idx=None):
+        if idx==None:
+            if name_of_item == '':
+                name_of_item = 'item_'+str(int(self.archive['n_items']+1))
+            self.archive[name_of_item]={'n_subitems': 1, name_of_item: item}
+            self.archive['n_items']+=1
+        else:
+            if name_of_item == '':
+                name_of_item = 'subitem_{}.{}'.format(idx, self.archive[idx]['n_subitems']+1)
+            self.archive[idx][name_of_item]=item
+            self.archive[idx]['n_subitems']+=1
     def store_goodness_of_fit(self,goodness_of_fit):
         self.goodness_of_fit = goodness_of_fit
     def create_goodness_of_fit(self, str type_of_input='simulated', parallel=True):

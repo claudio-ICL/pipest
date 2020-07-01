@@ -11,8 +11,8 @@ if not os.path.basename(path_pipest)=='pipest':
     print("path_pipest not found. Instead: {}".format(path_pipest))
     raise ValueError("path_pipest not found.")
 path_models=path_pipest+'/models'    
-path_sdhawkes=path_pipest+'/sdhawkes_powerlaw'
-path_lobster=path_pipest+'/lobster_for_sdhawkes'
+path_sdhawkes=path_pipest+'/sdhawkes'
+path_lobster=path_pipest+'/lobster'
 path_lobster_data=path_lobster+'/data'
 path_lobster_pyscripts=path_lobster+'/py_scripts'
 
