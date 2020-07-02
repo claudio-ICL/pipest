@@ -1086,9 +1086,14 @@ class SDHawkes:
         def prepare_traj(np.ndarray[DTYPEf_t, ndim=2] x):
             cdef np.ndarray[DTYPEf_t, ndim=2] price = np.array(x, copy=True)
             price[:,0]-=price[0,0]
+            price[:,0]+=earliest_time
             return computation.select_interval(price,0.0,T)
         fig=plt.figure(figsize=(10,8))
         ax=fig.add_subplot(111)
+        try:
+            earliest_time=self.simulated_price[0,0]
+        except:
+            earliest_time=0.0
         try:
             p=prepare_traj(self.simulated_price)
             ax.plot(p[:,0],p[:,1], label='simulation')
