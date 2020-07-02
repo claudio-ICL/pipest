@@ -6,6 +6,7 @@
 
 import sys
 import os
+import glob
 path_pipest = os.path.abspath('./')
 n=0
 while (not os.path.basename(path_pipest)=='pipest') and (n<4):
@@ -96,15 +97,15 @@ def read(
     model.uncertainty_quantification.adjust_baserates(
         target,
         adj_coef=5.0e-2,
-        num_iter=5, 
-        max_number_of_events=10000
+        num_iter=15, 
+        max_number_of_events=30000
     )
-    model.reduce_price_volatility(reduction_coef=0.5)
-    #model.create_goodness_of_fit(type_of_input='empirical')
+    model.reduce_price_volatility(reduction_coef=0.7)
+    model.create_goodness_of_fit(type_of_input='empirical')
     time_start=0.0
     time_end=time_start+0.15*60*60
     model.simulate(time_start, time_end,
-                   max_number_of_events=20000,
+                   max_number_of_events=50000,
                    add_initial_cond=True,
                    store_results=True, report_full_volumes=False)
     model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
@@ -128,17 +129,18 @@ def measure_impact(
     liquidator_base_rate=0.150,
     type_of_liquid = 'with_the_market', #constant_intensity or with_the_market or against_the_market
     liquidator_control_type='fraction_of_bid_side', # fraction_of_inventory or fraction_of_bid_side
-    liquidator_control=0.2
+    liquidator_control=0.2,
+    count=0
     ):    
     with open(path_impact+'/models/{}/{}_{}_{}/{}_sdhawkes_{}_{}'\
             .format(symbol, symbol, date, time_window, symbol, date, time_window), 'rb') as source:
         model=pickle.load(source)
-    i=0
+    i=count
     name=str(model.name_of_model)+'_bm'+str(i)
     path=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol, date, time_window)
     while os.path.exists(path+name):
-        i+=1
-        name=name.replace("_bm"+str(i-1), "_bm"+str(i))
+        i+=6 #this is the number of different cases when panmeasure is executed
+        name=name.replace("_bm"+str(i-6), "_bm"+str(i))
     model.set_name_of_model(name)
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
@@ -151,9 +153,9 @@ def measure_impact(
     initial_condition_events=1+np.array(model.simulated_events,copy=True)
     initial_condition_states=np.array(model.simulated_states,copy=True)
     initial_condition_volumes=np.array(model.simulated_volume,copy=True)
-    initial_inventory=4.0
+    initial_inventory=10.0
     time_start=float(initial_condition_times[-1])
-    time_end=time_start+0.5*60*60
+    time_end=time_start+1.00*60*60
     model.setup_liquidator(initial_inventory=initial_inventory,
                            time_start=time_start,
                            liquidator_base_rate=liquidator_base_rate,
@@ -166,7 +168,7 @@ def measure_impact(
         initial_condition_states=initial_condition_states,
         initial_condition_times=initial_condition_times,
         initial_condition_volumes=initial_condition_volumes,
-        max_number_of_events=10**4,
+        max_number_of_events=10**5,
         verbose=False,
         report_history_of_intensities = False,
         store_results=True
@@ -177,7 +179,7 @@ def measure_impact(
     model.liquidator.impact.store_bm_impact()
     model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
                                  ticksize=model.data.ticksize)
-    #model.store_history_of_intensities()
+    model.store_history_of_intensities()
     model.dump(path=path)
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
@@ -199,12 +201,15 @@ def panmeasure(
                         liquidator_base_rate,
                         type_of_liquid,
                         liquidator_control_type,
-                        liquidator_control)
+                        liquidator_control,
+			count
+			)
             count+=1
 
 
 def collect_results(
         symbol='INTC', date='2019-01-23', time_window="41400-45000"):
+    now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
     with open(path_impact+'/models/{}/{}_{}_{}/{}_sdhawkes_{}_{}'\
             .format(symbol, symbol, date, time_window, symbol, date, time_window), 'rb') as source:
@@ -215,13 +220,13 @@ def collect_results(
     for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window)):
         with open(path, 'rb') as source:
             bm=pickle.load(source)
-        model.stack_to_archive(bm.name_of_model)
+        model.stack_to_archive(bm.name_of_model, name_of_item=bm.name_of_model)
         model.stack_to_archive(bm.liquidator, name_of_item='liquidator', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_times, name_of_item='simulated_times', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_events, name_of_item='simulated_events', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_states, name_of_item='simulated_states', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_intensities, name_of_item='simulated_intensities', idx=bm.name_of_model)
-    model.dump(path=path_impact+'/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
+    model.dump(path=path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
     print(message)
