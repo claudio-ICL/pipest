@@ -215,7 +215,7 @@ def collect_results(
     for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window)):
         with open(path, 'rb') as source:
             bm=pickle.load(source)
-        model.stack_to_archive(bm.name_of_model)
+        model.stack_to_archive(bm.name_of_model, name_of_item=bm.name_of_model)
         model.stack_to_archive(bm.liquidator, name_of_item='liquidator', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_times, name_of_item='simulated_times', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_events, name_of_item='simulated_events', idx=bm.name_of_model)
