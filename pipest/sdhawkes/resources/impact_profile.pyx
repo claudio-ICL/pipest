@@ -176,10 +176,22 @@ class Impact():
         np.ndarray[DTYPEi_t, ndim=1] events,
         np.ndarray[DTYPEi_t, ndim=1] states,
         ):
+        assert len(times)==len(events)
+        assert len(events)==len(states)
+        self.num_event_types=int(len(base_rates))
+        self.num_states=int(impact_coefficients.shape[1])
         self.sdhawkes = Multivariate_sdHawkesProcess(
             times,events,states,
             base_rates, impact_coefficients,
             decay_coefficients, trans_prob)
+        idx=np.array(times>=0.0, dtype=np.bool)
+        self.times=np.array(times[idx], copy=True)
+        self.events=np.array(events[idx], copy=True)
+        self.states=np.array(states[idx], copy=True)
+        self.labelled_times, self.count = computation.distribute_times_per_event_state(
+            self.num_event_types, self.num_states,
+            self.times, self.events, self.states)
+
     def produce_reduced_weakly_defl_pp(self,
                  time_start=None, time_end=None,
                  int num_init_guesses = 3,
@@ -199,10 +211,10 @@ class Impact():
         if time_end==None:
             time_end=self.times[len(self.times)-1]
         idx = np.logical_and(
-            np.isin(self.sdhawkes.states,self.weakly_defl_states),
+            np.isin(self.states,self.weakly_defl_states),
             self.events>=1
         )        
-        cdef np.ndarray[DTYPEf_t, ndim=1] reduced_times = np.array(self.sdhawkes.times[idx],copy=True,dtype=DTYPEf)
+        cdef np.ndarray[DTYPEf_t, ndim=1] reduced_times = np.array(self.times[idx],copy=True,dtype=DTYPEf)
         self.reduced_weakly_defl_pp = Univariate_Ordinary_HawkesProcess(
             reduced_times, time_start, time_end,
             num_init_guesses = num_init_guesses,
@@ -234,60 +246,55 @@ class Impact():
     def evaluate_compensator_of_weakly_defl_pp(self, DTYPEf_t eval_time):
         return compute_compensator_of_weakly_defl_pp(
             eval_time,
-            self.weakly_defl_pp.num_event_types,
-            self.weakly_defl_pp.num_states,
+            self.num_event_types,
+            self.num_states,
             self.weakly_defl_states,
-            self.weakly_defl_pp.sampled_times,
-            self.weakly_defl_pp.sampled_states,
-            self.weakly_defl_pp.labelled_times,
-            self.weakly_defl_pp.count,
-            self.weakly_defl_pp.base_rates,
-            self.weakly_defl_pp.imp_dec_ratio,
-            self.weakly_defl_pp.decay_coefficients,
-            self.weakly_defl_pp.trans_prob,
+            self.times, #times is supposed to start at 0.0, which is also the time when liquidation starts
+            self.states,
+            self.labelled_times,
+            self.count,
+            self.sdhawkes.base_rates,
+            self.sdhawkes.imp_dec_ratio,
+            self.sdhawkes.decay_coefficients,
+            self.sdhawkes.trans_prob,
             self.liquidator.termination_time
         )
     
     def evaluate_impact_profile(self, DTYPEf_t eval_time, display_message=False):
+        # It is assumed that liquidation starts at zero and times>=0
         cdef DTYPEf_t numerator =\
         compute_numerator(
             eval_time,
             self.liquidator.termination_time,
-            self.weakly_defl_pp.sampled_times,
-            self.weakly_defl_pp.sampled_states,
-            self.weakly_defl_pp.labelled_times,
-            self.weakly_defl_pp.count,
-            self.weakly_defl_pp.base_rates[0],
-            self.weakly_defl_pp.imp_dec_ratio[1,:,:],
-            self.weakly_defl_pp.decay_coefficients[1,:,:],
-            self.weakly_defl_pp.trans_prob,
+            self.times,
+            self.states,
+            self.labelled_times,
+            self.count,
+            self.liquidator.base_rate,
+            self.sdhawkes.imp_dec_ratio[1,:,:], #sell market orders impacting lob events
+            self.sdhawkes.decay_coefficients[1,:,:], #sell market orders impacting lob events
+            self.sdhawkes.trans_prob,
             self.array_weakly_defl_states,
-            self.weakly_defl_pp.num_event_types,
-            self.weakly_defl_pp.num_states,
+            self.sdhawkes.num_event_types,
+            self.sdhawkes.num_states,
             self.liquidator.num_orders
         )
         cdef DTYPEf_t sqrt_denominator =\
         (self.evaluate_compensator_of_weakly_defl_pp(eval_time)
          -self.weakly_defl_pp.base_rates[0]*min(eval_time,self.liquidator.termination_time))
         sqrt_denominator -= self.reduced_weakly_defl_pp.compute_expectation(eval_time)
-        cdef DTYPEf_t denominator = pow(sqrt_denominator,2)
+        cdef DTYPEf_t denominator = sqrt_denominator*sqrt_denominator
         if display_message:
             message='evaluate_impact_profile:'
             message+='  numerator={}'.format(numerator)
             message+='  denominator={}'.format(denominator)
             print(message)
         return numerator/denominator
-    
-    def compute_imp_profile_history(self, DTYPEf_t time_horizon, num_extra_eval_points = 10, store_result= True):
+    def compute_imp_profile_history(self, DTYPEf_t time_horizon, int num_extra_eval_points = 10):
         idx_liquidator = np.logical_and(self.events==0,self.times<=time_horizon)
         cdef np.ndarray[DTYPEf_t, ndim=1] eval_points = np.atleast_1d(np.array(self.times[idx_liquidator],copy=True))
         cdef np.ndarray[DTYPEf_t, ndim=1] extra_eval_points =\
-        np.cumsum(
-            np.sort(
-                np.random.exponential(size=(num_extra_eval_points,))
-            )
-        )
-        extra_eval_points = time_horizon*extra_eval_points/extra_eval_points[len(extra_eval_points)-1]
+                np.linspace(0.0, time_horizon, num=num_extra_eval_points, dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=2] eval_times =\
         np.sort(np.concatenate([eval_points,extra_eval_points],axis=0),axis=0).reshape(-1,1)
         cdef np.ndarray[DTYPEf_t, ndim=2] imp_profile = np.zeros_like(eval_times)
@@ -298,17 +305,12 @@ class Impact():
         print(message)
         imp_profile[:,0] = np.apply_along_axis(self.evaluate_impact_profile,1,eval_times)
         cdef np.ndarray[DTYPEf_t, ndim=2] result = np.concatenate([eval_times,imp_profile], axis=1)
-        if store_result:
-            df=pd.DataFrame({'time':result[:,0], 'impact':result[:,1]})
-            self.imp_profile_history = df
         return result
-    
-    def store_impact_profile(self,np.ndarray[DTYPEf_t, ndim=2] impact_profile):
+    def store_impact_profile(self, DTYPEf_t time_horizon, int num_extra_eval_points = 10):
+        impact_profile = self.compute_imp_profile_history(
+                time_horizon, num_extra_eval_points)
         df=pd.DataFrame({'time': impact_profile[:,0], 'impact': impact_profile[:,1]})
         self.impact_profile=df    
-    def normalise_imp_profile_history(self):
-        self.imp_profile_history[:,1] = np.tanh(self.imp_profile_history[:,1])
-
     def store_bm_impact(self, 
             int density_of_eval_points=1000):
         profile, intensity = self.compute_bm_impact(
@@ -406,15 +408,15 @@ def compute_compensator_of_weakly_defl_pp(
     double [:,:,:] beta,
     double [:,:,:] phi,
     DTYPEf_t liquid_termination_time,
-):
+): # It is assumed that liquidation starts at time 0.0 and all times are non-negative
     cdef int len_times=len(times)
     cdef int n=0, x=0, x1=0, e=1, e1=0, j=0
     cdef DTYPEf_t upper_time=0.0, T_n=copy.copy(times[0]), summand=0.0, total=0.0
     cdef DTYPEf_t result = 0.0
     for x in weakly_defl_states:
-        for e in range(1,num_event_types):
-            for n in range(len_times-1):
-                with nogil:
+        with nogil:
+            for e in range(1,num_event_types):
+                for n in range(len_times-1):
                     total=0.0
                     T_n = times[n]
                     if T_n < eval_time:
@@ -460,7 +462,7 @@ def compute_cdf_execution_horizon(DTYPEf_t eval_time,
     cdef int n_orders = np.int(ceil(initial_inventory/size_child_order))
     cdef DTYPEf_t nu_t = base_rate*eval_time
     cdef int j=0
-    cdef double P = copy.copy(exp(-nu_t))
+    cdef double P = exp(-nu_t)
     cdef long factorial=1
     with nogil:
         for j in range(1,min(14,n_orders+1)):
@@ -476,18 +478,18 @@ def evaluate_anti_cdf_execution_horizon(DTYPEf_t eval_time,
 
 cdef double compute_anti_cdf_execution_horizon(DTYPEf_t eval_time,
                                   DTYPEf_t base_rate,
-                                  int n_orders):
+                                  int n_orders
+                                  ) nogil:
     """
     It is assumed that the arrival of liquidator's orders follow a Poisson process with intensity equal to the base rate and that each child order has a fixed constant size.
     """
     cdef DTYPEf_t nu_t = base_rate*eval_time
     cdef int j=0
-    cdef double P = copy.copy(exp(-nu_t))
+    cdef double P = exp(-nu_t)
     cdef long factorial=1
-    with nogil:
-        for j in range(1,min(14,n_orders+1)):
-            factorial*=j
-            P+= exp(-nu_t)*pow(nu_t,j)/factorial
+    for j in range(1,min(14,n_orders+1)):
+        factorial*=j
+        P+= exp(-nu_t)*pow(nu_t,j)/factorial
     return P
 
 cdef double compute_numerator(
@@ -514,7 +516,7 @@ cdef double compute_numerator(
         base_rate, imp_dec_ratio_one, beta_one, phi,
         weakly_defl_states, num_event_types, num_states, num_orders
     )
-    result = pow(sqrt_result, 2) 
+    result = sqrt_result*sqrt_result
     return result
     
 
@@ -548,7 +550,7 @@ cdef double compute_second_summand_of_numerator(
     int num_states,
     int num_orders,
 ):
-    cdef np.ndarray[DTYPEi_t, ndim=1] factorial = store_factorials(num_orders)
+    cdef np.ndarray[DTYPEi_t, ndim=1] factorial = cache_factorials(num_orders)
     cdef long [:] factorial_memview = factorial
     cdef np.ndarray[DTYPEf_t, ndim=3] summands = np.zeros(
         (num_states,num_event_types,num_states),dtype=DTYPEf)
@@ -676,7 +678,7 @@ cdef double compute_gn(DTYPEf_t eval_time,
             )
     return base_rate*phi[X_n,0,x1]*phi[X_nm1,e,x]*integral
 
-def store_factorials(int n):
+def cache_factorials(int n):
     cdef int k =0
     cdef int N=min(16,n)
     cdef np.ndarray[DTYPEi_t, ndim=1] factorial = np.ones(N, dtype=DTYPEi)
