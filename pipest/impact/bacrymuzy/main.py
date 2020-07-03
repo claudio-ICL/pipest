@@ -223,7 +223,8 @@ def collect_results(
     now=datetime.datetime.now()
     print(message)
     model.create_archive()
-    for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?*'.format(symbol, symbol, date, time_window)):
+    for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window)):
+        print(path)
         with open(path, 'rb') as source:
             bm=pickle.load(source)
         model.stack_to_archive(bm.name_of_model, name_of_item=bm.name_of_model)
