@@ -170,6 +170,7 @@ class Liquidator:
         print("liquidator.type_of_liquid: {}".format(self.type_of_liquid))
         print("liquidator.control_type: {}".format(self.control_type))
         print("liquidator.control: {}".format(self.control))
+        print("liquidator.base_rate: {}".format(self.base_rate))
         print("liquidator.start_time: {}".format(self.start_time))
         try:
             print("liquidator.termination_time: {}".format(self.termination_time))
@@ -302,7 +303,7 @@ class SDHawkes:
             self.create_mle_estim(type_of_input='empirical',store_trans_prob=True, store_dirichlet_param=True)
             self.mle_estim.store_results_of_estimation(model.mle_estim.results_of_estimation)
             self.mle_estim.store_hawkes_parameters()
-            #self.mle_estim.create_goodness_of_fit()
+            self.mle_estim.create_goodness_of_fit()
         except:
             print("No data or mle_estim found in given model")
             pass

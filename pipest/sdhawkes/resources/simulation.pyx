@@ -352,7 +352,10 @@ def simulate(int number_of_event_types,
     'Initialise history of volumes'
     cdef np.ndarray[DTYPEf_t, ndim=2] volume = -np.ones((max_size,2*n_levels),dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=2] history_of_dirichlet_param = np.ones((max_size,2*n_levels),dtype=DTYPEf)
-    volume[0:number_of_initial_events,:]=initial_volumes
+    try:
+        volume[0:number_of_initial_events,:]=initial_volumes
+    except:
+        pass
     'Initialise results'
     result_times[0:number_of_initial_events] = initial_condition_times
     result_events[0:number_of_initial_events] = initial_condition_events
@@ -634,7 +637,10 @@ def simulate_liquidation(
     cdef np.ndarray[DTYPEi_t, ndim=1] result_states = -np.ones(max_size, dtype=DTYPEi)
     'Initialise history of volumes'
     cdef np.ndarray[DTYPEf_t, ndim=2] volume = -np.ones((max_size,2*n_levels),dtype=DTYPEf)
-    volume[0:number_of_initial_events,:]=np.array(initial_volumes,dtype=DTYPEf,copy=True)
+    try:
+        volume[0:number_of_initial_events,:]=initial_volumes
+    except:
+        pass
     cdef DTYPEf_t [:,:] volume_memview = volume
     cdef DTYPEf_t [:] volimb_limits_memview = volimb_limits
     'Initialise inventory'
