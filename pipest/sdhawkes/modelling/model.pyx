@@ -1082,13 +1082,13 @@ class SDHawkes:
             times.reshape(-1,1), price.reshape(-1,1)
             ],axis=1)
         return price_trajectory
-    def plot_price_trajectories(self, DTYPEf_t T = 100.0, 
+    def plot_price_trajectories(self, DTYPEf_t t0 =0.0, DTYPEf_t t1 = 100.0, 
             save_fig=False, path=None, name='prices', plot=True):
         def prepare_traj(np.ndarray[DTYPEf_t, ndim=2] x):
             cdef np.ndarray[DTYPEf_t, ndim=2] price = np.array(x, copy=True)
             price[:,0]-=price[0,0]
             price[:,0]+=earliest_time
-            return computation.select_interval(price,0.0,T)
+            return computation.select_interval(price,t0,t1)
         fig=plt.figure(figsize=(10,8))
         ax=fig.add_subplot(111)
         try:
