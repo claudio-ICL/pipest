@@ -92,7 +92,6 @@ def read(
     )
     model.get_configuration(calmodel)
     model.create_uq()
-    #model.base_rates=np.array([0.15408215, 0.14851349, 6.986689, 6.6295], dtype=np.float)
     target=computation.avg_rates(model.data.number_of_event_types, 
                                 model.data.observed_times,
                                 model.data.observed_events, partial=False)
@@ -103,14 +102,12 @@ def read(
         max_number_of_events=30000
     )
     model.reduce_price_volatility(reduction_coef=0.7)
-    model.enforce_price_symmetry()
     model.create_goodness_of_fit(type_of_input='empirical')
-    model.store_2Dstates(type_of_input='empirical')
     if simulate:    
         time_start=0.0
         time_end=time_start+0.15*60*60
         model.simulate(time_start, time_end,
-                       max_number_of_events=20000,
+                       max_number_of_events=50000,
                        add_initial_cond=True,
                        store_results=True, report_full_volumes=False)
         model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
@@ -132,8 +129,6 @@ def measure_impact(
     date="2019-01-23",
     time_window="41400-45000",
     liquidator_base_rate=0.150,
-    type_of_liquid = 'with_the_market', #constant_intensity or with_the_market or against_the_market
-    liquidator_control_type='fraction_of_bid_side', # fraction_of_inventory or fraction_of_bid_side
     liquidator_control=0.2,
     count=0
     ):    
@@ -141,11 +136,11 @@ def measure_impact(
             .format(symbol, symbol, date, time_window, symbol, date, time_window), 'rb') as source:
         model=pickle.load(source)
     i=count
-    name=str(model.name_of_model)+'_bm'+str(i)
+    name=str(model.name_of_model)+'_1s'+str(i)
     path=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol, date, time_window)
     while os.path.exists(path+name):
-        i+=6 #this is the number of different cases when panmeasure is executed
-        name=name.replace("_bm"+str(i-6), "_bm"+str(i))
+        i+=8 #this is the number of different cases when panmeasure is executed
+        name=name.replace("_1s"+str(i-6), "_1s"+str(i))
     model.set_name_of_model(name)
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
@@ -164,12 +159,12 @@ def measure_impact(
 #    initial_condition_volumes=np.array(model.simulated_volume,copy=True)
     initial_inventory=10.0
     time_start=float(initial_condition_times[-1])
-    time_end=time_start+1.50*60*60
+    time_end=time_start+1.00*60*60
     model.setup_liquidator(initial_inventory=initial_inventory,
                            time_start=time_start,
                            liquidator_base_rate=liquidator_base_rate,
-                           type_of_liquid=type_of_liquid,
-                           liquidator_control_type=liquidator_control_type,
+                           type_of_liquid='constant_intensity',
+                           liquidator_control_type='fraction_of_inventory',
                            liquidator_control=liquidator_control)
     model.simulate_liquidation(
         time_end,
@@ -194,25 +189,20 @@ def measure_impact(
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
     redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
 
-def panmeasure(
-    symbol="INTC",
-    date="2019-01-23",
-    time_window="41400-45000",
-    liquidator_base_rate=0.150,
-    liquidator_control=0.2
-    ):    
+
+def pan_measure(
+        symbol='INTC', date='2019-01-23', time_window="41400-45000"):
     count=0
-    for type_of_liquid in ['constant_intensity', 'with_the_market', 'against_the_market']:
-        for liquidator_control_type in ['fraction_of_inventory', 'fraction_of_bid_side']:
-            array_index=int(os.environ['PBS_ARRAY_INDEX'])
-            if count==array_index:
-                measure_impact(symbol, date, time_window,
-                        liquidator_base_rate,
-                        type_of_liquid,
-                        liquidator_control_type,
-                        liquidator_control,
-			count
-			)
+    for br in [0.01, 0.05, 0.1, 0.15]:
+        for c in [0.05, 0.1, 0.2, 0.5]:
+            if count==os.environ["PBS_ARRAY_INDEX"]:
+                measure_impact(
+                     symbol=symbol,
+                     date=date,
+                     time_window=time_window,
+                     liquidator_base_rate=br,
+                     liquidator_control=c,
+                     count=count)
             count+=1
 
 
@@ -226,10 +216,7 @@ def collect_results(
     now=datetime.datetime.now()
     print(message)
     model.create_archive()
-    pathlist = glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window))
-    pathlist.append(glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm??'.format(symbol, symbol, date, time_window)))
-    for path in pathlist:
-        print(path)
+    for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm*'.format(symbol, symbol, date, time_window)):
         with open(path, 'rb') as source:
             bm=pickle.load(source)
         model.stack_to_archive(bm.name_of_model, name_of_item=bm.name_of_model)
@@ -245,29 +232,21 @@ def collect_results(
 
 
 def main():
-    print("\n\npython {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
+    print("\npython {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
     symbol=str(sys.argv[1])
     date=str(sys.argv[2])
     time_window=str(sys.argv[3])
     action=str(sys.argv[4])
     if action=='-r' or action=='--read':
-        read(symbol,date,time_window, simulate=True)
+        read(symbol,date,time_window)
     elif action=='-m' or action=='--measure':
         liquidator_base_rate=float(sys.argv[5])
-        type_of_liquid=str(sys.argv[6])
-        liquidator_control_type=str(sys.argv[7])
-        liquidator_control=float(sys.argv[8])
+        liquidator_control=float(sys.argv[6])
         measure_impact(symbol, date, time_window,
                 liquidator_base_rate,
-                type_of_liquid,
-                liquidator_control_type,
                 liquidator_control)
     elif action=='-pm' or action=='--panmeasure':
-        liquidator_base_rate=float(sys.argv[5])
-        liquidator_control=float(sys.argv[6])
-        panmeasure(symbol, date, time_window,
-                liquidator_base_rate,
-                liquidator_control)
+        panmeasure(symbol, date, time_window,)
     elif action=='-c' or action=='--collect':
         collect_results(symbol, date, time_window)
 
