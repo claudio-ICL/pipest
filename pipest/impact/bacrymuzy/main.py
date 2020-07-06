@@ -223,7 +223,9 @@ def collect_results(
     now=datetime.datetime.now()
     print(message)
     model.create_archive()
-    for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window)):
+    pathlist = glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window))
+    pathlist.append(glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm??'.format(symbol, symbol, date, time_window)))
+    for path in pathlist:
         print(path)
         with open(path, 'rb') as source:
             bm=pickle.load(source)
@@ -240,7 +242,7 @@ def collect_results(
 
 
 def main():
-    print("\n python {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
+    print("\n\npython {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
     symbol=str(sys.argv[1])
     date=str(sys.argv[2])
     time_window=str(sys.argv[3])

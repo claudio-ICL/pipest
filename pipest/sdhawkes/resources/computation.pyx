@@ -1387,7 +1387,8 @@ def produce_phi_for_symmetry(int n_states,
     cdef np.ndarray[DTYPEf_t, ndim=3] u = np.array(trans_prob,dtype=DTYPEf,copy=True)
     for y in range(n_states):
         for x in range(n_states):
-            u[y,:,x] /= U[y,x]
+            if U[y,x]!=0.0:
+                u[y,:,x] /= U[y,x]
     cdef np.ndarray[DTYPEf_t, ndim=3] q = np.zeros_like(trans_prob,dtype=DTYPEf)
     for y in range(n_states):
         for x in range(n_states):
@@ -1396,7 +1397,11 @@ def produce_phi_for_symmetry(int n_states,
             elif x in deflationary_states:
                 q[y,:,x] = iota_delta[y]*u[y,:,x]/(len(deflationary_states))
             else:
-                q[y,:,x] = trans_prob[y,:,x]/P[y,:,0]
+                for e in range(n_event_types):
+                    if P[y,e,0]!=0.0:
+                        q[y,e,x] = trans_prob[y,e,x]/P[y,e,0]
+                    else:
+                        q[y,e,x] = trans_prob[y,e,x]
     cdef np.ndarray[DTYPEf_t, ndim=2] Q = np.zeros((n_states,n_event_types), dtype=DTYPEf)
     for y in range(n_states):
         for x in inf_def_states:
@@ -1406,10 +1411,15 @@ def produce_phi_for_symmetry(int n_states,
     for y in range(n_states):
         for x in range(n_states):
             if x in inf_def_states:
-                new_phi[y,:,x] = q[y,:,x]/Q_bar[y]
+                if Q_bar[y]!=0.0:
+                    new_phi[y,:,x] = q[y,:,x]/Q_bar[y]
+                else:
+                    new_phi[y,:,x] = q[y,:,x]
             else:
-                new_phi[y,:,x] = (1-Q[y,:]/Q_bar[y])*q[y,:,x]
-            
+                if Q_bar[y]!=0.0:
+                    new_phi[y,:,x] = (1-Q[y,:]/Q_bar[y])*q[y,:,x]
+                else:
+                    new_phi[y,:,x] = (1-Q[y,:])*q[y,:,x]
     return new_phi                
     
 "MISCELLANEOUS TOOLS"    
