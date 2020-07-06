@@ -92,6 +92,7 @@ def read(
     )
     model.get_configuration(calmodel)
     model.create_uq()
+    #model.base_rates=np.array([0.15408215, 0.14851349, 6.986689, 6.6295], dtype=np.float)
     target=computation.avg_rates(model.data.number_of_event_types, 
                                 model.data.observed_times,
                                 model.data.observed_events, partial=False)
@@ -102,12 +103,14 @@ def read(
         max_number_of_events=30000
     )
     model.reduce_price_volatility(reduction_coef=0.7)
+    model.enforce_price_symmetry()
     model.create_goodness_of_fit(type_of_input='empirical')
+    model.store_2Dstates(type_of_input='empirical')
     if simulate:    
         time_start=0.0
         time_end=time_start+0.15*60*60
         model.simulate(time_start, time_end,
-                       max_number_of_events=50000,
+                       max_number_of_events=20000,
                        add_initial_cond=True,
                        store_results=True, report_full_volumes=False)
         model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
@@ -248,7 +251,7 @@ def main():
     time_window=str(sys.argv[3])
     action=str(sys.argv[4])
     if action=='-r' or action=='--read':
-        read(symbol,date,time_window)
+        read(symbol,date,time_window, simulate=True)
     elif action=='-m' or action=='--measure':
         liquidator_base_rate=float(sys.argv[5])
         type_of_liquid=str(sys.argv[6])
