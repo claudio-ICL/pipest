@@ -1333,94 +1333,101 @@ def compute_bm_impact_profile(np.ndarray[DTYPEf_t, ndim=2] history_of_intensity)
         axis=1)
     return result
     
-def assess_symmetry(int n_states, 
+def assess_symmetry(
+    int num_event_types, int num_states,
     np.ndarray[DTYPEf_t, ndim=1] base_rates,
-    np.ndarray[DTYPEf_t, ndim=3] imp_dec_ratio,
     np.ndarray[DTYPEf_t, ndim=3] trans_prob,
     list deflationary_states,
     list inflationary_states,
    ):
-    cdef int n_event_types = len(base_rates)
-    cdef np.ndarray[DTYPEf_t, ndim=1] rho = base_rates + np.sum(imp_dec_ratio.reshape(-1,n_event_types),axis=0)
-    cdef np.ndarray[DTYPEf_t, ndim=1] eta = np.zeros(n_event_types,dtype=DTYPEf)
-    cdef np.ndarray[DTYPEf_t, ndim=1] deflationary_pressure = np.zeros(n_states,dtype=DTYPEf)
-    cdef np.ndarray[DTYPEf_t, ndim=1] inflationary_pressure = np.zeros(n_states,dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=1] deflationary_pressure = np.zeros(num_states,dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=1] inflationary_pressure = np.zeros(num_states,dtype=DTYPEf)
     cdef int y,x
-    for y in range(n_states):
-        for x in inflationary_states:
-            eta=copy.copy(trans_prob[y,:,x])
-            inflationary_pressure[y] += np.dot(eta,rho)
-        for x in deflationary_states:
-            eta=copy.copy(trans_prob[y,:,x])
-            deflationary_pressure[y] += np.dot(eta,rho)    
+    for y in range(num_states):
+        for e in range(num_event_types):
+            for x in inflationary_states:
+                inflationary_pressure[y] += base_rates[e]*trans_prob[y,e,x]
+            for x in deflationary_states:
+                deflationary_pressure[y] += base_rates[e]*trans_prob[y,e,x]
     cdef DTYPEf_t asymmetry = np.linalg.norm(deflationary_pressure - inflationary_pressure)   
     return inflationary_pressure, deflationary_pressure, asymmetry
 
-def produce_phi_for_symmetry(int n_states, 
-    np.ndarray[DTYPEf_t, ndim=1] base_rates,
-    np.ndarray[DTYPEf_t, ndim=3] imp_dec_ratio,
-    np.ndarray[DTYPEf_t, ndim=3] trans_prob,
-    list deflationary_states,
-    list inflationary_states,
-   ):
-    cdef int n_event_types = len(base_rates)
-    cdef int y=0,e=0,x=0
-    cdef np.ndarray[DTYPEf_t, ndim=1] rho = base_rates + np.sum(imp_dec_ratio.reshape(-1,n_event_types),axis=0)
-    inflationary_pressure, deflationary_pressure, asymmetry =\
-    assess_symmetry(
-        n_states, base_rates, imp_dec_ratio,trans_prob,
-        deflationary_states, inflationary_states
-    )
-    cdef np.ndarray[DTYPEf_t, ndim=1] iota = inflationary_pressure
-    cdef np.ndarray[DTYPEf_t, ndim=1] delta = deflationary_pressure
-    cdef np.ndarray[DTYPEf_t, ndim=1] iota_delta = (iota+delta)/2
-    cdef list inf_def_states = list(set(inflationary_states) | set(deflationary_states))
-    cdef np.ndarray[DTYPEf_t, ndim=2] U = np.zeros((n_states,n_states),dtype=DTYPEf)
-    cdef np.ndarray[DTYPEf_t, ndim=3] P = np.zeros((n_states,n_event_types,2),dtype=DTYPEf)
-    for y in range(n_states):
-        for x in range(n_states):
-            U[y,x]=np.dot(trans_prob[y,:,x],rho)
-            if x in inf_def_states:
-                P[y,:,1]+=trans_prob[y,:,x]
-            else:
-                P[y,:,0]+=trans_prob[y,:,x]
-    cdef np.ndarray[DTYPEf_t, ndim=3] u = np.array(trans_prob,dtype=DTYPEf,copy=True)
-    for y in range(n_states):
-        for x in range(n_states):
-            if U[y,x]!=0.0:
-                u[y,:,x] /= U[y,x]
-    cdef np.ndarray[DTYPEf_t, ndim=3] q = np.zeros_like(trans_prob,dtype=DTYPEf)
-    for y in range(n_states):
-        for x in range(n_states):
-            if x in inflationary_states:
-                q[y,:,x] = iota_delta[y]*u[y,:,x]/(len(inflationary_states))
-            elif x in deflationary_states:
-                q[y,:,x] = iota_delta[y]*u[y,:,x]/(len(deflationary_states))
-            else:
-                for e in range(n_event_types):
-                    if P[y,e,0]!=0.0:
-                        q[y,e,x] = trans_prob[y,e,x]/P[y,e,0]
-                    else:
-                        q[y,e,x] = trans_prob[y,e,x]
-    cdef np.ndarray[DTYPEf_t, ndim=2] Q = np.zeros((n_states,n_event_types), dtype=DTYPEf)
-    for y in range(n_states):
-        for x in inf_def_states:
-            Q[y,:]+= q[y,:,x]
-    cdef np.ndarray[DTYPEf_t, ndim=1] Q_bar = np.sum(Q,axis=1)
-    cdef np.ndarray[DTYPEf_t, ndim=3] new_phi = np.zeros_like(trans_prob,dtype=DTYPEf)
-    for y in range(n_states):
-        for x in range(n_states):
-            if x in inf_def_states:
-                if Q_bar[y]!=0.0:
-                    new_phi[y,:,x] = q[y,:,x]/Q_bar[y]
-                else:
-                    new_phi[y,:,x] = q[y,:,x]
-            else:
-                if Q_bar[y]!=0.0:
-                    new_phi[y,:,x] = (1-Q[y,:]/Q_bar[y])*q[y,:,x]
-                else:
-                    new_phi[y,:,x] = (1-Q[y,:])*q[y,:,x]
-    return new_phi                
+def produce_hawkes_param_for_symmetry(
+        np.ndarray[DTYPEf_t, ndim=1] base_rates,
+        np.ndarray[DTYPEf_t, ndim=3] imp_coef,
+        np.ndarray[DTYPEf_t, ndim=3] dec_coef
+        ):
+    cdef int d_E = len(base_rates)
+    cdef np.ndarray[DTYPEf_t, ndim=1] nu = np.zeros_like(base_rates, dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=3] alpha = np.zeros_like(imp_coef, dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=3] beta = np.zeros_like(dec_coef, dtype=DTYPEf)
+    for e in [2*i for i in range(d_E//2)]:
+        nu[e]=0.5*(base_rates[e]+base_rates[e+1])
+        nu[e+1]=nu[e]
+        alpha[:,:,e]=0.5*(imp_coef[:,:,e]+imp_coef[:,:,e+1])
+        alpha[:,:,e+1]=alpha[:,:,e]
+        beta[:,:,e]=0.5*(dec_coef[:,:,e]+dec_coef[:,:,e+1])
+        beta[:,:,e+1]=beta[:,:,e]
+    return nu, alpha, beta
+
+
+def produce_phi_for_symmetry(
+        int num_event_types,
+        int num_states,
+        int num_st2,
+        np.ndarray[DTYPEf_t, ndim=3] phi,
+        list deflationary_states,
+        list inflationary_states,
+        list stationary_states
+        ):
+    assert len(deflationary_states)==len(inflationary_states)
+    assert len(deflationary_states)==num_st2
+    assert set(list(range(num_states))).difference(deflationary_states+inflationary_states)==set(stationary_states)
+    #The map from inflationary to deflationary states is sigma(x)=d_S - 1 - x
+    assert set([num_states-1-x for x in deflationary_states])==set(inflationary_states)
+    def sigma_S(x):
+        return num_states-1-x
+    # The permutation of event types is sigma(2*e)=2*e+1, sigma(2*e+1)=2*e
+    assert num_event_types%2==0
+    def sigma_E(e):
+        return 2*(e//2)+1-e%2
+    cdef np.ndarray[DTYPEf_t, ndim=2] infl_sum = np.zeros((num_states, num_event_types), dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=2] defl_sum = np.zeros((num_states, num_event_types), dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=2] stat_sum = np.zeros((num_states, num_event_types), dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=2] new_infl_sum = np.zeros((num_states, num_event_types), dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=2] new_defl_sum = np.zeros((num_states, num_event_types), dtype=DTYPEf)
+    cdef np.ndarray[DTYPEf_t, ndim=3] new_phi = np.zeros((num_states, num_event_types, num_states), dtype=DTYPEf)
+    # the probabilities of transitioning to a stationary state are kept the same
+    for x0 in stationary_states:
+        new_phi[:,:,x0]=np.array(phi[:,:,x0], copy=True)     
+    
+    # the probabilities of transitioning to an inflationary/deflationary states are made symmetric in the following
+    cdef list infl_events = [2*e+1 for e in range(num_event_types//2)]
+    for y in range(num_states):
+        for e in infl_events:
+            for x in inflationary_states:
+                infl_sum[y,sigma_E(e)]+=phi[y,sigma_E(e),x]
+                defl_sum[y,e]+=phi[y,e,sigma_S(x)]
+                avg=0.5*(phi[y,e,x]+phi[y,sigma_E(e),sigma_S(x)])
+                new_phi[y,e,x]=avg
+                new_phi[y,sigma_E(e),sigma_S(x)]=avg
+                new_infl_sum[y,e]+=new_phi[y,e,x]
+                new_defl_sum[y,sigma_E(e)]+=new_phi[y,sigma_E(e),sigma_S(x)]
+            stat_sum[y,e]=sum([phi[y,e,x0] for x0 in stationary_states])
+            stat_sum[y,sigma_E(e)]=sum([phi[y,sigma_E(e),x0] for x0 in stationary_states])
+            for x in inflationary_states:
+                if defl_sum[y,e]>0.0:
+                    new_phi[y,e,sigma_S(x)]=max(0.0,
+                            (1.0-stat_sum[y,e]-new_infl_sum[y,e])*phi[y,e,sigma_S(x)]/defl_sum[y,e]
+                            )
+                if infl_sum[y,sigma_E(e)]>0.0:
+                    new_phi[y,sigma_E(e),x]=max(0.0,
+                            (1.0-stat_sum[y,sigma_E(e)]-new_defl_sum[y,sigma_E(e)])*phi[y,sigma_E(e),x]/infl_sum[y,sigma_E(e)]
+                            )
+    return new_phi
+
+
+
     
 "MISCELLANEOUS TOOLS"    
 
