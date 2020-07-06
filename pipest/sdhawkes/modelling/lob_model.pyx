@@ -173,7 +173,7 @@ class state_encoding:
         self.inflationary_states = inflationary_states
         self.st1_stationary=st1_stationary
         cdef list stationary_states = self.select_states_of_specified_st1(st1_stationary)
-        self.stationary_sates = stationary_states
+        self.stationary_states = stationary_states
         cdef list weakly_deflationary_states = deflationary_states+stationary_states
         weakly_deflationary_states.sort()
         self.weakly_deflationary_states = weakly_deflationary_states

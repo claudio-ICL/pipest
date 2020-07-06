@@ -303,7 +303,8 @@ class SDHawkes:
             self.create_mle_estim(type_of_input='empirical',store_trans_prob=True, store_dirichlet_param=True)
             self.mle_estim.store_results_of_estimation(model.mle_estim.results_of_estimation)
             self.mle_estim.store_hawkes_parameters()
-            self.mle_estim.create_goodness_of_fit()
+            if create_goodness_of_fit:
+                self.mle_estim.create_goodness_of_fit()
         except:
             print("No data or mle_estim found in given model")
             pass
@@ -506,7 +507,7 @@ class SDHawkes:
                 if idx_zero_mass[x,e,0]:
                     st2=x%self.state_enc.num_of_st2 #st2 corresponding to same volume
                     x_next=self.state_enc.num_of_st2+st2 #one_label of state with same volume and no price change
-                    phi[x,e,x_next]=1.0# by default if no information is given, the state remains such that volumes are the same and there is no pric change
+                    phi[x,e,x_next]=1.0# by default if no information is given, the state remains such that volumes are the same and there is no price change
                     normalisation[x,e,:]=1.0
         phi/=normalisation
         if not np.all(np.sum(phi,axis=2)<=1.0):
@@ -515,36 +516,39 @@ class SDHawkes:
         if np.any(np.isnan(phi)):
             print(phi)
         assert not np.any(np.isnan(phi))
-        self.transition_probabilities = phi
+        self.transition_probabilities = np.array(phi, copy=True)
         self.inflationary_pressure, self.deflationary_pressure, asymmetry =\
             computation.assess_symmetry(
-            self.number_of_states,
-            self.base_rates,
-            self.impact_decay_ratios,
-            self.transition_probabilities,
-            self.state_enc.deflationary_states,
-            self.state_enc.inflationary_states)
-        print('SDHawkes: asymmetry in transition_probabilities = {}'.format(asymmetry))
-        print('Transition probabilities have been set')
-    def enforce_symmetry_in_transition_probabilities(self, int is_liquidator_present = 0):
+                self.number_of_event_types,
+                self.number_of_states,
+                self.base_rates,
+                self.transition_probabilities,
+                self.state_enc.deflationary_states,
+                self.state_enc.inflationary_states)
+        print('Transition probabilities have been set. Price Asymmetry = {}'.format(asymmetry))
+    def enforce_price_symmetry(self, int is_liquidator_present = 0):
+        print("I am enforcing price symmetry")
         cdef int i = is_liquidator_present
-        cdef np.ndarray[DTYPEf_t, ndim=3] ratios = copy.copy(self.impact_decay_ratios[i:,:,i:])
-        cdef np.ndarray[DTYPEf_t, ndim=1] nu = copy.copy(self.base_rates[i:])
-        cdef np.ndarray[DTYPEf_t, ndim=3] phi = copy.copy(self.transition_probabilities[:,i:,:])
-        new_phi = computation. produce_phi_for_symmetry(
+        cdef np.ndarray[DTYPEf_t, ndim=1] nu = np.array(self.base_rates[i:], copy=True)
+        cdef np.ndarray[DTYPEf_t, ndim=3] alpha = np.array(self.impact_coefficients[i:,:,i:], copy=True)
+        cdef np.ndarray[DTYPEf_t, ndim=3] beta = np.array(self.decay_coefficients[i:,:,i:], copy=True)
+        cdef np.ndarray[DTYPEf_t, ndim=3] phi = np.array(self.transition_probabilities[:,i:,:], copy=True)
+        new_nu, new_alpha, new_beta = computation.produce_hawkes_param_for_symmetry(
+            nu, alpha, beta)
+        self.base_rates[i:]=np.array(new_nu, copy=True)
+        self.impact_coefficients[i:,:,i:]=np.array(new_alpha, copy=True)
+        self.decay_coefficients[i:,:,i:]=np.array(new_beta, copy=True)
+        self.set_hawkes_parameters(self.base_rates, self.impact_coefficients, self.decay_coefficients)
+        new_phi = computation.produce_phi_for_symmetry(
+            self.number_of_event_types - i,
             self.number_of_states,
-            nu,ratios,phi,
+            self.state_enc.num_of_st2,
+            phi,
             self.state_enc.deflationary_states,
-            self.state_enc.inflationary_states)
-        self.transition_probabilities[:,i:,:] = copy.copy(new_phi)
-        self.inflationary_pressure, self.deflationary_pressure, asymmetry = computation.assess_symmetry(
-            self.number_of_states,
-            nu,
-            ratios,
-            self.transition_probabilities[:,i:,:],
-            self.state_enc.deflationary_states,
-            self.state_enc.inflationary_states)
-        print('SDHawkes: new asymmetry in transition_probabilities = {}'.format(asymmetry))
+            self.state_enc.inflationary_states,
+            self.state_enc.stationary_states)
+        self.transition_probabilities[:,i:,:] = np.array(new_phi, copy=True)
+        self.set_transition_probabilities(self.transition_probabilities)
     def reduce_price_volatility(self,DTYPEf_t reduction_coef=0.66):
         cdef DTYPEf_t coef=min(1.0,max(0.0,reduction_coef))
         cdef np.ndarray[DTYPEf_t, ndim=3] phi = np.array(self.transition_probabilities, copy=True)
