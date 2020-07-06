@@ -1387,7 +1387,8 @@ def produce_phi_for_symmetry(int n_states,
     cdef np.ndarray[DTYPEf_t, ndim=3] u = np.array(trans_prob,dtype=DTYPEf,copy=True)
     for y in range(n_states):
         for x in range(n_states):
-            u[y,:,x] /= U[y,x]
+            if U[y,x]!=0.0:
+                u[y,:,x] /= U[y,x]
     cdef np.ndarray[DTYPEf_t, ndim=3] q = np.zeros_like(trans_prob,dtype=DTYPEf)
     for y in range(n_states):
         for x in range(n_states):
@@ -1396,7 +1397,11 @@ def produce_phi_for_symmetry(int n_states,
             elif x in deflationary_states:
                 q[y,:,x] = iota_delta[y]*u[y,:,x]/(len(deflationary_states))
             else:
-                q[y,:,x] = trans_prob[y,:,x]/P[y,:,0]
+                for e in range(n_event_types):
+                    if P[y,e,0]!=0.0:
+                        q[y,e,x] = trans_prob[y,e,x]/P[y,e,0]
+                    else:
+                        q[y,e,x] = trans_prob[y,e,x]
     cdef np.ndarray[DTYPEf_t, ndim=2] Q = np.zeros((n_states,n_event_types), dtype=DTYPEf)
     for y in range(n_states):
         for x in inf_def_states:
@@ -1406,10 +1411,15 @@ def produce_phi_for_symmetry(int n_states,
     for y in range(n_states):
         for x in range(n_states):
             if x in inf_def_states:
-                new_phi[y,:,x] = q[y,:,x]/Q_bar[y]
+                if Q_bar[y]!=0.0:
+                    new_phi[y,:,x] = q[y,:,x]/Q_bar[y]
+                else:
+                    new_phi[y,:,x] = q[y,:,x]
             else:
-                new_phi[y,:,x] = (1-Q[y,:]/Q_bar[y])*q[y,:,x]
-            
+                if Q_bar[y]!=0.0:
+                    new_phi[y,:,x] = (1-Q[y,:]/Q_bar[y])*q[y,:,x]
+                else:
+                    new_phi[y,:,x] = (1-Q[y,:])*q[y,:,x]
     return new_phi                
     
 "MISCELLANEOUS TOOLS"    
@@ -1657,4 +1667,50 @@ def select_interval(x, DTYPEf_t t0, DTYPEf_t t1):
         print("Error: x.ndim expected to be either 1 or 2, but x.ndim={}".format(ndims))
         raise ValueError("Incorrect shape")
     return 1
+
+def previous_times_in_range(np.ndarray[DTYPEf_t, ndim=1] times, DTYPEf_t dt=1.0):
+    cdef int i=0, n=0, N=len(times)
+    cdef np.ndarray[DTYPEi_t, ndim=1] idx = np.arange(N, dtype=DTYPEi)
+    cdef np.ndarray[DTYPEi_t, ndim=1] diff = np.zeros_like(idx)
+    cdef DTYPEf_t [:] times_memview = times
+    cdef DTYPEi_t [:] diff_memview = diff
+    for n in prange(N, nogil=True):
+        while (n-diff_memview[n]-1>=0)&(times_memview[n-diff_memview[n]]>=times_memview[n]-dt):
+            diff_memview[n]+=1
+    idx-=diff
+    return idx
+def compute_weighted_queueimb(np.ndarray[DTYPEi_t, ndim=1] st2,
+        np.ndarray[DTYPEf_t, ndim=1] times, DTYPEf_t dt=1.0):
+    assert len(times)==len(st2)
+    assert dt>0.0
+    cdef int N = len(times)
+    cdef np.ndarray[DTYPEi_t, ndim=1] idx=previous_times_in_range(times, dt)
+    cdef np.ndarray[DTYPEf_t, ndim=1] results = np.zeros_like(times, dtype=DTYPEf)
+    cdef DTYPEf_t [:] res = results
+    cdef DTYPEi_t [:] st2_memview = st2
+    cdef DTYPEi_t [:] idx_memview = idx
+    cdef DTYPEf_t [:] times_memview = times
+    cdef DTYPEf_t t_prev=0.0, t_left=0.0
+    cdef int n=0, i=0
+    for n in prange(N, nogil=True):
+        t_left=times_memview[n]-dt
+        for i in range(idx_memview[n],n):
+            t_prev=max(t_left,times[i])
+            res[n]+=st2_memview[i]\
+                    *(\
+                    2*(times_memview[i+1]-t_prev)/dt\
+                    -\
+                    (pow(times_memview[n]-t_prev,2) \
+                    - pow(times_memview[n]-times_memview[i+1],2))/pow(dt,2)
+                    )
+    return results
+def history_of_weighted_queueimb(np.ndarray[DTYPEi_t, ndim=1] st2,
+        np.ndarray[DTYPEf_t, ndim=1] times, DTYPEf_t dt=1.0):
+    cdef np.ndarray[DTYPEf_t, ndim=2] history = np.zeros((len(times),2), dtype=DTYPEf)
+    history[:,0]=np.array(times, copy=True)
+    history[:,1]=compute_weighted_queueimb(st2,times,dt)
+    return history
+
+
+
 

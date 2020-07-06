@@ -24,7 +24,110 @@ import os
 from matplotlib.colors import ListedColormap
 import copy
 import bisect
+import computation
 
+
+
+
+def plot_queue_imbalance(model, t0=0.0, t1=100.0,
+        figsizex=10, figsizey=8,
+        plot_st2=False,
+        save_fig=False, path='./', name='queueimb', plot=True, return_ax=False):
+    def idx_timewindow(times):
+        times-=times[0]
+        times+=earliest_time
+        return np.logical_and(times>=t0, times<=t1)
+    def select_(history):
+        h=np.array(history, copy=True)
+        h[:,0]-=h[0,0]
+        h[:,0]+=earliest_time
+        return computation.select_interval(h, t0,t1)
+    fig=plt.figure(figsize=(figsizex,figsizey))
+    ax=fig.add_subplot(111)
+    try:
+        earliest_time=model.simulated_price[0,0]
+    except:
+        earliest_time=0.0
+    if plot_st2:
+        try:
+            idx=idx_timewindow(model.simulated_times)
+            ax.step(model.simulated_times[idx], model.simulated_2Dstates[idx,1], label='st2 simulation', linewidth=0.5)
+        except:
+            print("I could not plot simulation")
+        try:
+            idx=idx_timewindow(model.data.observed_times)
+            ax.step(model.data.observed_times[idx], model.data.observed_2Dstates[idx,1], label='st2 data', linewidth=0.5)
+        except:
+            print("I could not plot data")
+        ax.legend(loc=3)
+        ax.set_ylabel('discretised queue imbalance')
+    ax.set_ylim([-2.5, 2.5])
+    ax2=ax.twinx()
+    try:
+        h_sim=select_(model.simulated_history_weighted_queueimb)
+        ax2.plot(h_sim[:,0], h_sim[:,1], label='conv-st2 simulation', linewidth=3)
+    except:
+        print("I could not plot simulated history of weighted queue imbalance")
+    try:
+        h_emp=select_(model.data.observed_history_weighted_queueimb)
+        ax2.plot(h_emp[:,0], h_emp[:,1], label='conv-st2 data', linewidth=3)
+    except:
+        print("I could not plot observed history of weighted queue imbalance")
+    ax2.legend(loc=2)
+    ax2.set_ylim([-2.5, 2.5])
+    if save_fig:    
+        fname=path+name
+        plt.savefig(fname)
+    if plot:
+        plt.show()   
+    if return_ax:
+        return ax
+
+def plot_price_trajectories(model,  t0 =0.0,  t1 = 100.0, 
+        figsizex=10, figsizey=8,
+        save_fig=False, path=None, name='prices', plot=True, return_ax=False):
+    def prepare_traj(x):
+        price = np.array(x, copy=True)
+        price[:,0]-=price[0,0]
+        price[:,0]+=earliest_time
+        return computation.select_interval(price,t0,t1)
+    fig=plt.figure(figsize=(figsizex,figsizey))
+    ax=fig.add_subplot(111)
+    try:
+        earliest_time=model.simulated_price[0,0]
+    except:
+        earliest_time=0.0
+    try:
+        p=prepare_traj(model.simulated_price)
+        ax.plot(p[:,0],p[:,1], label='simulation')
+    except:
+        print("I could not plot simulated price")
+        pass
+    try:
+        p=prepare_traj(model.data.mid_price.values)
+        ax.plot(p[:,0],p[:,1], label='data')
+    except:
+        print("I could not plot data")
+        pass
+    try:
+        p=prepare_traj(model.reconstructed_empirical_price)
+        ax.plot(p[:,0],p[:,1], label='reconstruction', linestyle='--')
+    except:
+        print("I could not plot reconstructed_empirical_price")
+        pass
+    ax.set_ylabel('price')
+    ax.set_xlabel('time')
+    ax.legend()
+    fig.suptitle('Price trajectories')
+    if save_fig:    
+        if path==None:
+            path='/home/claudio/Desktop/'
+        fname=path+name
+        plt.savefig(fname)
+    if plot:
+        plt.show()   
+    if return_ax:
+        return ax
 
 
 def plot_events(events,time=None,n_event_types=0):

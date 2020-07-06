@@ -335,9 +335,9 @@ class state_encoding:
         multi_dim_states=self.translate_labels(one_dim_states)
         price_movement=np.array(multi_dim_states['st_1'].values,dtype=np.int)-1
         if is_mid_price:
-            price_trajectory=initial_price+tickSize*np.cumsum(price_movement)/2
+            price_trajectory=initial_price+0.5*tickSize*np.cumsum(price_movement)/2
         else:
-            price_trajectory=initial_price+tickSize*np.cumsum(price_movement)
+            price_trajectory=initial_price+0.5*tickSize*np.cumsum(price_movement)
         if not time==None:
             price=pd.DataFrame({'time': time, 'recon_price': price_trajectory})
             return price

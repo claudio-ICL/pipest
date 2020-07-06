@@ -1083,7 +1083,7 @@ class SDHawkes:
             ],axis=1)
         return price_trajectory
     def plot_price_trajectories(self, DTYPEf_t t0 =0.0, DTYPEf_t t1 = 100.0, 
-            save_fig=False, path=None, name='prices', plot=True):
+            save_fig=False, path='./', name='prices', plot=True, return_ax=False):
         def prepare_traj(np.ndarray[DTYPEf_t, ndim=2] x):
             cdef np.ndarray[DTYPEf_t, ndim=2] price = np.array(x, copy=True)
             price[:,0]-=price[0,0]
@@ -1118,12 +1118,12 @@ class SDHawkes:
         ax.legend()
         fig.suptitle('Price trajectories')
         if save_fig:    
-            if path==None:
-                path='/home/claudio/Desktop/'
             fname=path+name
             plt.savefig(fname)
         if plot:
             plt.show()   
+        if return_ax:
+            return ax
 
 
     def make_start_liquid_origin_of_times(self,delete_negative_times=False):
@@ -1362,6 +1362,9 @@ class SDHawkes:
     def store_2Dstates(self,str type_of_input='simulated'):
         if type_of_input=='simulated':
             self.simulated_2Dstates = self.state_enc.produce_2Dstates(self.simulated_states)
+        elif type_of_input=='empirical':
+            self.data.observed_2Dstates = self.data.state_enc.produce_2Dstates(
+                    self.data.observed_states)
     def create_impact_profile(self,
             delete_negative_times=False,
             int num_init_guesses = 6,

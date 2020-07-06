@@ -657,7 +657,9 @@ At a first glance, assuming $\theta_3(t) = s_2(t)$ seems very reasonable, but in
 Our state-dependent Hawkes model of an order-driven market is a more granular version of Bacry\&Muzy model that embeds in the event-state relation the mechanism underlying the ``impulsive impact kernel'' of \citealp{BM14haw}.
 We will leave the interpretation of the first two components of the counting process as it was in their original model, but we will modify the third and the fourth components to account, rather than for proxy of the mid-price, for limit order events that put pressure on price decreases and price increases respectively. A proxy for the mid-price will be retrieved from the time-evolution of the state variable. 
 
-More precisely, we consider four streams of arrival times: the stream $(\arrivalTimes[1]_j)_j$ of times when limit orders are executed on the bid side (equivalently identified with the arrival times of sell market orders); the stream  $(\arrivalTimes[2]_j)_j$ of times when limit orders are executed on the ask side (equivalently identified with arrival times of buy market orders); the stream  $(\arrivalTimes[3]_j)_j$ of times when a new limit order is queued on the ask side, or when an existing limit order on the bid side is cancelled from its queue; the stream  $(\arrivalTimes[4]_j)_j$ of times when a new limit order is queued on the bid side, or when an existing limit order on the ask side is cancelled from its queue. Limit orders posted on or cancelled from ask/bid sides refer to those events that happened on the first $n$ levels, where $n$ is a hyperparameter of the model that we fix at the beginning. Correspondingly, these sequences of random times give rise to a four-dimensional counting process $\multiCountingProc=(\countingProc[1],\dots, \countingProc[4])$ with the following interpretation of its components:
+More precisely, we consider four streams of arrival times: the stream $(\arrivalTimes[1]_j)_j$ of times when limit orders are executed on the bid side (equivalently identified with the arrival times of sell market orders); the stream  $(\arrivalTimes[2]_j)_j$ of times when limit orders are executed on the ask side (equivalently identified with arrival times of buy market orders); the stream  $(\arrivalTimes[3]_j)_j$ of times when a new limit order is queued on the ask side, or when an existing limit order on the bid side is cancelled from its queue; the stream  $(\arrivalTimes[4]_j)_j$ of times when a new limit order is queued on the bid side, or when an existing limit order on the ask side is cancelled from its queue. Limit orders posted on or cancelled from ask/bid sides refer to those events that happened on the first $n$ levels, where $n$ is a hyperparameter of the model that we fix at the beginning.
+
+The four sequences of random times give rise to a four-dimensional counting process $\multiCountingProc=(\countingProc[1],\dots, \countingProc[4])$ with the following interpretation of its components:
 \begin{itemize}
  \item $\countingProc[1](t)$ denotes the number of seller-initiated trades that happened before or at time $t$ (identified with the number of market orders arrived on the bid side of the orderbook by time $t$);
  \item $\countingProc[2](t)$ denotes the number of buyer-initiated trades that happened before or at time $t$ (identified with the number of market orders arrived on the ask side of the orderbook by time $t$);
@@ -697,7 +699,7 @@ When a new event occurs, i.e. when one of the components $\countingProc$ of $\mu
 
 Moreover, the first component $\stateVariable_1$ of the sate variable $\stateVariable$ enables to write the following proxy for the mid-price:
 \begin{equation}\label{eq.midprice_proxy}
- \midprice_0 + \tickSizeOfLOB \intzerot \stateVariable_1(s) d\groundProc(s),
+ \midprice_0 + \frac{\tickSizeOfLOB}{2} \intzerot \stateVariable_1(s) d\groundProc(s),
 \end{equation}
 where $\tickSizeOfLOB$ is the tick size of the limit order book and $\groundProc = \countingProc[1] + \dots + \countingProc[4]$ is the ground process of $\multiCountingProc$. This proxy for the mid-price  is the same as the one used in \citealp{BM14haw}, albeit obtained via different variables. 
 
@@ -725,7 +727,7 @@ Here, in Algorithm \ref{algo.lob_update}, we describe how to reproduce the order
   \REQUIRE $\stateVariable(t-)$, $(t,q_M, 0, -1)$
   \STATE set $\ell := (2\stateVariable_2(t-) - K - 1)/(2K)$
   \STATE set $u:= (2\stateVariable_2(t-) +1)/K$
-  \STATE sample $V_{t-} = (\nthBestAskVolume[1]_{t-},\nthBestBidVolume[1]_{t-},\dots,\nthBestAskVolume[n]_{t-},\nthBestBidVolume[n]_{t-}) \sim \text{Dir}_{\dirichletParam(\stateVariable(t-))}(\cdot \vert \stateVariable_2 (t-) )$ by setting $V_{t-} \leftarrow $ Algorithm \ref{algo.rejection_sampling}($\ell$,$u$, $(\dirparam_i(\stateVariable(t-)))_{i=0,\dots,2n-1}$)
+  \STATE sample $V_{t-} = (\nthBestAskVolume[1]_{t-},\nthBestBidVolume[1]_{t-},\dots,\nthBestAskVolume[n]_{t-},\nthBestBidVolume[n]_{t-}) \sim \text{Dir}_{\dirichletParam(\stateVariable(t-))}(\cdot \vert \stateVariable_2 (t-) )$ 
   \STATE set $\stateVariable_1(t) := -1$ if $q_M \geq \nthBestBidPrice[1]_{t-}$; $0$ otherwise
   \STATE initialise $q:=0$
   \FOR {$i$ in $1,\dots,n$}
@@ -754,13 +756,13 @@ Line 4 and Lines 6:10 in Algorithm \ref{algo.lob_update} account for equations \
 Measuring price impact requires two things. The first is to modify the  model $(\multiCountingProc,\stateVariable)$ of Section \ref{sec.sdHawkes_model} in a way to account for a labelled agent, whose impact we wish to measure. The second is to extrapolate to which extent the labelled agent is responsible for the evolution of the price dynamics that emerge from the state process $(\stateVariable(t))_{t}$.  Section \ref{sec.labelled_agent} describes the former; Sections \ref{sec.impact_a_la_BM} and \ref{sec.one-side_impact} will present two different ways to do the latter.
 
 \subsection{Labelled agent}\label{sec.labelled_agent}
-We account for a labelled agent in the market, and we aim to measure her impact on the dynamics of the orderbook. We take the perspective of a liquidation, namely we consider our agent (also referred to as liquidator) to be selling an (usually large) amount $\metaorderSize$ of asset. The case of acquisition is mutatis mutandis the same. 
+We account for a labelled agent in the market, and we aim to measure her impact on the dynamics of the orderbook. We take the perspective of a liquidation, namely we consider our agent (also referred to as liquidator) to be selling the amount $\metaorderSize$ of asset. The case of acquisition is mutatis mutandis the same. 
 
 We let $\timeWindow$ represent the time window of the liquidation. The quantity $\metaorderSize$ will be referred to as the size of the liquidator's metaorder, or her initial inventory, and it will be normalised with respect to the overall volume $\sum_{i=1}^{n}(\nthBestAskVolume[i]_{0} + \nthBestBidVolume[i]_{0})$ of offers sitting on the first $n$ levels of the orderbook  at the start of the liquidation window. Hence, we say that the quantity $\metaorderSize$ is liquidity-normalised (or liquidity-denominated). Recall that $n$ is the number of levels taken into account for the evaluation of the queue imbalance $\volumeImbalance^n$ that enters the definition of the second component $\stateVariable_2$ of the state variable in equation \eqref{eq.state-variable}.     
 
 We assume that the liquidator intervenes in the market only by sending sell market orders; she will never place a limit order to queue on the ask side, but she will initiate trades with existing offers on the bid side. 
 Hence, the liquidation is described by the sequence $\lbrace (\arrivalTimes[0]_j, q_{M,j},0,-1): \, \, j=1,2,\dots \rbrace$ of sell market orders sent by the liquidator. For every $j$, $\arrivalTimes[0]_j$ is the time stamp of the liquidator's $j$-th child market order, and $q_{M,j}$ is its size. 
-We suppose that the stream of (random) times $\arrivalTimes[0]_1 < \arrivalTimes[0]_2 < \dots$ is confined in $\timeWindow$. We assume non-explosiveness, so that the number of liquidator's market orders is finite if the time horizon $\timeHorizon$ of the execution window is not $+\infty$. Moreover, we let $\initialTime = \arrivalTimes[0]_1$ represent the time at which the liquidator begins its intervention in the market, and we let $\terminationTime:=\sup\lbrace\arrivalTimes[0]_j\leq\timeHorizon: \, j=1,2,\dots\rbrace$ be the time at which the liquidation stops. 
+We suppose that the stream of (random) times $\arrivalTimes[0]_1 < \arrivalTimes[0]_2 < \dots$ is confined in $\timeWindow$. We assume non-explosiveness, so that the number of liquidator's market orders is finite if the time horizon $\timeHorizon$ of the execution window is not $+\infty$. Moreover, we let $\initialTime = \arrivalTimes[0]_1$ represent the time at which the liquidator begins her intervention in the market, and we let $\terminationTime:=\sup\lbrace\arrivalTimes[0]_j\leq\timeHorizon: \, j=1,2,\dots\rbrace$ be the time at which the liquidation stops. 
 For every $j$, the size $q_{M,j}$ is liquidity-normalised, i.e. it is expressed as a fraction of the overall volume $\sum_{i=1}^{n}(\nthBestAskVolume[i]_{\arrivalTimes[0]_j-} + \nthBestBidVolume[i]_{\arrivalTimes[0]_j-})$ of offers sitting on the first $n$ levels of the orderbook immediately before the arrival of the liquidator's $j$-th market order.
 
 Because of our normalisation of volumes, the map  $t\mapsto \sum_{i=1}^{n}(\nthBestAskVolume[i]_t +\nthBestBidVolume[i]_t)$ is constantly equal to $1$. In real-world limit order books, the overall volume of offers in the order book may change over time, so that we are in fact normalising by a non-constant quantity. However, we assume that this variability is irrelevant for our purposes, in the sense captured by the following 
@@ -940,7 +942,7 @@ and this proves the induction step.
 
 
 \subsection{Price impact profiles \`a la Bacry-Muzy}\label{sec.impact_a_la_BM}
-Extrapolating the price dynamics requires to partition the state space $\stateSpace$ according to the values of the first component $\stateVariable_1$ of the state variable $\stateVariable= (\stateVariable_1, \stateVariable_2)$. More precisely, we define
+We partition the state space $\stateSpace$ according to the values of the first component $\stateVariable_1$ of the state variable $\stateVariable= (\stateVariable_1, \stateVariable_2)$. More precisely, we define
 \begin{equation}\label{eq.partition_of_state_space}
 \begin{split}
  \stateSpace^{x_1} := & \left\lbrace y=(y_1,y_2) \in \stateSpace: \, \, y_1 = x_1\right\rbrace,
