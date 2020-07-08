@@ -144,8 +144,8 @@ def measure_impact(
     name=str(model.name_of_model)+'_bm'+str(i)
     path=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol, date, time_window)
     while os.path.exists(path+name):
-        i+=6 #this is the number of different cases when panmeasure is executed
-        name=name.replace("_bm"+str(i-6), "_bm"+str(i))
+        i+=8 #this is the number of different cases when panmeasure is executed
+        name=name.replace("_bm"+str(i-8), "_bm"+str(i))
     model.set_name_of_model(name)
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
@@ -170,7 +170,9 @@ def measure_impact(
                            liquidator_base_rate=liquidator_base_rate,
                            type_of_liquid=type_of_liquid,
                            liquidator_control_type=liquidator_control_type,
-                           liquidator_control=liquidator_control)
+                           liquidator_control=liquidator_control,
+                           liq_excit=1.0,
+                           liq_dec=10.0)
     model.simulate_liquidation(
         time_end,
         initial_condition_events=initial_condition_events,
@@ -202,7 +204,7 @@ def panmeasure(
     liquidator_control=0.2
     ):    
     count=0
-    for type_of_liquid in ['constant_intensity', 'with_the_market', 'against_the_market']:
+    for type_of_liquid in ['constant_intensity', 'with_the_market', 'with_price_move', 'against_price_move']:
         for liquidator_control_type in ['fraction_of_inventory', 'fraction_of_bid_side']:
             array_index=int(os.environ['PBS_ARRAY_INDEX'])
             if count==array_index:
