@@ -332,7 +332,9 @@ class SDHawkes:
             liquidator_base_rate=None,
             self_excitation=False,
             DTYPEf_t  liquidator_control=0.5,
-            liquidator_control_type='fraction_of_inventory'):
+            liquidator_control_type='fraction_of_inventory',
+            DTYPEf_t liq_excit = 1.0,
+            DTYPEf_t liq_dec = 10.0):
         try:
             self.liquidator.print_info()
             print("\nI am overwriting the above")
@@ -343,7 +345,9 @@ class SDHawkes:
                                    type_of_liquid=type_of_liquid,
                                    self_excitation=self_excitation,
                                    liquidator_control=liquidator_control,
-                                   liquidator_control_type=liquidator_control_type)
+                                   liquidator_control_type=liquidator_control_type,
+                                   liq_excit = liq_excit,
+                                   liq_dec = liq_dec)
         except:
             self.introduce_liquidator(
                                    initial_inventory=initial_inventory,
@@ -352,7 +356,9 @@ class SDHawkes:
                                    type_of_liquid=type_of_liquid,
                                    self_excitation=self_excitation,
                                    liquidator_control=liquidator_control,
-                                   liquidator_control_type=liquidator_control_type)
+                                   liquidator_control_type=liquidator_control_type,
+                                   liq_excit = liq_excit,
+                                   liq_dec = liq_dec)
     def introduce_liquidator(self,
                              DTYPEf_t initial_inventory = 0.0,
                              time_start=None,
@@ -360,7 +366,9 @@ class SDHawkes:
                              liquidator_base_rate=None,
                              self_excitation=False,
                              DTYPEf_t  liquidator_control=0.5,
-                             liquidator_control_type='fraction_of_inventory'):
+                             liquidator_control_type='fraction_of_inventory',
+                             DTYPEf_t liq_excit = 1.0,
+                             DTYPEf_t liq_dec = 10.0):
         try:
             self.liquidator.print_info()
             print("Liquidator exists. Use method 'setup_liquidator' instead")
@@ -374,6 +382,18 @@ class SDHawkes:
             idx_type=0
         elif type_of_liquid=='against_the_market':
             idx_type=1
+        elif type_of_liquid=='with_price_move':
+            alpha=np.zeros((1+self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
+            for e1 in range(1,self.number_of_event_types):
+                for x in self.state_enc.deflationary_states:
+                    alpha[e1,x]=liq_excit
+            beta=max(1.1,liq_dec)*np.ones((1+self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
+        elif type_of_liquid=='against_price_move':
+            alpha=np.zeros((1+self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
+            for e1 in range(1,self.number_of_event_types):
+                for x in self.state_enc.inflationary_states:
+                    alpha[e1,x]=liq_excit
+            beta=max(1.1,liq_dec)*np.ones((1+self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
         elif type_of_liquid!='constant_intensity':
             raise ValueError ('{}: type_of_liquid not recognised'.format(type_of_liquid))
         if liquidator_base_rate==None:
@@ -388,28 +408,29 @@ class SDHawkes:
                                values=self.impact_coefficients[0,:,:],
                                axis=0)
         """
-        Second, impact_coeff of liquidator as response to the other participants is set as the impact_coeff of either sell_I or buy_I depending on type_of_liquid
-        """ 
-        if type_of_liquid == 'constant_intensity':
-            impact_coeff=np.insert(
-                impact_coeff,obj=0,
-                values=np.zeros((1+self.number_of_event_types,self.number_of_states),dtype=DTYPEf),
-                axis=2)
-        else:    
-            impact_coeff=np.insert(impact_coeff,obj=0,values=impact_coeff[:,:,idx_type],axis=2)
-            if not self_excitation:
-                impact_coeff[0,:,0] = np.zeros(self.number_of_states,dtype=DTYPEf)
-        """
-        Third, decay_coeff of other participants as response to the liquidator' interventions is set as the decay_coeff of the same participants as response to sell_I
+        Second, decay_coeff of other participants as response to the liquidator' interventions is set as the decay_coeff of the same participants as response to sell_I
         """
         decay_coeff=np.insert(self.decay_coefficients,
                               obj=0,
                               values=self.decay_coefficients[0,:,:],
                               axis=0)
         """
-        Fourth, decay_coeff of liquidator as response to the other participants is set as the decay_coeff of either sell_I or buy_I depending on type_of_liquid
-        """
-        decay_coeff=np.insert(decay_coeff,obj=0,values=decay_coeff[:,:,idx_type],axis=2)
+        Third, impact_coeff decay_coeff of liquidator as response to the other participants is set as the impact_coeff of either sell_I or buy_I depending on type_of_liquid
+        """ 
+        if type_of_liquid=='with_the_market' or type_of_liquid=='against_the_market':
+            impact_coeff=np.insert(impact_coeff,obj=0,values=impact_coeff[:,:,idx_type],axis=2)
+            decay_coeff=np.insert(decay_coeff,obj=0,values=decay_coeff[:,:,idx_type],axis=2)
+            if not self_excitation:
+                impact_coeff[0,:,0] = np.zeros(self.number_of_states,dtype=DTYPEf)
+        elif type_of_liquid == 'constant_intensity':
+            impact_coeff=np.insert(
+                impact_coeff,obj=0,
+                values=np.zeros((1+self.number_of_event_types,self.number_of_states),dtype=DTYPEf),
+                axis=2)
+            decay_coeff=np.insert(decay_coeff,obj=0,values=1.1*np.ones((1+self.number_of_event_types, self.number_of_states)),axis=2)
+        else:    
+            impact_coeff=np.insert(impact_coeff,obj=0,values=alpha,axis=2)
+            decay_coeff=np.insert(decay_coeff,obj=0,values=beta,axis=2)
         """
         Finally, transition probabilities are updated, but this does not matter since   it will never be used, but it is done to modify the dimension
         """
@@ -442,8 +463,9 @@ class SDHawkes:
                                    type_of_liquid='with_the_market',
                                    self_excitation=False,
                                    liquidator_control=0.5,
-                                   liquidator_control_type='fraction_of_inventory'
-                                  ):
+                                   liquidator_control_type='fraction_of_inventory',
+                                   DTYPEf_t liq_excit = 1.0,
+                                   DTYPEf_t liq_dec = 10.0):
         "Notice that it is assumed that the liquidator has already been introduced, with event type = 0"
         if initial_inventory==None:
             initial_inventory=self.initial_inventory
@@ -459,6 +481,18 @@ class SDHawkes:
             idx_type=1
         elif type_of_liquid=='against_the_market':
             idx_type=2
+        elif type_of_liquid=='with_price_move':
+            alpha=np.zeros((self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
+            for e1 in range(1,self.number_of_event_types):
+                for x in self.state_enc.deflationary_states:
+                    alpha[e1,x]=liq_excit
+            beta=max(1.1,liq_dec)*np.ones((self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
+        elif type_of_liquid=='against_price_move':
+            alpha=np.zeros((self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
+            for e1 in range(1,self.number_of_event_types):
+                for x in self.state_enc.inflationary_states:
+                    alpha[e1,x]=liq_excit
+            beta=max(1.1,liq_dec)*np.ones((self.number_of_event_types, self.number_of_states), dtype=DTYPEf)
         elif type_of_liquid!='constant_intensity':
             raise ValueError ('{}: type_of_liquid not recognised'.format(type_of_liquid))
         rates=self.base_rates
@@ -471,16 +505,15 @@ class SDHawkes:
             rates[0]=liquidator_base_rate
         if type_of_liquid=='constant_intensity':
             imp_coef[:,:,0]=np.zeros((self.number_of_event_types,self.number_of_states),dtype=DTYPEf)
-        else:
-            imp_coef[:,:,0]=imp_coef[:,:,idx_type]
+        elif type_of_liquid=='with_the_market' or type_of_liquid=='against_the_market':
+            imp_coef[:,:,0]=np.array(imp_coef[:,:,idx_type], copy=True)
+            decay_coef[:,:,0]=np.array(decay_coef[:,:,idx_type], copy=True)
             if not self_excitation:
                 imp_coef[0,:,0]=np.zeros(self.number_of_states,dtype=DTYPEf)
-        decay_coef[:,:,0]=decay_coef[:,:,idx_type]
-        i_d_ratio=imp_coef/(decay_coef-1)
-        self.base_rates=rates
-        self.impact_coefficients=imp_coef
-        self.decay_coefficients=decay_coef
-        self.impact_decay_ratios=i_d_ratio
+        else:
+            imp_coef[:,:,0]=alpha
+            decay_coef[:,:,0]=beta
+        self.set_hawkes_parameters(rates, imp_coef, decay_coef)
         self.liquidator = Liquidator(initial_inventory,
                                      self.base_rates[0], self.impact_coefficients[:,:,0], self.decay_coefficients[:,:,0],
                                      type_of_liquid, control, control_type,
@@ -511,6 +544,7 @@ class SDHawkes:
                     normalisation[x,e,:]=1.0
         phi/=normalisation
         if not np.all(np.sum(phi,axis=2)<=1.0):
+            print("Masses exceed 1.0")
             print(np.sum(phi,axis=2))
         assert np.all(np.sum(phi,axis=2)<=1.0)
         if np.any(np.isnan(phi)):
