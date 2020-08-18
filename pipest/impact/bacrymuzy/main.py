@@ -92,17 +92,18 @@ def read(
     )
     model.get_configuration(calmodel)
     model.create_uq()
-    #model.base_rates=np.array([0.15408215, 0.14851349, 6.986689, 6.6295], dtype=np.float)
-    target=computation.avg_rates(model.data.number_of_event_types, 
-                                model.data.observed_times,
-                                model.data.observed_events, partial=False)
-    model.uncertainty_quantification.adjust_baserates(
-        target,
-        adj_coef=5.0e-2,
-        num_iter=15, 
-        max_number_of_events=30000
-    )
-    model.reduce_price_volatility(reduction_coef=0.7)
+    model.set_base_rates(np.array([0.14008215, 0.14451349, 6.4689, 6.0295], dtype=np.float))
+#    target=computation.avg_rates(model.data.number_of_event_types, 
+#                                model.data.observed_times,
+#                                model.data.observed_events, partial=False)
+#    model.uncertainty_quantification.adjust_baserates(
+#        target,
+#        adj_coef=5.0e-2,
+#        num_iter=15, 
+#        max_number_of_events=30000
+#    )
+    model.reduce_price_volatility(reduction_coef=0.8)
+    model.enforce_price_symmetry()
     model.enforce_price_symmetry()
     model.create_goodness_of_fit(type_of_input='empirical')
     model.store_2Dstates(type_of_input='empirical')
@@ -164,22 +165,22 @@ def measure_impact(
 #    initial_condition_volumes=np.array(model.simulated_volume,copy=True)
     initial_inventory=10.0
     time_start=float(initial_condition_times[-1])
-    time_end=time_start+1.50*60*60
+    time_end=time_start+1.00*60*60
     model.setup_liquidator(initial_inventory=initial_inventory,
                            time_start=time_start,
                            liquidator_base_rate=liquidator_base_rate,
                            type_of_liquid=type_of_liquid,
                            liquidator_control_type=liquidator_control_type,
                            liquidator_control=liquidator_control,
-                           liq_excit=1.0,
-                           liq_dec=10.0)
+                           liq_excit=3.5,
+                           liq_dec=30.0)
     model.simulate_liquidation(
         time_end,
         initial_condition_events=initial_condition_events,
         initial_condition_states=initial_condition_states,
         initial_condition_times=initial_condition_times,
         initial_condition_volumes=initial_condition_volumes,
-        max_number_of_events=2*10**5,
+        max_number_of_events=1*10**5,
         verbose=False,
         report_history_of_intensities = False,
         store_results=True
@@ -229,13 +230,19 @@ def collect_results(
     print(message)
     model.create_archive()
     pathlist = glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window))
-    pathlist.append(glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm??'.format(symbol, symbol, date, time_window)))
+    pathlist += glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm??'.format(symbol, symbol, date, time_window))
     for path in pathlist:
         print(path)
-        with open(path, 'rb') as source:
-            bm=pickle.load(source)
+        try:
+            with open(path, 'rb') as source:
+                bm=pickle.load(source)
+        except:
+            print("I could not unpicke {}".format(path))
         model.stack_to_archive(bm.name_of_model, name_of_item=bm.name_of_model)
         model.stack_to_archive(bm.liquidator, name_of_item='liquidator', idx=bm.name_of_model)
+        model.stack_to_archive(bm.base_rates, name_of_item='base_rates', idx=bm.name_of_model)
+        model.stack_to_archive(bm.impact_coefficients, name_of_item='impact_coef', idx=bm.name_of_model)
+        model.stack_to_archive(bm.decay_coefficients, name_of_item='decay_coef', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_times, name_of_item='simulated_times', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_events, name_of_item='simulated_events', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_states, name_of_item='simulated_states', idx=bm.name_of_model)
@@ -253,7 +260,7 @@ def main():
     time_window=str(sys.argv[3])
     action=str(sys.argv[4])
     if action=='-r' or action=='--read':
-        read(symbol,date,time_window, simulate=True)
+        read(symbol,date,time_window, simulate=False)
     elif action=='-m' or action=='--measure':
         liquidator_base_rate=float(sys.argv[5])
         type_of_liquid=str(sys.argv[6])
