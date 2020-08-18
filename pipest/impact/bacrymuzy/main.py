@@ -104,6 +104,7 @@ def read(
 #    )
     model.reduce_price_volatility(reduction_coef=0.8)
     model.enforce_price_symmetry()
+    model.enforce_price_symmetry()
     model.create_goodness_of_fit(type_of_input='empirical')
     model.store_2Dstates(type_of_input='empirical')
     if simulate:    
@@ -171,8 +172,8 @@ def measure_impact(
                            type_of_liquid=type_of_liquid,
                            liquidator_control_type=liquidator_control_type,
                            liquidator_control=liquidator_control,
-                           liq_excit=1.0,
-                           liq_dec=10.0)
+                           liq_excit=3.5,
+                           liq_dec=30.0)
     model.simulate_liquidation(
         time_end,
         initial_condition_events=initial_condition_events,
@@ -232,10 +233,16 @@ def collect_results(
     pathlist += glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm??'.format(symbol, symbol, date, time_window))
     for path in pathlist:
         print(path)
-        with open(path, 'rb') as source:
-            bm=pickle.load(source)
+        try:
+            with open(path, 'rb') as source:
+                bm=pickle.load(source)
+        except:
+            print("I could not unpicke {}".format(path))
         model.stack_to_archive(bm.name_of_model, name_of_item=bm.name_of_model)
         model.stack_to_archive(bm.liquidator, name_of_item='liquidator', idx=bm.name_of_model)
+        model.stack_to_archive(bm.base_rates, name_of_item='base_rates', idx=bm.name_of_model)
+        model.stack_to_archive(bm.impact_coefficients, name_of_item='impact_coef', idx=bm.name_of_model)
+        model.stack_to_archive(bm.decay_coefficients, name_of_item='decay_coef', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_times, name_of_item='simulated_times', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_events, name_of_item='simulated_events', idx=bm.name_of_model)
         model.stack_to_archive(bm.simulated_states, name_of_item='simulated_states', idx=bm.name_of_model)
