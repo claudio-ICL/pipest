@@ -92,17 +92,19 @@ def read(
     )
     model.get_configuration(calmodel)
     model.create_uq()
-    target=computation.avg_rates(model.data.number_of_event_types, 
-                                model.data.observed_times,
-                                model.data.observed_events, partial=False)
-    model.uncertainty_quantification.adjust_baserates(
-        target,
-        adj_coef=5.0e-2,
-        num_iter=15, 
-        max_number_of_events=30000
-    )
+    model.set_base_rates(np.array([0.14008215, 0.14451349, 6.4689, 6.0295], dtype=np.float))
+#    target=computation.avg_rates(model.data.number_of_event_types, 
+#                                model.data.observed_times,
+#                                model.data.observed_events, partial=False)
+#    model.uncertainty_quantification.adjust_baserates(
+#        target,
+#        adj_coef=5.0e-2,
+#        num_iter=15, 
+#        max_number_of_events=30000
+#    )
     model.reduce_price_volatility(reduction_coef=0.7)
-    model.create_goodness_of_fit(type_of_input='empirical')
+    #Remarkably, compared to the same function in bacrymuzy/main.py, here we are NOT enforcing price symmetry
+    #model.create_goodness_of_fit(type_of_input='empirical')
     if simulate:    
         time_start=0.0
         time_end=time_start+0.15*60*60
@@ -144,7 +146,7 @@ def measure_impact(
     model.set_name_of_model(name)
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
-    message+='I am measuring bacry-muzy impact\n'
+    message+='I am measuring one-sided impact\n'
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
     path_readout=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol,date,time_window)\
             +name+'_readout'.format(symbol)
@@ -157,14 +159,14 @@ def measure_impact(
 #    initial_condition_events=1+np.array(model.simulated_events,copy=True)
 #    initial_condition_states=np.array(model.simulated_states,copy=True)
 #    initial_condition_volumes=np.array(model.simulated_volume,copy=True)
-    initial_inventory=10.0
+    initial_inventory=0.4
     time_start=float(initial_condition_times[-1])
-    time_end=time_start+1.00*60*60
+    time_end=time_start+0.50*60*60
     model.setup_liquidator(initial_inventory=initial_inventory,
                            time_start=time_start,
                            liquidator_base_rate=liquidator_base_rate,
-                           type_of_liquid='constant_intensity',
-                           liquidator_control_type='fraction_of_inventory',
+                           type_of_liquid='constant_intensity',#Poissonian liquidation ...
+                           liquidator_control_type='fraction_of_inventory',# ...with constant order size to be under the assumptions of the explicit formula for the one-sided impact profile
                            liquidator_control=liquidator_control)
     model.simulate_liquidation(
         time_end,
@@ -172,15 +174,16 @@ def measure_impact(
         initial_condition_states=initial_condition_states,
         initial_condition_times=initial_condition_times,
         initial_condition_volumes=initial_condition_volumes,
-        max_number_of_events=2*10**5,
+        max_number_of_events=1*10**4,
         verbose=False,
         report_history_of_intensities = False,
         store_results=True
     )
     model.make_start_liquid_origin_of_times(delete_negative_times=False)
     model.create_impact_profile(delete_negative_times=False,
-                                produce_weakly_defl_pp=False,)
-    model.liquidator.impact.store_bm_impact()
+                                produce_weakly_defl_pp=True,
+                                mle_estim=True)
+    model.liquidator.impact.store_impact_profile(model.liquidator.termination_time, num_extra_eval_points = 2)
     model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
                                  ticksize=model.data.ticksize)
     model.store_history_of_intensities()
@@ -216,15 +219,15 @@ def collect_results(
     now=datetime.datetime.now()
     print(message)
     model.create_archive()
-    for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm*'.format(symbol, symbol, date, time_window)):
+    for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_1s*'.format(symbol, symbol, date, time_window)):
         with open(path, 'rb') as source:
-            bm=pickle.load(source)
-        model.stack_to_archive(bm.name_of_model, name_of_item=bm.name_of_model)
-        model.stack_to_archive(bm.liquidator, name_of_item='liquidator', idx=bm.name_of_model)
-        model.stack_to_archive(bm.simulated_times, name_of_item='simulated_times', idx=bm.name_of_model)
-        model.stack_to_archive(bm.simulated_events, name_of_item='simulated_events', idx=bm.name_of_model)
-        model.stack_to_archive(bm.simulated_states, name_of_item='simulated_states', idx=bm.name_of_model)
-        model.stack_to_archive(bm.simulated_intensities, name_of_item='simulated_intensities', idx=bm.name_of_model)
+            m1s=pickle.load(source)
+        model.stack_to_archive(m1s.name_of_model, name_of_item=m1s.name_of_model)
+        model.stack_to_archive(m1s.liquidator, name_of_item='liquidator', idx=m1s.name_of_model)
+        model.stack_to_archive(m1s.simulated_times, name_of_item='simulated_times', idx=m1s.name_of_model)
+        model.stack_to_archive(m1s.simulated_events, name_of_item='simulated_events', idx=m1s.name_of_model)
+        model.stack_to_archive(m1s.simulated_states, name_of_item='simulated_states', idx=m1s.name_of_model)
+        model.stack_to_archive(m1s.simulated_intensities, name_of_item='simulated_intensities', idx=m1s.name_of_model)
     model.dump(path=path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
