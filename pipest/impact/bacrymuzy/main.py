@@ -64,6 +64,7 @@ def read(
     date="2019-01-23",
     time_window="41400-45000",
     simulate=False,
+    quantify_uncertainty=False
     ):    
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
@@ -91,7 +92,6 @@ def read(
         calmodel.volume_enc.volume_imbalance_upto_level
     )
     model.get_configuration(calmodel)
-    model.create_uq()
     model.set_base_rates(np.array([0.14008215, 0.14451349, 6.4689, 6.0295], dtype=np.float))
 #    target=computation.avg_rates(model.data.number_of_event_types, 
 #                                model.data.observed_times,
@@ -116,6 +116,23 @@ def read(
                        store_results=True, report_full_volumes=False)
         model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
                                      ticksize=model.data.ticksize)
+    if quantify_uncertainty:
+        model.create_uq()
+        initial_condition_times=np.array(model.data.observed_times[:10000],copy=True)
+        initial_condition_events=np.array(model.data.observed_events[:10000],copy=True)
+        initial_condition_states=np.array(model.data.observed_states[:10000],copy=True)
+        initial_condition_volumes=np.array(model.data.observed_volumes[:10000,:],copy=True)
+        time_start=float(initial_condition_times[len(initial_condition_times)-1])
+        time_end=time_start+1.0*60*60
+        model.uncertainty_quantification.simulate(
+                time_start, time_end,
+                initial_condition_times = initial_condition_times,
+                initial_condition_events = intitial_condition_events
+                initial_condition_states=initial_condition_states,
+                initial_condition_volumes=initial_condition_volumes
+                max_number_of_events = 4*10**4
+                )
+        model.uncertainty_quantification.calibrate_on_simulated_data(maxiter=50)
     model.store_price_trajectory(type_of_input='empirical', initial_price=model.data.mid_price.iloc[0,1],
                                  ticksize=model.data.ticksize)
     try:
@@ -260,7 +277,8 @@ def main():
     time_window=str(sys.argv[3])
     action=str(sys.argv[4])
     if action=='-r' or action=='--read':
-        read(symbol,date,time_window, simulate=False)
+        read(symbol,date,time_window, simulate=False, 
+                quantify_uncertainty = True)
     elif action=='-m' or action=='--measure':
         liquidator_base_rate=float(sys.argv[5])
         type_of_liquid=str(sys.argv[6])
