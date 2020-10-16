@@ -1429,6 +1429,7 @@ class SDHawkes:
             if mle_estim:
                 impact.produce_reduced_weakly_defl_pp(
                     num_init_guesses = num_init_guesses,
+                    use_prange = True,
                     maxiter = maxiter, time_start=time_start, time_end=time_end)
         self.liquidator.get_impact(impact)
         print('\nSDHawkes:  "liquidator.impact" has been initialised\n\n')

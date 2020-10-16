@@ -9,7 +9,7 @@ control="0.2"
 
 action="--read"
 input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action"
-jobid_r=$(qsub -l walltime=05:50:00 -l select=1:ncpus=8:mem=24gb:mpiprocs=1:ompthreads=8 -N "impact-r" -v "$input" wrapper_submission.sh)
+jobid_r=$(qsub -l walltime=05:50:00 -l select=1:ncpus=32:mem=24gb:mpiprocs=1:ompthreads=32 -N "impact-r" -v "$input" wrapper_submission.sh)
 echo "impact-r submitted with jobid: $jobid_r"
 #action="--measure"
 #input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action, br=$br, liquidtype=$liquidtype, controltype=$controltype, control=$control"

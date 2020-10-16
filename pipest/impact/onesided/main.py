@@ -160,9 +160,9 @@ def measure_impact(
 #    initial_condition_events=1+np.array(model.simulated_events,copy=True)
 #    initial_condition_states=np.array(model.simulated_states,copy=True)
 #    initial_condition_volumes=np.array(model.simulated_volume,copy=True)
-    initial_inventory=0.4
+    initial_inventory=10.0
     time_start=float(initial_condition_times[-1])
-    time_end=time_start+0.50*60*60
+    time_end=time_start+0.750*60*60
     model.setup_liquidator(initial_inventory=initial_inventory,
                            time_start=time_start,
                            liquidator_base_rate=liquidator_base_rate,
@@ -175,16 +175,16 @@ def measure_impact(
         initial_condition_states=initial_condition_states,
         initial_condition_times=initial_condition_times,
         initial_condition_volumes=initial_condition_volumes,
-        max_number_of_events=1*10**4,
+        max_number_of_events=1*10**5,
         verbose=False,
         report_history_of_intensities = False,
         store_results=True
     )
-    model.make_start_liquid_origin_of_times(delete_negative_times=False)
+    model.make_start_liquid_origin_of_times(delete_negative_times=True)
     model.create_impact_profile(delete_negative_times=False,
                                 produce_weakly_defl_pp=True,
                                 mle_estim=True)
-    model.liquidator.impact.store_impact_profile(model.liquidator.termination_time, num_extra_eval_points = 2)
+    model.liquidator.impact.store_impact_profile(model.liquidator.termination_time, num_extra_eval_points = 10**1)
     model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
                                  ticksize=model.data.ticksize)
     model.store_history_of_intensities()

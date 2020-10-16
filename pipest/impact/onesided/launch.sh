@@ -15,7 +15,7 @@ control="0.2"
 #echo "impact-m submitted with jobid: $jobid_m"
 action="--panmeasure"
 input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action, br=$br, control=$control"
-jobid_pm=$(qsub -l walltime=17:50:00 -l select=1:ncpus=8:mem=4gb:mpiprocs=1:ompthreads=8 -N "impact-pm" -J 0-7 -v "$input" -W depend=afterok:$jobid_r wrapper_submission.sh)
+jobid_pm=$(qsub -l walltime=20:50:00 -l select=1:ncpus=32:mem=4gb:mpiprocs=1:ompthreads=32 -N "impact-pm" -J 0-15 -v "$input" -W depend=afterok:$jobid_r wrapper_submission.sh)
 echo "impact-pm submitted with jobid: $jobid_pm"
 action="--collect"
 input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action"
