@@ -118,15 +118,23 @@ def read(
                                      ticksize=model.data.ticksize)
     if quantify_uncertainty:
         model.create_uq()
+<<<<<<< HEAD
         initial_condition_times=np.array(model.data.observed_times[:10],copy=True)
         initial_condition_events=np.array(model.data.observed_events[:10],copy=True)
         initial_condition_states=np.array(model.data.observed_states[:10],copy=True)
         initial_condition_volumes=np.array(model.data.observed_volumes[:10,:],copy=True)
+=======
+        initial_condition_times=np.array(model.data.observed_times[:10000],copy=True)
+        initial_condition_events=np.array(model.data.observed_events[:10000],copy=True)
+        initial_condition_states=np.array(model.data.observed_states[:10000],copy=True)
+        initial_condition_volumes=np.array(model.data.observed_volumes[:10000,:],copy=True)
+>>>>>>> 82f88ebcbe82ff765c80bec03b371c8901e8ab79
         time_start=float(initial_condition_times[len(initial_condition_times)-1])
         time_end=time_start+1.0*60*60
         model.uncertainty_quantification.simulate(
                 time_start, time_end,
                 initial_condition_times = initial_condition_times,
+<<<<<<< HEAD
                 initial_condition_events = initial_condition_events,
                 initial_condition_states=initial_condition_states,
                 initial_condition_volumes=initial_condition_volumes,
@@ -135,6 +143,14 @@ def read(
         model.uncertainty_quantification.calibrate_on_simulated_data(maxiter=50, 
                         batch_size=10**4, num_run_per_minibatch = 2      
         )
+=======
+                initial_condition_events = intitial_condition_events
+                initial_condition_states=initial_condition_states,
+                initial_condition_volumes=initial_condition_volumes
+                max_number_of_events = 4*10**4
+                )
+        model.uncertainty_quantification.calibrate_on_simulated_data(maxiter=50)
+>>>>>>> 82f88ebcbe82ff765c80bec03b371c8901e8ab79
     model.store_price_trajectory(type_of_input='empirical', initial_price=model.data.mid_price.iloc[0,1],
                                  ticksize=model.data.ticksize)
     try:
