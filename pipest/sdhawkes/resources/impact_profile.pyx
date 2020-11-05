@@ -169,6 +169,7 @@ class Impact():
                 state_enc.weakly_deflationary_states,dtype=DTYPEi)
         self.array_weakly_defl_states=ar_w_defl
         self.num_weakly_defl_states = len(self.weakly_defl_states)
+        self.stored_onesided_impact_profiles=[]
     def store_sdhawkes(self,
         np.ndarray[DTYPEf_t, ndim=1] base_rates,
         np.ndarray[DTYPEf_t, ndim=3] impact_coefficients,
@@ -286,27 +287,31 @@ class Impact():
         if np.isclose(numerator, 0.0, atol=1.0e-12) and np.isclose(denominator, 0.0, atol=1.0e-12):
             return 0.0
         return numerator/denominator
-    def compute_imp_profile_history(self, DTYPEf_t time_horizon, int num_extra_eval_points = 10):
-        idx_liquidator = np.logical_and(self.events==0,self.times<=time_horizon)
+    def compute_imp_profile_history(self, DTYPEf_t t0,  DTYPEf_t t1, int num_extra_eval_points = 10):
+        idx_liquidator = np.logical_and(self.events==0, np.logical_and(self.times>=t1, self.times<=t1))
         cdef np.ndarray[DTYPEf_t, ndim=1] eval_points = np.atleast_1d(np.array(self.times[idx_liquidator],copy=True))
         cdef np.ndarray[DTYPEf_t, ndim=1] extra_eval_points =\
-                np.linspace(0.0, time_horizon, num=num_extra_eval_points, dtype=DTYPEf)
+                np.linspace(0.0, t1, num=max(2,num_extra_eval_points), dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=2] eval_times =\
         np.sort(np.concatenate([eval_points,extra_eval_points],axis=0),axis=0).reshape(-1,1)
         cdef np.ndarray[DTYPEf_t, ndim=2] imp_profile = np.zeros_like(eval_times)
         message='compute_imp_profile_history:'
-        message+=' time_horizon={}'.format(time_horizon)
+        message+=' t0={}, t1={}'.format(t0,t1)
         message+='eval_times.shape=({},{}),'.format(eval_times.shape[0],eval_times.shape[1])
         message+=' compute_imp_profile_history: imp_profile.shape=({},{})'.format(imp_profile.shape[0],imp_profile.shape[1])
         print(message)
         imp_profile[:,0] = np.apply_along_axis(self.evaluate_impact_profile,1,eval_times)
         cdef np.ndarray[DTYPEf_t, ndim=2] result = np.concatenate([eval_times,imp_profile], axis=1)
         return result
-    def store_impact_profile(self, DTYPEf_t time_horizon, int num_extra_eval_points = 10):
+    def store_impact_profile(self, DTYPEf_t t0, DTYPEf_t t1, int num_extra_eval_points = 10):
         impact_profile = self.compute_imp_profile_history(
-                time_horizon, num_extra_eval_points)
+                t0, t1, num_extra_eval_points)
+        self.stored_onesided_impact_profiles.append(impact_profile)
         df=pd.DataFrame({'time': impact_profile[:,0], 'impact': impact_profile[:,1]})
-        self.impact_profile=df    
+        try:
+            self.df_impact_profile=pd.concat([self.df_impact_profile, df])
+        except (NameError, AttributeError):
+            self.df_impact_profile = df
     def store_bm_impact(self, 
             int density_of_eval_points=1000):
         profile, intensity = self.compute_bm_impact(
@@ -512,12 +517,14 @@ cdef double compute_numerator(
     cdef DTYPEf_t result = 0.0, sqrt_result = 0.0
     sqrt_result = compute_first_summand_of_numerator(
         eval_time,termination_time, base_rate,num_orders)
+    print("Impact.compute_numerator: first summand = {}".format(sqrt_result))
     sqrt_result += compute_second_summand_of_numerator(
         eval_time, times, states, labelled_times, count,
         base_rate, imp_dec_ratio_one, beta_one, phi,
         weakly_defl_states, num_event_types,
         num_states, num_weakly_defl_states, num_orders
     )
+    print("Impact.compute_numerator: sqrt_result = {}".format(sqrt_result))
     result = sqrt_result*sqrt_result
     return result
     
@@ -615,6 +622,7 @@ cdef double compute_fn(DTYPEf_t eval_time,
               ) nogil:
     cdef DTYPEf_t fn = 0.0
     cdef DTYPEf_t upper_time = min(T_np1,eval_time)
+    #assert upper_time >= T_n
     cdef DTYPEf_t integral = 0.0
     cdef DTYPEf_t P_T_geq_u = 0.0, nu_0_times_u = 0.0
     cdef DTYPEf_t du = 0.0, u=0.0
@@ -629,6 +637,7 @@ cdef double compute_fn(DTYPEf_t eval_time,
                 nu_0_times_u = base_rate*u
                 P_T_geq_u = exp(-nu_0_times_u)
                 for k in range(1,min(14,num_orders+1)):
+                    #assert factorial[4]>0
                     P_T_geq_u+=exp(-nu_0_times_u)*pow(nu_0_times_u,k)/factorial[k]        
                 integral+= du*P_T_geq_u*(
                     - pow(upper_time-u+1.0, 1-beta_one_x1_e) + pow(T_n - u +1.0, 1-beta_one_x1_e)
@@ -674,6 +683,7 @@ cdef double compute_gn(DTYPEf_t eval_time,
             nu_0_times_u = base_rate*u
             P_T_geq_u = exp(-nu_0_times_u)
             for k in range(1,min(14,num_orders+1)):
+                #assert factorial[k] > 0
                 P_T_geq_u+=exp(-nu_0_times_u)*pow(nu_0_times_u,k)/factorial[k]
             integral+=du*P_T_geq_u*(
                 1 - pow(T_np1 - u +1, 1-beta_one_x1_e)
