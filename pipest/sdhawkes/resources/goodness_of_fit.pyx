@@ -66,7 +66,7 @@ class good_fit:
         self.states = states
         self.type_of_input=type_of_input #it can be either 'simulated' or 'empirical'
         self.state_traj_times,self.state_traj_states = computation.produce_state_trajectory(states, times)
-        self.labelled_times,self.count = computation.distribute_times_per_event_state(
+        self.labelled_times, self.count = computation.distribute_times_per_event_state(
                                                         n_event_types,
                                                         n_states,
                                                         times,

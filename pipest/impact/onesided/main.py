@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
-
-
 import sys
 import os
 import glob
@@ -38,6 +34,7 @@ import datetime
 import timeit
 import model as sd_hawkes_model
 import computation
+from measure_impact import *
 
 def redirect_stdout(direction= 'from', # or 'to'
                     message= '',
@@ -69,7 +66,7 @@ def read(
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
     message+='I am reading from saved models\n'
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
-    path_readout=path_impact+'/models/{}/{}_{}_{}_readout'.format(symbol, symbol, date, time_window)
+    path_readout=path_impact+'/models/{}/{}_{}_{}_onesided_thesis_readout'.format(symbol, symbol, date, time_window)
     fout, saveout = redirect_stdout(direction='from', message=message, path=path_readout)
     try:
         with open(path_models+"/{}/{}_{}/{}_sdhawkes_{}_{}"
@@ -104,7 +101,7 @@ def read(
 #    )
     model.reduce_price_volatility(reduction_coef=0.7)
     #Remarkably, compared to the same function in bacrymuzy/main.py, here we are NOT enforcing price symmetry
-    #model.create_goodness_of_fit(type_of_input='empirical')
+    model.create_goodness_of_fit(type_of_input='empirical')
     if simulate:    
         time_start=0.0
         time_end=time_start+0.15*60*60
@@ -120,6 +117,7 @@ def read(
         os.mkdir(path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     except FileExistsError:
         pass
+    model.set_name_of_model('{}_sdhawkes_{}_{}_onesided_thesis'.format(symbol, date, time_window))
     model.dump(path=path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
@@ -132,70 +130,22 @@ def measure_impact(
     time_window="41400-45000",
     liquidator_base_rate=0.150,
     liquidator_control=0.2,
-    count=0
+    count=0, 
+    phase="prep",
+    quarter=None
     ):    
-    with open(path_impact+'/models/{}/{}_{}_{}/{}_sdhawkes_{}_{}'\
-            .format(symbol, symbol, date, time_window, symbol, date, time_window), 'rb') as source:
-        model=pickle.load(source)
-    i=count
-    name=str(model.name_of_model)+'_1s'+str(i)
-    path=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol, date, time_window)
-    while os.path.exists(path+name):
-        i+=16 #this is the number of different cases when panmeasure is executed
-        name=name.replace("_1s"+str(i-16), "_1s"+str(i))
-    model.set_name_of_model(name)
-    now=datetime.datetime.now()
-    message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
-    message+='I am measuring one-sided impact\n'
-    message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
-    print(message)
-    path_readout=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol,date,time_window)\
-            +name+'_readout'.format(symbol)
-    fout, saveout = redirect_stdout(direction='from', message=message, path=path_readout)
-    initial_condition_times=np.array(model.data.observed_times[:10000],copy=True)
-    initial_condition_events=1+np.array(model.data.observed_events[:10000],copy=True)
-    initial_condition_states=np.array(model.data.observed_states[:10000],copy=True)
-    initial_condition_volumes=np.array(model.data.observed_volumes[:10000,:],copy=True)
-#    initial_condition_times=np.array(model.simulated_times,copy=True)
-#    initial_condition_events=1+np.array(model.simulated_events,copy=True)
-#    initial_condition_states=np.array(model.simulated_states,copy=True)
-#    initial_condition_volumes=np.array(model.simulated_volume,copy=True)
-    initial_inventory=10.0
-    time_start=float(initial_condition_times[-1])
-    time_end=time_start+0.750*60*60
-    model.setup_liquidator(initial_inventory=initial_inventory,
-                           time_start=time_start,
-                           liquidator_base_rate=liquidator_base_rate,
-                           type_of_liquid='constant_intensity',#Poissonian liquidation ...
-                           liquidator_control_type='fraction_of_inventory',# ...with constant order size to be under the assumptions of the explicit formula for the one-sided impact profile
-                           liquidator_control=liquidator_control)
-    model.simulate_liquidation(
-        time_end,
-        initial_condition_events=initial_condition_events,
-        initial_condition_states=initial_condition_states,
-        initial_condition_times=initial_condition_times,
-        initial_condition_volumes=initial_condition_volumes,
-        max_number_of_events=1*10**5,
-        verbose=False,
-        report_history_of_intensities = False,
-        store_results=True
-    )
-    model.make_start_liquid_origin_of_times(delete_negative_times=True)
-    model.create_impact_profile(delete_negative_times=False,
-                                produce_weakly_defl_pp=True,
-                                mle_estim=True)
-    model.liquidator.impact.store_impact_profile(model.liquidator.termination_time, num_extra_eval_points = 10**1)
-    model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
-                                 ticksize=model.data.ticksize)
-    model.store_history_of_intensities()
-    model.dump(path=path)
-    now=datetime.datetime.now()
-    message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
-    redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
-
+    if phase=="prep":
+        measure_impact_prep(symbol, date, time_window, liquidator_base_rate, liquidator_control, count)
+    elif phase=="core":
+        measure_impact_core(symbol, date, time_window, liquidator_base_rate, liquidator_control, quarter=quarter, count=count)
+    elif phase=="conclude":
+        measure_impact_conclude(symbol, date, time_window, liquidator_base_rate, liquidator_control, count)
+    else:
+        print("WARNING: measure_impact: phase not recognised")
+        print("Given phase: {}".format(pahse))
 
 def panmeasure(
-        symbol='INTC', date='2019-01-23', time_window="41400-45000"):
+        symbol='INTC', date='2019-01-23', time_window="41400-45000", phase="prep", quarter=None):
     count=0
     for br in [0.01, 0.05, 0.1, 0.15]:
         for c in [0.05, 0.1, 0.2, 0.5]:
@@ -206,7 +156,8 @@ def panmeasure(
                      time_window=time_window,
                      liquidator_base_rate=br,
                      liquidator_control=c,
-                     count=count)
+                     count=count, 
+                     phase=phase, quarter=quarter)
             count+=1
 
 
@@ -242,22 +193,39 @@ def main():
     time_window=str(sys.argv[3])
     action=str(sys.argv[4])
     if action=='-r' or action=='--read':
-        read(symbol,date,time_window)
+        read(symbol,date,time_window, simulate=True)
     elif action=='-m' or action=='--measure':
         liquidator_base_rate=float(sys.argv[5])
         liquidator_control=float(sys.argv[6])
-        measure_impact(symbol, date, time_window,
+        try:
+            phase=str(sys.argv[7])
+            try:
+                quarter=int(sys.argv[8])
+            except:
+                quarter = None
+            measure_impact(symbol, date, time_window,
                 liquidator_base_rate,
-                liquidator_control)
+                liquidator_control, 
+                phase=phase, quarter=quarter)
+        except:
+            for phase in ["prep", "core", "conclude"]:
+                measure_impact(symbol, date, time_window,
+                    liquidator_base_rate,
+                    liquidator_control, 
+                    phase=phase)
     elif action=='-pm' or action=='--panmeasure':
-        panmeasure(symbol, date, time_window,)
+        phase=sys.argv[5]
+        try:
+            quarter=int(sys.argv[6])
+        except IndexError:
+            quarter=None
+        panmeasure(symbol, date, time_window, phase, quarter=quarter)
     elif action=='-c' or action=='--collect':
         collect_results(symbol, date, time_window)
-
     else:
         print("action: {}".format(action))
         print("Error: action not recognised")
-        raise ValueError("Action not recognised")
+        raise ValueError
     
 if __name__=="__main__":
     main()

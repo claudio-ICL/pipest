@@ -70,7 +70,7 @@ def read(
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
     message+='I am reading from saved models\n'
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
-    path_readout=path_impact+'/models/{}/{}_{}_{}_readout'.format(symbol, symbol, date, time_window)
+    path_readout=path_impact+'/models/{}/{}_{}_{}_bm_thesis_readout'.format(symbol, symbol, date, time_window)
     fout, saveout = redirect_stdout(direction='from', message=message, path=path_readout)
     try:
         with open(path_models+"/{}/{}_{}/{}_sdhawkes_{}_{}"
@@ -111,30 +111,22 @@ def read(
         time_start=0.0
         time_end=time_start+0.15*60*60
         model.simulate(time_start, time_end,
-                       max_number_of_events=20000,
+                       max_number_of_events=50000,
                        add_initial_cond=True,
                        store_results=True, report_full_volumes=False)
         model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
                                      ticksize=model.data.ticksize)
     if quantify_uncertainty:
         model.create_uq()
-<<<<<<< HEAD
-        initial_condition_times=np.array(model.data.observed_times[:10],copy=True)
-        initial_condition_events=np.array(model.data.observed_events[:10],copy=True)
-        initial_condition_states=np.array(model.data.observed_states[:10],copy=True)
-        initial_condition_volumes=np.array(model.data.observed_volumes[:10,:],copy=True)
-=======
         initial_condition_times=np.array(model.data.observed_times[:10000],copy=True)
         initial_condition_events=np.array(model.data.observed_events[:10000],copy=True)
         initial_condition_states=np.array(model.data.observed_states[:10000],copy=True)
         initial_condition_volumes=np.array(model.data.observed_volumes[:10000,:],copy=True)
->>>>>>> 82f88ebcbe82ff765c80bec03b371c8901e8ab79
         time_start=float(initial_condition_times[len(initial_condition_times)-1])
         time_end=time_start+1.0*60*60
         model.uncertainty_quantification.simulate(
                 time_start, time_end,
                 initial_condition_times = initial_condition_times,
-<<<<<<< HEAD
                 initial_condition_events = initial_condition_events,
                 initial_condition_states=initial_condition_states,
                 initial_condition_volumes=initial_condition_volumes,
@@ -143,20 +135,13 @@ def read(
         model.uncertainty_quantification.calibrate_on_simulated_data(maxiter=50, 
                         batch_size=10**4, num_run_per_minibatch = 2      
         )
-=======
-                initial_condition_events = intitial_condition_events
-                initial_condition_states=initial_condition_states,
-                initial_condition_volumes=initial_condition_volumes
-                max_number_of_events = 4*10**4
-                )
-        model.uncertainty_quantification.calibrate_on_simulated_data(maxiter=50)
->>>>>>> 82f88ebcbe82ff765c80bec03b371c8901e8ab79
     model.store_price_trajectory(type_of_input='empirical', initial_price=model.data.mid_price.iloc[0,1],
                                  ticksize=model.data.ticksize)
     try:
         os.mkdir(path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     except FileExistsError:
         pass
+    model.set_name_of_model('{}_sdhawkes_{}_{}_bm_thesis'.format(symbol, date, time_window))
     model.dump(path=path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
@@ -293,8 +278,8 @@ def main():
     time_window=str(sys.argv[3])
     action=str(sys.argv[4])
     if action=='-r' or action=='--read':
-        read(symbol,date,time_window, simulate=False, 
-                quantify_uncertainty = True)
+        read(symbol,date,time_window, simulate=True, 
+                quantify_uncertainty = False)
     elif action=='-m' or action=='--measure':
         liquidator_base_rate=float(sys.argv[5])
         type_of_liquid=str(sys.argv[6])
