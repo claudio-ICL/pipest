@@ -87,7 +87,7 @@ def measure_impact_prep(
     initial_condition_events=1+np.array(model.data.observed_events[:5],copy=True)
     initial_condition_states=np.array(model.data.observed_states[:5],copy=True)
     initial_condition_volumes=np.array(model.data.observed_volumes[:5,:],copy=True)
-    initial_inventory=4.0
+    initial_inventory=5.0
     time_start=float(initial_condition_times[-1])
     time_end=time_start+0.750*60*60
     model.setup_liquidator(initial_inventory=initial_inventory,
@@ -102,7 +102,7 @@ def measure_impact_prep(
         initial_condition_states=initial_condition_states,
         initial_condition_times=initial_condition_times,
         initial_condition_volumes=initial_condition_volumes,
-        max_number_of_events=1*10**3,
+        max_number_of_events=1*10**4,
         verbose=False,
         report_history_of_intensities = False,
         store_results=True
@@ -143,11 +143,12 @@ def measure_impact_core(
     if t0==None:
         t0=0.0
     if t1==None:
-        t1=model.liquidator.termination_time
+        idx = len(model.liquidator.impact.times)-1
+        t1=model.liquidator.impact.times[idx]
     if quarter!=None:
         t0 = t0 + (t1-t0)*max(0.0, min(4,quarter)-1.0)/4.0
-        t1 = t1 + (t1-t0)*max(0.0, min(4,quarter))/4.0
-    model.liquidator.impact.store_impact_profile(t0, t1, num_extra_eval_points = 10**0)
+        t1 = t0 + (t1-t0)*max(0.0, min(4,quarter))/4.0
+    model.liquidator.impact.store_impact_profile(t0, t1, num_extra_eval_points = 3)
     model.dump(path=path)
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)

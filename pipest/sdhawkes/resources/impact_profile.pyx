@@ -288,17 +288,17 @@ class Impact():
             return 0.0
         return numerator/denominator
     def compute_imp_profile_history(self, DTYPEf_t t0,  DTYPEf_t t1, int num_extra_eval_points = 10):
-        idx_liquidator = np.logical_and(self.events==0, np.logical_and(self.times>=t1, self.times<=t1))
+        idx_liquidator = np.logical_and(self.events==0,
+                np.logical_and(t0<=self.times, self.times<=t1))
         cdef np.ndarray[DTYPEf_t, ndim=1] eval_points = np.atleast_1d(np.array(self.times[idx_liquidator],copy=True))
         cdef np.ndarray[DTYPEf_t, ndim=1] extra_eval_points =\
-                np.linspace(0.0, t1, num=max(2,num_extra_eval_points), dtype=DTYPEf)
+                np.linspace(t0, t1, num=max(2,num_extra_eval_points), dtype=DTYPEf)
         cdef np.ndarray[DTYPEf_t, ndim=2] eval_times =\
         np.sort(np.concatenate([eval_points,extra_eval_points],axis=0),axis=0).reshape(-1,1)
         cdef np.ndarray[DTYPEf_t, ndim=2] imp_profile = np.zeros_like(eval_times)
-        message='compute_imp_profile_history:'
-        message+=' t0={}, t1={}'.format(t0,t1)
+        message='\ncompute_imp_profile_history:\n'
+        message+='t0={}, t1={}, '.format(t0,t1)
         message+='eval_times.shape=({},{}),'.format(eval_times.shape[0],eval_times.shape[1])
-        message+=' compute_imp_profile_history: imp_profile.shape=({},{})'.format(imp_profile.shape[0],imp_profile.shape[1])
         print(message)
         imp_profile[:,0] = np.apply_along_axis(self.evaluate_impact_profile,1,eval_times)
         cdef np.ndarray[DTYPEf_t, ndim=2] result = np.concatenate([eval_times,imp_profile], axis=1)
