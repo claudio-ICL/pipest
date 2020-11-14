@@ -49,9 +49,15 @@ def redirect_stdout(direction= 'from', # or 'to'
         return fout, saveout
     elif direction=='to':
         print(message)
-        fout.close()
-        sys.stdout=saveout
-        print(message)
+        try:
+            fout.close()
+        except:
+            pass
+        try:
+            sys.stdout=saveout
+            print(message)
+        except:
+            pass
     else:
         print("WARNINNG: redirect_stdout failed! direction={} not recognised".format(direction))
         print(message)        

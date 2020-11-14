@@ -43,3 +43,4 @@ pipest/lobster/py_scripts/build/temp.linux-x86_64-3.7/prepare_from_lobster.o
 pipest/impact/models/*
 pipest/impact/bacrymuzy/impact-*.*
 pipest/impact/onesided/impact-?*.*
+pipest/impact/onesided/*/impact-?*.*
