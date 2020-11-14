@@ -1468,6 +1468,25 @@ class SDHawkes:
                 t_1=float(self.simulated_times[len(self.simulated_times)-1])
             intensities=computation.select_interval(self.simulated_intensities, t_0, t_1)
             plot_tools.plot_intensities(intensities,first_event_index=first_event_index,plot=True,save_fig=save_fig,name=name)
+    def plot_impact_profile(
+            self, 
+            time_start=None, time_end=None,
+            save_fig=False, path=None,name='onesided_impact_profile', plot=True
+        ):
+        if time_start==None:
+            time_start=self.liquidator.start_time
+        if time_end==None:
+            time_end=self.liquidator.termination_time
+        plot_tools.plot_impact_profile(
+                self.liquidator.impact.sdhawkes.times,
+                self.liquidator.impact.sdhawkes.events,
+                self.simulated_price,
+                self.liquidator.inventory_trajectory,
+                self.simulated_intensities,
+                self.liquidator.impact.df_impact_profile.values,
+                time_start, time_end,
+                save_fig=save_fig,
+                path=path, name=name, plot=plot)
     def plot_bm_impact_profile(
             self, 
             time_start=None, time_end=None,

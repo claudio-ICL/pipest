@@ -294,29 +294,20 @@ def plot_bm_impact_profile(
         
         
         
-def plot_impact_profile(profile,
-                        times,events,inventory,history_of_intensity,price,
-                        time_start=0.0,time_end=-1.0,
-                        save_fig=False,path=None,name='impact_profile',plot=True
-                       ):
-    time_start = max(time_start,profile[0,0])
-    if time_end<=time_start:
-        time_end = bm_profile[-1,0]
-    else:
-        time_end = max(time_start,min(time_end,profile[-1,0]))
-    idx_start=bisect.bisect_left(profile[:,0], time_start)
-    idx_end=bisect.bisect(profile[:,0],time_end)
-    time=np.array(profile[idx_start:idx_end,0],copy=True)
-    impact_profile=np.array(profile[idx_start:idx_end,1],copy=True)
-    start_index=bisect.bisect_left(times,time_start)
-    end_index=bisect.bisect(times,time_end)
-    idx_liquidator=(events[start_index:end_index]==0)
-    times=np.array(times[start_index:end_index],copy=True)
-    events=np.array(events[start_index:end_index],copy=True)
-    inventory=np.array(inventory[start_index:end_index],copy=True)
-    price=np.array(price[start_index:end_index],copy=True)
-    idx_history=np.logical_and(history_of_intensity[:,0]>=time_start,history_of_intensity[:,0]<=time_end)
-    history_of_intensity=history_of_intensity[idx_history,:]
+def plot_impact_profile(
+        times, events, price, inventory,
+        history_of_intensity,
+        profile, 
+        time_start, time_end,
+        save_fig=False, path=None,name='onesided_impact_profile', plot=True
+        ):
+    profile=select_interval(profile,time_start, time_end)
+    history_of_intensity=select_interval(history_of_intensity, time_start, time_end)
+    price=select_interval(price, time_start, time_end)
+    inventory=select_interval(inventory, time_start, time_end)
+    idx=np.logical_and(times>=time_start, times<=time_end)
+    times=np.array(times[idx], copy=True)
+    events=np.array(events[idx], copy=True)
     fig = plt.figure(figsize=(10,8))
     ax_profile=fig.add_subplot(211)
     ax_events=ax_profile.twinx()
@@ -333,20 +324,20 @@ def plot_impact_profile(profile,
             np.amax(history_of_intensity[:,1]),num=3))
     ax_2.set_ylim([-4,4])
     ax_2.set_ylabel('liquidator_intensity')
-    ax_profile.plot(time,impact_profile,color='green',label='impact_profile',linewidth=2.0)
+    ax_profile.plot(profile[:, 0], profile[:,1], color='green',label='impact_profile',linewidth=2.0)
     ax_profile.set_xlabel('time')
     ax_profile.set_ylabel('impact')
 #     ax_profile.set_yticks([])
     ax_profile.legend()
     
     ax_inventory=fig.add_subplot(212)
-    ax_inventory.plot(times,inventory,color='red',label='inventory')
+    ax_inventory.plot(inventory[:,0], inventory[:,1], color='red', label='inventory')
     ax_price=ax_inventory.twinx()
-    ax_price.step(times,price,where='post',color='blue',label='price')
+    ax_price.step(price[:,0], price[:,1],  where='post',color='blue',label='price')
     ax_inventory.set_xlabel('time')
     ax_inventory.set_ylabel('inventory')
-    ax_inventory.set_ylim([-0.1,1.1*inventory[0]])
-    ax_inventory.set_yticks(np.linspace(0,inventory[0],num=10))
+    ax_inventory.set_ylim([-0.1,1.1*inventory[0,1]])
+    ax_inventory.set_yticks(np.linspace(0,inventory[0,1],num=10))
     ax_price.set_ylabel('price')
     ax_price.legend(loc=1)
     ax_inventory.legend(loc=5)

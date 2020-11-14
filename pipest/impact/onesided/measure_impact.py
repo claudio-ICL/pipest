@@ -104,7 +104,7 @@ def measure_impact_prep(
         initial_condition_volumes=initial_condition_volumes,
         max_number_of_events=1*10**4,
         verbose=False,
-        report_history_of_intensities = False,
+        report_history_of_intensities = True,
         store_results=True
     )
     model.make_start_liquid_origin_of_times(delete_negative_times=True)

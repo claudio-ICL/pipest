@@ -168,6 +168,7 @@ def collect_results(
     with open(path_impact+'/models/{}/{}_{}_{}/{}_sdhawkes_{}_{}'\
             .format(symbol, symbol, date, time_window, symbol, date, time_window), 'rb') as source:
         model=pickle.load(source)
+    model.set_name_of_model = model.name_of_model + "_results"
     now=datetime.datetime.now()
     print(message)
     model.create_archive()
@@ -179,11 +180,14 @@ def collect_results(
         model.stack_to_archive(m1s.simulated_times, name_of_item='simulated_times', idx=m1s.name_of_model)
         model.stack_to_archive(m1s.simulated_events, name_of_item='simulated_events', idx=m1s.name_of_model)
         model.stack_to_archive(m1s.simulated_states, name_of_item='simulated_states', idx=m1s.name_of_model)
-        model.stack_to_archive(m1s.simulated_intensities, name_of_item='simulated_intensities', idx=m1s.name_of_model)
+        try:
+            model.stack_to_archive(m1s.simulated_intensities, name_of_item='simulated_intensities', idx=m1s.name_of_model)
+        except:
+            pass
     model.dump(path=path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
-    print(message)
+    redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
 
 
 def main():
