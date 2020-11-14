@@ -13,23 +13,23 @@ control="0.2"
 #input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action, br=$br, control=$control"
 #jobid_m=$(qsub -l walltime=05:50:00 -l select=1:ncpus=8:mem=4gb:mpiprocs=1:ompthreads=8 -N "impact-m" -v "$input" -W depend=afterok:$jobid_r wrapper_submission.sh)
 #echo "impact-m submitted with jobid: $jobid_m"
-action="--panmeasure"
-for phase in "prep" "core" "conclude"
-do
-  input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action, br=$br, control=$control"
-  input+=", phase=$phase"
-  if [ "$phase" = "core" ]; then
-    for quarter in 1 2 3 4; do
-	  jobid_pm=$(qsub -l walltime=72:00:00 -l select=1:ncpus=32:mem=4gb:mpiprocs=1:ompthreads=32 -N "impact-pm" -J 0-15 -v "$input, quarter=$quarter" -W depend=afterok:$jobid_pm wrapper_submission.sh)
-	  echo "impact-pm $phase quarter=$quarter submitted with jobid: $jobid_pm"
-    done
-  else
-	  jobid_pm=$(qsub -l walltime=72:00:00 -l select=1:ncpus=32:mem=4gb:mpiprocs=1:ompthreads=32 -N "impact-pm" -J 0-15 -v "$input" -W depend=afterok:$jobid_pm wrapper_submission.sh)
-	  echo "impact-pm $phase submitted with jobid: $jobid_pm"
-  fi
-done
-#action="--collect"
-#input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action"
-#jobid_c=$(qsub -l walltime=00:50:00 -l select=1:ncpus=1:mem=8gb -N "impact-c" -v "$input" -W depend=afterok:$jobid_pm wrapper_submission.sh)
-#echo "impact-c submitted with jobid: $jobid_c"
-##
+#action="--panmeasure"
+#for phase in "prep" "core" "conclude"
+#do
+#  input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action, br=$br, control=$control"
+#  input+=", phase=$phase"
+#  if [ "$phase" = "core" ]; then
+#    for quarter in 1 2 3 4; do
+#	  jobid_pm=$(qsub -l walltime=72:00:00 -l select=1:ncpus=32:mem=4gb:mpiprocs=1:ompthreads=32 -N "impact-pm" -J 0-15 -v "$input, quarter=$quarter" -W depend=afterok:$jobid_pm wrapper_submission.sh)
+#	  echo "impact-pm $phase quarter=$quarter submitted with jobid: $jobid_pm"
+#    done
+#  else
+#	  jobid_pm=$(qsub -l walltime=72:00:00 -l select=1:ncpus=32:mem=4gb:mpiprocs=1:ompthreads=32 -N "impact-pm" -J 0-15 -v "$input" -W depend=afterok:$jobid_pm wrapper_submission.sh)
+#	  echo "impact-pm $phase submitted with jobid: $jobid_pm"
+#  fi
+#done
+action="--collect"
+input="symbol=$symbol, date=$date, timewindow=$timewindow, action=$action"
+jobid_c=$(qsub -l walltime=00:50:00 -l select=1:ncpus=1:mem=8gb -N "impact-c" -v "$input" -W depend=afterok:$jobid_pm wrapper_submission.sh)
+echo "impact-c submitted with jobid: $jobid_c"
+#

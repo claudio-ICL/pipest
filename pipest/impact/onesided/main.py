@@ -50,9 +50,15 @@ def redirect_stdout(direction= 'from', # or 'to'
         return fout, saveout
     elif direction=='to':
         print(message)
-        fout.close()
-        sys.stdout=saveout
-        print(message)
+        try:
+            fout.close()
+        except:
+            pass
+        try:
+            sys.stdout=saveout
+            print(message)
+        except:
+            pass
     else:
         print("WARNINNG: redirect_stdout failed! direction={} not recognised".format(direction))
         print(message)        
@@ -165,21 +171,29 @@ def collect_results(
         symbol='INTC', date='2019-01-23', time_window="41400-45000"):
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
-    with open(path_impact+'/models/{}/{}_{}_{}/{}_sdhawkes_{}_{}'\
+    with open(path_impact+'/models/{}/{}_{}_{}/{}_sdhawkes_{}_{}_onesided_thesis'\
             .format(symbol, symbol, date, time_window, symbol, date, time_window), 'rb') as source:
         model=pickle.load(source)
     now=datetime.datetime.now()
     print(message)
+    model.set_name_of_model = model.name_of_model + "_20201106"
     model.create_archive()
     for path in glob.glob(path_impact+'/models/{}/{}_{}_{}/*_1s*'.format(symbol, symbol, date, time_window)):
-        with open(path, 'rb') as source:
-            m1s=pickle.load(source)
-        model.stack_to_archive(m1s.name_of_model, name_of_item=m1s.name_of_model)
-        model.stack_to_archive(m1s.liquidator, name_of_item='liquidator', idx=m1s.name_of_model)
-        model.stack_to_archive(m1s.simulated_times, name_of_item='simulated_times', idx=m1s.name_of_model)
-        model.stack_to_archive(m1s.simulated_events, name_of_item='simulated_events', idx=m1s.name_of_model)
-        model.stack_to_archive(m1s.simulated_states, name_of_item='simulated_states', idx=m1s.name_of_model)
-        model.stack_to_archive(m1s.simulated_intensities, name_of_item='simulated_intensities', idx=m1s.name_of_model)
+        try:
+            with open(path, 'rb') as source:
+                m1s=pickle.load(source)
+            model.stack_to_archive(m1s.name_of_model, name_of_item=m1s.name_of_model)
+            model.stack_to_archive(m1s.liquidator, name_of_item='liquidator', idx=m1s.name_of_model)
+            model.stack_to_archive(m1s.simulated_times, name_of_item='simulated_times', idx=m1s.name_of_model)
+            model.stack_to_archive(m1s.simulated_events, name_of_item='simulated_events', idx=m1s.name_of_model)
+            model.stack_to_archive(m1s.simulated_states, name_of_item='simulated_states', idx=m1s.name_of_model)
+            try:
+                model.stack_to_archive(m1s.simulated_intensities, name_of_item='simulated_intensities', idx=m1s.name_of_model)
+            except:
+                pass
+        except:
+           pass
+    model.set_name_of_model = model.name_of_model + "_20201106"
     model.dump(path=path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)

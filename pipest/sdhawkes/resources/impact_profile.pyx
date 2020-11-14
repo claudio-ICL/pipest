@@ -312,6 +312,10 @@ class Impact():
             self.df_impact_profile=pd.concat([self.df_impact_profile, df])
         except (NameError, AttributeError):
             self.df_impact_profile = df
+        try:
+            self.df_impact_profile.sort_values(by='time', inplace=True, ignore_index=True)
+        except:
+            pass
     def store_bm_impact(self, 
             int density_of_eval_points=1000):
         profile, intensity = self.compute_bm_impact(
