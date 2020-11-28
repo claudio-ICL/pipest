@@ -138,12 +138,16 @@ def measure_impact(
     liquidator_control=0.2,
     count=0, 
     phase="prep",
-    quarter=None
+    segment=None, num_segments=4,
     ):    
     if phase=="prep":
         measure_impact_prep(symbol, date, time_window, liquidator_base_rate, liquidator_control, count)
     elif phase=="core":
-        measure_impact_core(symbol, date, time_window, liquidator_base_rate, liquidator_control, quarter=quarter, count=count)
+        measure_impact_core(
+            symbol, date, time_window, liquidator_base_rate, 
+            liquidator_control, 
+            segment=segment, 
+            num_segments=num_segments, count=count)
     elif phase=="conclude":
         measure_impact_conclude(symbol, date, time_window, liquidator_base_rate, liquidator_control, count)
     else:
@@ -151,7 +155,9 @@ def measure_impact(
         print("Given phase: {}".format(pahse))
 
 def panmeasure(
-        symbol='INTC', date='2019-01-23', time_window="41400-45000", phase="prep", quarter=None):
+        symbol='INTC', date='2019-01-23', 
+        time_window="41400-45000", phase="prep", 
+        segment=None, num_segments=4):
     count=0
     for br in [0.01, 0.05, 0.1, 0.15]:
         for c in [0.05, 0.1, 0.2, 0.5]:
@@ -163,7 +169,9 @@ def panmeasure(
                      liquidator_base_rate=br,
                      liquidator_control=c,
                      count=count, 
-                     phase=phase, quarter=quarter)
+                     phase=phase,
+                     segment=segment,
+                     num_segments=num_segments)
             count+=1
 
 
@@ -207,20 +215,23 @@ def main():
     time_window=str(sys.argv[3])
     action=str(sys.argv[4])
     if action=='-r' or action=='--read':
-        read(symbol,date,time_window, simulate=True)
+        read(symbol,date,time_window, simulate=False)
     elif action=='-m' or action=='--measure':
         liquidator_base_rate=float(sys.argv[5])
         liquidator_control=float(sys.argv[6])
         try:
             phase=str(sys.argv[7])
             try:
-                quarter=int(sys.argv[8])
+                segment=int(sys.argv[8])
+                num_segments=int(sys.argv[9])
             except:
-                quarter = None
+                segment = None
+                num_segments=4
             measure_impact(symbol, date, time_window,
                 liquidator_base_rate,
                 liquidator_control, 
-                phase=phase, quarter=quarter)
+                phase=phase, 
+                segment=segment, num_segments=num_segments)
         except:
             for phase in ["prep", "core", "conclude"]:
                 measure_impact(symbol, date, time_window,
@@ -230,10 +241,13 @@ def main():
     elif action=='-pm' or action=='--panmeasure':
         phase=sys.argv[5]
         try:
-            quarter=int(sys.argv[6])
+            segment=int(sys.argv[6])
+            num_segments=int(sys.argv[7])
         except IndexError:
-            quarter=None
-        panmeasure(symbol, date, time_window, phase, quarter=quarter)
+            segment=None
+            num_segments=4
+        panmeasure(symbol, date, time_window, phase, 
+                   segment=segment, num_segments=num_segments)
     elif action=='-c' or action=='--collect':
         collect_results(symbol, date, time_window)
     else:

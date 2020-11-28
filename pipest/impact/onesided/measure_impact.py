@@ -93,7 +93,7 @@ def measure_impact_prep(
     initial_condition_events=1+np.array(model.data.observed_events[:5],copy=True)
     initial_condition_states=np.array(model.data.observed_states[:5],copy=True)
     initial_condition_volumes=np.array(model.data.observed_volumes[:5,:],copy=True)
-    initial_inventory=5.0
+    initial_inventory=10.0
     time_start=float(initial_condition_times[-1])
     time_end=time_start+0.750*60*60
     model.setup_liquidator(initial_inventory=initial_inventory,
@@ -108,12 +108,16 @@ def measure_impact_prep(
         initial_condition_states=initial_condition_states,
         initial_condition_times=initial_condition_times,
         initial_condition_volumes=initial_condition_volumes,
-        max_number_of_events=1*10**4,
+        max_number_of_events=1*10**5,
         verbose=False,
         report_history_of_intensities = True,
         store_results=True
     )
     model.make_start_liquid_origin_of_times(delete_negative_times=True)
+    model.create_impact_profile(delete_negative_times=False,
+                                produce_weakly_defl_pp=True,
+                                maxiter=50,
+                                mle_estim=True)
     model.dump(path=path)
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
@@ -126,7 +130,8 @@ def measure_impact_core(
     time_window="41400-45000",
     liquidator_base_rate=0.150,
     liquidator_control=0.2,
-    t0=None, t1=None, quarter=None,
+    t0=None, t1=None, segment=None,
+    num_segments=4,
     count=0
     ):    
     name_of_model = '{}_sdhawkes_{}_{}_onesided_thesis'.format(symbol, date, time_window)
@@ -140,7 +145,7 @@ def measure_impact_core(
     message+='measure_impact_core\n'
     message+='symbol={}, date={}, time_window={},  count={}'.format(symbol,date,time_window, count)
     path_readout=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol,date,time_window)\
-            +name+'_core-{}_readout'.format(quarter)
+            +name+'_core-{}_readout'.format(segment)
     fout, saveout = redirect_stdout(direction='from', message=message, path=path_readout)
     if 'impact' not in model.liquidator.__dict__:
         model.create_impact_profile(delete_negative_times=False,
@@ -149,11 +154,14 @@ def measure_impact_core(
     if t0==None:
         t0=0.0
     if t1==None:
-        idx = len(model.liquidator.impact.times)-1
-        t1=model.liquidator.impact.times[idx]
-    if quarter!=None:
-        t0 = t0 + (t1-t0)*max(0.0, min(4,quarter)-1.0)/4.0
-        t1 = t0 + (t1-t0)*max(0.0, min(4,quarter))/4.0
+        try:
+            t1 = model.liquidator.termination_time
+        except:
+            idx = len(model.liquidator.impact.times)-1
+            t1=model.liquidator.impact.times[idx]
+    if segment!=None:
+        t0 = t0 + (t1-t0)*max(0.0, min(num_segments,segment)-1.0)/num_segments
+        t1 = t0 + (t1-t0)*max(0.0, min(num_segments,segment))/num_segments
     model.liquidator.impact.store_impact_profile(t0, t1, num_extra_eval_points = 3)
     model.dump(path=path)
     now=datetime.datetime.now()
