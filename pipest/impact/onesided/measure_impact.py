@@ -130,7 +130,7 @@ def measure_impact_core(
     time_window="41400-45000",
     liquidator_base_rate=0.150,
     liquidator_control=0.2,
-    t0=None, t1=None, segment=None,
+    segment=None,
     num_segments=4,
     count=0
     ):    
@@ -151,17 +151,19 @@ def measure_impact_core(
         model.create_impact_profile(delete_negative_times=False,
                                     produce_weakly_defl_pp=True,
                                     mle_estim=True)
-    if t0==None:
-        t0=0.0
-    if t1==None:
-        try:
-            t1 = model.liquidator.termination_time
-        except:
-            idx = len(model.liquidator.impact.times)-1
-            t1=model.liquidator.impact.times[idx]
+    timeorigin = 0.0
+    try:
+        T = model.liquidator.termination_time
+    except:
+        idx = len(model.liquidator.impact.times)-1
+        T=model.liquidator.impact.times[idx]
     if segment!=None:
-        t0 = t0 + (t1-t0)*max(0.0, min(num_segments,segment)-1.0)/num_segments
-        t1 = t0 + (t1-t0)*max(0.0, min(num_segments,segment))/num_segments
+        t0 = timeorigin + (T-timeorigin)*max(0.0, min(num_segments,segment)-1.0)/num_segments
+        t1 = timeorigin + (T-timeorigin)*max(0.0, min(num_segments,segment))/num_segments
+    else:
+        t0=timeorigin
+        t1=T
+    assert t0<t1
     model.liquidator.impact.store_impact_profile(t0, t1, num_extra_eval_points = 3)
     model.dump(path=path)
     now=datetime.datetime.now()
