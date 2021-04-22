@@ -31,15 +31,32 @@ ctypedef np.int_t DTYPEi_t
 
 """
 Dictionary for trades and orders' direction.
-We follow LOBSTER convention, i.e. we adopt the perspective of the orderbook and we label events that happend on the bid side with the integer 1, and event that happened on the ask side with the integer -1. This means for example that a limit order to buy a certain number of shares at a certain price is referred to as having direction 1, and a limit order to sell a certain number of shares at a certain price is referred to as having direction -1. Consistently, executions of sell limit orders have direction -1, but notice that such executions are a buyer initiated trades. Analogously, executions of buy limit orders have direction 1, but they are seller initiated trades. As a consequence, market orders in the LOBSTER message file are identified as being the counterparts to  executions of limit orders, and a market order is a buy market order when it causes the execution of a sell limit order (hence direction -1), and a market order is a sell market order when it causes the execution of a buy limit order (hence direction 1). 
+We follow LOBSTER convention, i.e. we adopt the perspective of the orderbook
+and we label events that happend on the bid side with the integer 1,
+and events that happened on the ask side with the integer -1. 
+This means for example that a limit order to buy a certain number of shares at a certain price is referred to as having direction 1,
+and a limit order to sell a certain number of shares at a certain price is referred to as having direction -1. 
+Consistently, executions of sell limit orders have direction -1, 
+but notice that such executions are buyer initiated trades. 
+Analogously, executions of buy limit orders have direction 1, 
+but they are seller initiated trades. 
+As a consequence, market orders in the LOBSTER message file are identified as being the counterparts to  executions of limit orders,
+and a market order is a buy market order when it causes the execution of a sell limit order (hence direction -1),
+and a market order is a sell market order when it causes the execution of a buy limit order (hence direction 1). 
 
 Dictionary for event types.
-We keep consistency with Bacry and Muzy (2014), and we think of event types as having alternatively deflationary consequences on prices and inflationary consequences. Additionally, we distinguish between executions of orders (i.e. actual trades) and posting/cancelling of orders (i.e. events that modify the configuration of the orderbook yet without involving a transaction). If our event types are e=1,2,3,4, then: 
+We keep consistency with Bacry and Muzy (2014), 
+and we think of event types as having alternatively deflationary consequences on prices 
+and inflationary consequences. 
+Additionally, we distinguish between executions of orders (i.e. actual trades) 
+and posting/cancelling of orders (i.e. events that modify the configuration of the orderbook yet without involving a transaction). 
+If our event types are e=1,2,3,4, then: 
 e=1 represents trades on the bid side (i.e. execution of buy limit order, i.e. trades initiated by sell market orders). Their direction as encoded in LOBSTER is 1, and their LOBSTER event category is 4 and 5. These trades are likely to deflate prices. 
 e=2 represents trades on the ask side (i.e. execution of sell limit order, i.e. trades initiated by buy market orders). Their direction as encoded in LOBSTER is -1, and their LOBSTER event category is 4 and 5. These trades are likely to inflate prices. 
-e=3 represents limit orders posted on the ask side (hence LOBSTER direction -1, LOBSTER event category 1) and limit orders cancelled from the bid side (hence LOBSTER direction 1, LOBSTER event category 2 and 3). These activities are likely to deflate prices.
-e=4 represents limit orders posted on the bid side (hence LOBSTER direction 1, LOBSTER event category 1) and limit orders cancelled from the ask side (hence LOBSTER direction -1, LOBSTER event category 2 and 3). These activities are likely to inflate prices.
-By orderbook rules, executions happen at the best available price, hence events of type e=1 and e=2 will always occur on level 1. Instead, limit orders can be submitted to (or cancelled from) deeper levels of the orderbook. We restrict our attention to a small number of levels of the order book, stored by the integer n_levels.  
+e=3 represents ask limit orders posted inside the spread (hence cause ask price to drop) 
+and bid limit orders cancelled from the fiist bid side that depletes the entire liquidity available at the first bid level (hence casuing the bid price to drop).
+e=4 represents bid limit orders posted inside the spread (hence cause bid price to increase) 
+and ask limit orders cancelled from the first  ask level that depletes the entire liquidity available at the first ask level (hence casuing the ask price to increase).
 Remark. Notice that because of Python conventions, when the liquidator is not present in the model, our four event types e=1,2,3,4 are actually labelled e=0,1,2,3. Instead, when the liquidator is present, her interventions will be labelled with event of type e=0, so that the above dictionary e=1,2,3,4 will apply without shifting to 0,1,2,3.
 
 """
@@ -78,7 +95,7 @@ class event_encoding:
         self.df_event_enc=df
     
     def produce_marked_messagefile(self):
-        mf=self.messagefile.copy()
+        mf=self.messagefile
         cdef np.ndarray[DTYPEi_t,ndim=1] original_level = np.array(mf['level'].values,dtype=DTYPEi,copy=True)
         idx=np.array((mf['level'].values<=1),dtype=np.bool)
         mf.loc[idx,'level']=1
@@ -87,67 +104,11 @@ class event_encoding:
         idx=np.array((marked_mf['level']<=self.n_levels),dtype=np.bool)
         marked_mf=marked_mf.loc[idx,:].copy()
         marked_mf=marked_mf.astype({'hawkes_mark':'int'},copy=False)
-        self.marked_messagefile = marked_mf
+        self.messagefile = marked_mf
+        return marked_mf
         
         
         
-        
-        
-#     def create_sell_category(self,messagefile):
-#         is_category=self.define_event_category(messagefile,direction='sell')
-#         is_sell=self.distribute_per_levels(messagefile,is_category,n_level_distribution=self.n_level_distribution)
-#         return is_sell
-#     def create_buy_category(self,messagefile):
-#         is_category=self.define_event_category(messagefile,direction='buy')
-#         is_buy=self.distribute_per_levels(messagefile,is_category,n_level_distribution=self.n_level_distribution)
-#         return is_buy
-#     def define_event_category(self,messagefile, int direction=1):
-#         if (direction=='sell') | (direction == -1):
-#             direction=np.array(-1,dtype=np.int)
-#             opposite_direction=np.array(1,dtype=np.int)
-#         else:
-#             direction=np.array(1,dtype=np.int)
-#             opposite_direction=np.array(-1,dtype=np.int)
-#         is_market_order=np.logical_and(messagefile['direction']==opposite_direction,
-#                                        messagefile['eventType'].isin([4,5]))
-#         is_limit_order=np.logical_and(messagefile['direction']==direction,
-#                                       messagefile['eventType']==1)
-#         is_cancellation=np.logical_and(messagefile['direction']==opposite_direction,
-#                                        messagefile['eventType'].isin([2,3]))
-#         is_category=np.logical_or(
-#             np.logical_or(is_market_order,
-#                           is_limit_order),
-#             is_cancellation)
-#         return is_category
-#     def distribute_per_levels(self,messagefile,is_category,n_level_distribution=1):
-#         if 'level' not in list(messagefile.columns):
-#             print('event_encoding: Error: messagefile has no indication of level')
-#         else:
-#             distribution=np.zeros((len(messagefile),n_level_distribution),dtype=np.bool)
-#             for k in range(n_level_distribution):
-# #                 print(' distribute_per_levels: self.n_level_distriburion={}, k={}'.format(self.n_level_distribution,k))
-#                 if (k==0):
-#                     if n_level_distribution==1:
-#                         distribution[:,0]=is_category
-#                     else:
-# #                     print(' distribute_per_levels: enetering first level')
-#                         distribution[:,0]=np.logical_and(is_category,
-#                                                      messagefile['level']<=1)
-#                 elif (k==(n_level_distribution-1)):
-# #                     print(' distribute_per_levels: enetering last level')
-#                     distribution[:,k]=np.logical_and(is_category,
-#                                                      messagefile['level']>=n_level_distribution)
-#                 else:
-#                     distribution[:,k]=np.logical_and(is_category,
-#                                                      messagefile['level']==k)
-#             reconstruct=np.array(distribution[:,0],copy=True)
-#             for k in range(distribution.shape[1]):
-#                 reconstruct=np.logical_or(reconstruct,distribution[:,k])
-#             check=np.all(reconstruct==is_category)
-#             if not check:
-#                 print('\n event_encoding: distribute_per_levels: Error:')
-#                 print(' reconstruction failed')
-#             return distribution
         
         
 
@@ -305,7 +266,7 @@ class state_encoding:
     def compute_midprice_and_spread(self,LOB):
         best_ask_price=LOB['ask_price_1']
         best_bid_price=LOB['bid_price_1']
-        mid_price=(best_ask_price+best_bid_price)/2
+        mid_price=(best_ask_price+best_bid_price)//2
         spread=best_ask_price-best_bid_price
         return mid_price,spread
     def compute_midprice_change(self,np.ndarray[DTYPEf_t, ndim=1] mid_price):
@@ -378,179 +339,6 @@ class volume_encoding:
             pass
         
         
-#     def create_df_of_volume_encoding(self,DTYPEf_t step):
-#         values=np.round(np.arange(0,1,step,dtype=np.single),decimals=3)
-#         self.volume_values=values
-#         decimals=np.ceil(0.1*len(values)).astype(np.int)
-#         self.decimals=decimals
-#         self.unit_of_vol=np.array(10**decimals,dtype=np.int)
-#         self.int_volume_values=np.array(self.unit_of_vol*self.volume_values,dtype=np.int)
-# #         print('volume values=\n{}'.format(values))
-# #         print('integer volume values=\n{}'.format(self.int_volume_values))
-#         discrete_proportions=np.round(
-#             values,
-#             decimals=decimals)
-# #         print('volume values=\n{}'.format(discrete_proportions))
-#         n_discrete_proportions=len(discrete_proportions)
-#         int_vol=np.array(discrete_proportions*(self.unit_of_vol),dtype=np.int)
-#         matrix=np.expand_dims(int_vol,axis=1)
-#         k=1
-#         side=1
-#         col=['ask_1']
-#         while k<= self.n_levels:
-#             side=np.mod(side,2)
-#             while side <=1:
-#                 prev_len=len(matrix)
-#                 matrix=np.repeat(matrix,n_discrete_proportions,axis=0)
-#                 rightmost=np.expand_dims(np.tile(int_vol,prev_len),axis=1)
-#                 matrix=np.concatenate([matrix,rightmost],axis=1)
-#                 if side == 0:
-#                     col.append('ask_{}'.format(k))
-#                 elif side ==1:
-#                     col.append('bid_{}'.format(k))
-#                 side +=1
-#             k+=1
-# #         matrix=np.round(matrix,decimals=decimals)
-#         idx=(np.sum(matrix,axis=1)==self.unit_of_vol)
-#         matrix=np.array(matrix[idx,:])
-#         vol_imb=self.compute_volume_imbalance(matrix.astype(DTYPEf))
-#         self.liquidity_matrix=matrix
-#         self.volumes_names=col
-#         df=pd.DataFrame(matrix,index=range(len(matrix)))
-#         df.columns=col
-#         df['one_dim_label']=np.arange(len(matrix),dtype=np.int)
-#         self.str_volume_labels=(df['one_dim_label'].values).astype(str).tolist()
-#         subset = df[self.volumes_names]
-#         multidim_label = [tuple(x) for x in subset.values]
-#         df['multidim_label']=multidim_label
-#         self.df_vol=df.copy()
-#         df.loc[:,self.volumes_names]=np.round(matrix/self.unit_of_vol,decimals=self.decimals)
-        
-#         df['vol_imb_{}'.format(self.volume_imbalance_upto_level)]=vol_imb
-#         self.df_full=df.copy()
-#         check = np.all(np.isclose(np.sum(df[self.volumes_names].values,axis=1),1))
-#         if not check:
-#             raise ValueError('sum of proportions of volumes does NOT sum up to 1')
-        
-#         if self.volume_imbalance_upto_level ==1:
-#             check=np.all(np.isclose(
-#                 df['vol_imb_1'],
-#                 (df['bid_1']-df['ask_1'])/np.maximum((df['bid_1']+df['ask_1']),1.0e-7)
-#             ))
-#             if check:
-#                 print('check of vol_imb passed')
-#             else:
-#                 print('vol_imb is wrong')
-
-#     def convert_state_code(self,x,integer_input=False,multidim_input=False):
-#         if np.logical_and(np.logical_not(integer_input),multidim_input):
-#             x=np.array(self.unit_of_vol*np.round(x,decimals=self.decimals),dtype=np.int)
-#         x=np.squeeze(x)
-#         dim_x=len(np.shape(x))
-# #         print('dim_x={}'.format(dim_x))
-#         list_x=x.tolist()
-#         if np.shape(x) == ():
-#             idx=(self.df_vol['one_dim_label']==x)
-#             converted_x=self.df_vol.loc[idx,self.volumes_names].values
-#         elif np.logical_and((dim_x ==1),(np.logical_not(multidim_input))):
-# #             print('multidim_input={}'.format(multidim_input))
-#             print('conversion of {} one-dimensional labels'.format(x.shape[0]))
-#             print('input x={}'.format(x))
-#             idx=(self.df_vol['one_dim_label'].isin(list_x))
-#             converted_x=self.df_vol.loc[idx,self.volumes_names].values
-#         elif np.logical_and((dim_x ==1),(multidim_input)):
-# #             print('multidim_input={}'.format(multidim_input))
-#             print('conversion of a single {}-dimensional array of volume proportions'.format(dim_x))
-#             print('input x={}'.format(x))
-#             if not (np.sum(x)==self.unit_of_vol):
-#                 raise ValueError('proportions do not sum up to the correct unit of volumes: \n np.sum(x)={}'.format(np.sum(x)))
-#             def comparison(a,b):
-#                 return np.all(np.isclose(a,b))
-#             if x.shape==(2*self.n_levels,):
-#                 idx=np.apply_along_axis(comparison,1,
-#                                         self.liquidity_matrix,
-#                                         x)                         
-#                 converted_x=np.squeeze(self.df_vol.loc[idx,['one_dim_label']].values)
-#             else:
-#                 raise ValueError('Conversion of one tuple label into one single label selected, but input has shape {}'
-#                                  .format(x.shape))
-#         elif np.logical_and(dim_x>=2,multidim_input):
-#             raise ValueError('too many input dimensions. Did you intend to use the function translate_labels?')
-#         converted_x=np.squeeze(converted_x)    
-#         return converted_x
-    
-#     def translate_labels(self,labels,multidim_input=False,tuple_label=False,integer_input=False):
-#         cdef int length = len(labels)
-#         if np.logical_and(np.logical_not(integer_input),multidim_input):
-#             labels=np.round(labels,decimals=self.decimals)
-#             labels=np.array(labels*(10**self.decimals),dtype=np.int)
-#         labels=pd.DataFrame(labels,index=range(length))    
-        
-#         if not multidim_input:
-#             labels.columns=['one_dim_label']
-#             translation=labels.merge(self.df_vol,how='left',on='one_dim_label')
-#         elif (tuple_label):
-#             labels.columns=['multidim_label']
-#             translation=labels.merge(self.df_vol,how='left',on='multidim_label')
-#         elif not tuple_label:
-#             labels.columns=self.volumes_names
-#             translation=labels.merge(self.df_vol,how='left',on=self.volumes_names)
-#         translation['one_dim_label']=np.array(translation['one_dim_label'].values,dtype=np.int)
-#         return translation
-    
-#     def discretise_volumes(self,volumes,adjustment_position=0):
-#         """
-#         Given a matrix of instances of volume proportions (one instance every row), the function returns
-#         the closest  matrix of volumes in the unit of the class  
-#         """
-        
-#         instances=volumes.shape[0]
-#         n_levels=volumes.shape[1]//2
-#         if not adjustment_position<=volumes.shape[1]:
-#             raise ValueError('adjustment_position > volumes.shape[1]')
-#         if (adjustment_position==0):
-#             pos_to_adjust=np.random.randint(volumes.shape[1],size=(instances,))
-#         else:
-#             pos_to_adjust=np.array((adjustment_position-1)*np.ones((instances,)),dtype=np.int)
-            
-#         alternative=np.mod(pos_to_adjust+1,volumes.shape[1])
-        
-
-#         def replace_with_closest(A):
-#             original_shape=tuple(np.array(A.shape,copy=True))
-#             A=A.flatten()
-#             v=np.sort(self.int_volume_values)
-#             for i in range(A.shape[0]):
-#                 previous_value=np.array(A[i],copy=True)
-#                 idx=np.amin([np.abs(v-previous_value).argmin()])
-#                 A[i]=v[idx]
-# #                 print('entry {} of A'.format(i))
-# #                 print('previous_value={}'.format(previous_value))
-# #                 print('new value={}'.format(v[idx]))
-#             A=np.reshape(A,original_shape)
-#             return A
-#         disc_vol=np.round(self.unit_of_vol*volumes,decimals=3)
-#         disc_vol=np.minimum(disc_vol,np.amax(self.int_volume_values))
-            
-# #         print('discretised_volumes: given volumes = \n {}'.format(disc_vol))
-#         disc_vol=np.array(np.floor(replace_with_closest(disc_vol)),dtype=np.int)
-#         sum_=np.sum(disc_vol,axis=1)-disc_vol[np.arange(disc_vol.shape[0]),pos_to_adjust]
-#         idx=(sum_>self.unit_of_vol)
-#         if np.any(idx):
-#             print('Warning:sum_ > unit of volume \n unit={},np.amax(sum_)={}'.format(self.unit_of_vol,np.amax(sum_)))
-#             print('I am correcting this manually')
-#             disc_vol[idx,alternative[idx]]-=1
-            
-#         disc_vol=np.maximum(disc_vol,0)
-#         disc_vol[np.arange(disc_vol.shape[0]),pos_to_adjust]=np.maximum(0,self.unit_of_vol-sum_)
-# #         print('discretised_volumes: modified volumes = \n {}'.format(disc_vol))
-#         if not np.all(np.sum(disc_vol,axis=1)==self.unit_of_vol):
-#             print('Error')
-#             print('disc_vol=\n {}'.format(disc_vol))
-#             print('sum along lines =\n  {}'.format(np.sum(disc_vol,axis=1)))
-#             raise ValueError('proportions do not sum up to unit of vol')
-#         return disc_vol
-    
     def compute_volume_imbalance(self,np.ndarray[DTYPEf_t, ndim=2] liquidity_matrix, int upto_level=0):
         """
         liquidity matrix is supposed to have an instance every row. the columns are alternatively ask 
