@@ -35,7 +35,6 @@ ctypedef np.int_t DTYPEi_t
 def read_from_LOBSTER(str symbol='INTC', str date='2019-01-31',
                       int n_levels=10,
                       dump_after_reading=False,
-                      add_level_to_messagefile=True, 
                       int ticksize=100
                       ):
     cdef list column_name = produce_nameOfColumns(n_levels=n_levels)
