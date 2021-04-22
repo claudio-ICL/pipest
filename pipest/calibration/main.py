@@ -40,7 +40,7 @@ first_read_fromLOBSTER=True
 dump_after_reading=False
 add_level_to_messagefile=True
 #Optional parameters for "calibrate"
-type_of_preestim='ordinary_hawkes' #'ordinary_hawkes' or 'nonparam'
+type_of_preestim='ordinary_hawkes' 
 max_imp_coef = 20.0
 learning_rate = 0.0001
 maxiter = 80
@@ -51,13 +51,6 @@ num_processes = 8
 batch_size = 40000
 num_run_per_minibatch = 4
 number_of_attempts = 2  
-#Optional parameters for "nonparam_estim"
-num_quadpnts = 80
-quad_tmax = 1.0
-quad_tmin = 1.0e-1
-num_gridpnts = 100
-grid_tmax = 1.1
-grid_tmin = 1.5e-1
 
 def redirect_stdout(direction= 'from', # or 'to'
                     message= '',
@@ -91,7 +84,7 @@ def read_lobster():
     if (first_read_fromLOBSTER):
         LOB,messagefile=from_lobster.read_from_LOBSTER(symbol,date,
                                           dump_after_reading=dump_after_reading,
-                                          add_level_to_messagefile=add_level_to_messagefile)
+                                          )
     else:
         LOB,messagefile=from_lobster.load_from_pickleFiles(symbol,date)
 
@@ -100,54 +93,16 @@ def read_lobster():
                                   final_time=final_time)
 
     print('\nDATA CLEANING\n')
-    aggregate_time_stamp=True
-    eventTypes_to_aggregate=[1,2,3,4,5]
-    eventTypes_to_drop_with_nonunique_time=[]
-    eventTypes_to_drop_after_aggregation=[3]
-    only_4_events=False
-    separate_directions=True
-    separate_13_events=False
-    separate_31_events=False
-    separate_41_events=True
-    separate_34_events=True
-    separate_43_events=True
-    equiparate_45_events_with_same_time_stamp=True
-    drop_all_type3_events_with_nonunique_time=False
-    drop_5_events_with_same_time_stamp_as_4=True
-    drop_5_events_after_aggregation=True
-    tolerance_when_dropping=1.0e-7
-    add_hawkes_marks=True
-    clear_same_time_stamp=True
-    num_iter=4
 
     man_mf=from_lobster.ManipulateMessageFile(
-         LOB,messagefile,
+         LOB=LOB, 
+         mf=messagefile,
          symbol=symbol,
          date=date,
-         aggregate_time_stamp=aggregate_time_stamp,
-         eventTypes_to_aggregate=eventTypes_to_aggregate,  
-         only_4_events=only_4_events,
-         separate_directions=separate_directions,
-         separate_13_events=separate_13_events,
-         separate_31_events=separate_31_events,
-         separate_41_events=separate_41_events,
-         separate_34_events=separate_34_events,
-         separate_43_events=separate_43_events,
-         equiparate_45_events_with_same_time_stamp=
-         equiparate_45_events_with_same_time_stamp,
-         eventTypes_to_drop_with_nonunique_time=eventTypes_to_drop_with_nonunique_time,
-         eventTypes_to_drop_after_aggregation=eventTypes_to_drop_after_aggregation,
-         drop_all_type3_events_with_nonunique_time=drop_all_type3_events_with_nonunique_time,  
-         drop_5_events_with_same_time_stamp_as_4=drop_5_events_with_same_time_stamp_as_4,
-         drop_5_events_after_aggregation=drop_5_events_after_aggregation,
-         tolerance_when_dropping=tolerance_when_dropping,
-         clear_same_time_stamp=clear_same_time_stamp,
-         add_hawkes_marks=add_hawkes_marks,
-         num_iter=num_iter
-    )
+         )     
 
     man_ob=from_lobster.ManipulateOrderBook(
-        man_mf.LOB_sdhawkes,symbol=symbol,date=date,
+        LOB=man_mf.LOB,symbol=symbol,date=date,
         ticksize=man_mf.ticksize,n_levels=man_mf.n_levels,volume_imbalance_upto_level=2)
 
     data=from_lobster.DataToStore(man_ob,man_mf,time_origin=initial_time)
@@ -173,20 +128,14 @@ def read_lobster():
     redirect_stdout(direction='to',message=message,fout=fout,saveout=saveout)
     
 
-def nonparam_preestim():
-    now=datetime.datetime.now()
-    message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
-    message+='I am pre-estimating the model using non-parametric procedure\n'
-    message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
-    name_of_model_nonp=name_of_model+'_nonp'
-    path_mnonp=path_mmodel+'_nonp'
-    path_readout=path_mnonp+'_readout.txt'
-    fout,saveout=redirect_stdout(direction='from',path=path_readout,message=message)    
+
+
+    
+def calibrate(event_type = 0):
     with open(path_mdata,'rb') as source:
         data=pickle.load(source)
     assert symbol==data.symbol    
     assert date==data.date
-   
     model=sd_hawkes_model.SDHawkes(
         number_of_event_types=data.number_of_event_types,  number_of_states = data.number_of_states,
         number_of_lob_levels=data.n_levels, volume_imbalance_upto_level = data.volume_enc.volume_imbalance_upto_level,
@@ -194,53 +143,6 @@ def nonparam_preestim():
         st1_inflationary=data.state_enc.st1_inflationary, st1_stationary=data.state_enc.st1_stationary
     )
     model.get_input_data(data)
-    model.create_nonparam_estim(type_of_input='empirical',
-                                num_quadpnts = num_quadpnts,
-                                quad_tmax = quad_tmax,
-                                quad_tmin = quad_tmin,
-                                num_gridpnts = num_gridpnts,
-                                grid_tmax = grid_tmax,
-                                grid_tmin = grid_tmin,
-                                two_scales=True,
-                                tol=1.0e-7
-                               ) 
-    run_time = -time.time()
-    model.nonparam_estim.estimate_hawkes_kernel(
-        parallel=True,
-        store_L1_norm=False, use_filter=True, enforce_positive_g_hat=True,
-        filter_cutoff=50.0, filter_scale=30.0, num_addpnts_filter=3000)
-    model.nonparam_estim.fit_powerlaw(compute_L1_norm=True,ridge_param=1.0e-02, tol=1.0e-7)
-    model.nonparam_estim.store_base_rates()
-    run_time+=time.time()
-    model.nonparam_estim.store_runtime(run_time)
-    model.nonparam_estim.create_goodness_of_fit()
-    model.dump(name=name_of_model_nonp,path=path_models+'/'+symbol)
-    n=datetime.datetime.now()
-    message='\nNon-parametric pre-estimation terminates on {}-{:02d}-{:02d} at {}:{:02d}\n'\
-    .format(n.year, n.month, n.day, n.hour, n.minute)
-    redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
-
-
-    
-def calibrate(event_type = 0):
-    if type_of_preestim == 'nonparam':
-        with open(path_mmodel+'_nonp', 'rb') as source:
-            model=pickle.load(source)
-    elif type_of_preestim == 'ordinary_hawkes':        
-        with open(path_mdata,'rb') as source:
-            data=pickle.load(source)
-        assert symbol==data.symbol    
-        assert date==data.date
-        model=sd_hawkes_model.SDHawkes(
-            number_of_event_types=data.number_of_event_types,  number_of_states = data.number_of_states,
-            number_of_lob_levels=data.n_levels, volume_imbalance_upto_level = data.volume_enc.volume_imbalance_upto_level,
-            list_of_n_states=data.state_enc.list_of_n_states, st1_deflationary=data.state_enc.st1_deflationary,
-            st1_inflationary=data.state_enc.st1_inflationary, st1_stationary=data.state_enc.st1_stationary
-        )
-        model.get_input_data(data)
-    else:
-        print("type_of_preestim={}".format(type_of_preestim))
-        raise ValueError("type_of_preestim not recognised")
 
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
