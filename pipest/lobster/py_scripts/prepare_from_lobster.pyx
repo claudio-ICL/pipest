@@ -141,7 +141,7 @@ class ManipulateOrderBook:
                  str date='2019-01-31',
                  int ticksize=100,
                  int n_levels=2,
-                 list list_of_n_states=[3, 5],
+                 list list_of_n_states=[3, 3],
                  int st1_deflationary=0, int st1_inflationary=2, int st1_stationary=1,
                  int volume_imbalance_upto_level=1,
                  **kwargs

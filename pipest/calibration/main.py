@@ -38,19 +38,18 @@ number_of_event_types=4
 #Optional prameters for "read_lobster"
 first_read_fromLOBSTER=True
 dump_after_reading=False
-add_level_to_messagefile=True
 #Optional parameters for "calibrate"
 type_of_preestim='ordinary_hawkes' 
 max_imp_coef = 20.0
-learning_rate = 0.0001
-maxiter = 80
-num_guesses = 8
+learning_rate = 0.00005
+maxiter = 50
+num_guesses = 1
 parallel=False
 use_prange=True
 num_processes = 8
 batch_size = 40000
-num_run_per_minibatch = 4
-number_of_attempts = 2  
+num_run_per_minibatch = 2
+number_of_attempts = 3  
 
 def redirect_stdout(direction= 'from', # or 'to'
                     message= '',
@@ -104,6 +103,7 @@ def read_lobster():
     man_ob=from_lobster.ManipulateOrderBook(
         LOB=man_mf.LOB,symbol=symbol,date=date,
         ticksize=man_mf.ticksize,n_levels=man_mf.n_levels,volume_imbalance_upto_level=2)
+    man_ob.set_states(midprice_changes = np.array(man_mf.messagefile['sign_delta_mid'].values, dtype=np.int))
 
     data=from_lobster.DataToStore(man_ob,man_mf,time_origin=initial_time)
     sym = data.symbol

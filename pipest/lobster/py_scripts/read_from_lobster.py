@@ -33,8 +33,8 @@ import prepare_from_lobster as from_lobster
 def main(
     symbol='INTC',
     date='2019-01-22',
-    initial_time=9.0*60*60,
-    final_time=16.0*60*60,
+    initial_time=10.0*60*60,
+    final_time=15.0*60*60,
     first_read_fromLOBSTER=True,
     dump_after_reading=False,
 ):
@@ -72,7 +72,10 @@ def main(
 
     man_ob=from_lobster.ManipulateOrderBook(
         LOB=man_mf.LOB,symbol=symbol,date=date,
-        ticksize=man_mf.ticksize,n_levels=man_mf.n_levels,volume_imbalance_upto_level=2)
+        ticksize=man_mf.ticksize,n_levels=man_mf.n_levels,
+        volume_imbalance_upto_level=2, 
+        list_of_n_states = [3,3],
+        )
     man_ob.set_states(midprice_changes = np.array(man_mf.messagefile['sign_delta_mid'].values, dtype=np.int))
 
     data=from_lobster.DataToStore(man_ob,man_mf,time_origin=initial_time)
@@ -95,6 +98,33 @@ def main(
 #    fout.close()
 
     print('read_from_lobster.py: END OF FILE')
+
+    return data 
+
+def test():
+    data = main()
+    model=sd_hawkes_model.SDHawkes(
+        number_of_event_types=data.number_of_event_types,  number_of_states = data.number_of_states,
+        number_of_lob_levels=data.n_levels, volume_imbalance_upto_level = data.volume_enc.volume_imbalance_upto_level,
+        list_of_n_states=data.state_enc.list_of_n_states, st1_deflationary=data.state_enc.st1_deflationary,
+        st1_inflationary=data.state_enc.st1_inflationary, st1_stationary=data.state_enc.st1_stationary
+    )
+    model.get_input_data(data)
+    model.calibrate_on_input_data(partial=False, parallel=False, skip_mle_estim=True,
+            store_trans_prob=True, 
+            store_dirichlet_param=True,
+            dump_after_calibration=False, 
+            verbose=True)
+    yield model
+    trans_prob = model.estimate_transition_probabilities(
+            data.observed_events,
+            data.observed_states,
+            verbose=True)
+    yield trans_prob
+    dir_param = model.estimate_dirichlet_parameters(data.observed_volumes,data.observed_states, verbose=True)
+    yield dir_param
+
+
 
 
 if __name__=='__main__':
