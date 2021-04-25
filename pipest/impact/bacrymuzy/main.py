@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
 
 import sys
 import os
+from pathlib import Path
 import glob
 path_pipest = os.path.abspath('./')
 n=0
@@ -63,6 +62,7 @@ def read(
     symbol="INTC",
     date="2019-01-23",
     time_window="41400-45000",
+    enforce_price_symmetry=False,
     simulate=False,
     quantify_uncertainty=False
     ):    
@@ -70,20 +70,15 @@ def read(
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
     message+='I am reading from saved models\n'
     message+='symbol={}, date={}, time_window={}'.format(symbol,date,time_window)
-    path_readout=path_impact+'/models/{}/{}_{}_{}_bm_thesis_readout'.format(symbol, symbol, date, time_window)
+    path_readout=path_impact+'/models/{}/{}_{}_{}_corrections_readout'.format(symbol, symbol, date, time_window)
     fout, saveout = redirect_stdout(direction='from', message=message, path=path_readout)
-    try:
-        with open(path_models+"/{}/{}_{}/{}_sdhawkes_{}_{}"
-                  .format(symbol, symbol, date, symbol, date, time_window), 'rb') as source:
-            calmodel=pickle.load(source)
-    except FileNotFoundError:
-        try:
-            with open(path_models+"/{}/{}_sdhawkes_{}_{}"
-                      .format(symbol, symbol, date, time_window), 'rb') as source:
-                calmodel=pickle.load(source)
-        except FileNotFoundError:
-            print("File not found")
-            raise FileNotFoundError
+    dir_path = Path(path_models) / f'{symbol}' / f'{symbol}_{date}'
+    if not dir_path.exists():
+        dir_path = Path(path_models) / f'{symbol}' 
+    file_path = dir_path / f'{symbol}_sdhawkes_{date}_{time_window}'
+    assert file_path.exists()
+    with open(file_path, 'rb') as source:
+        calmodel=pickle.load(source)
     model=sd_hawkes_model.SDHawkes(
         number_of_event_types=calmodel.number_of_event_types,
         list_of_n_states=calmodel.state_enc.list_of_n_states,
@@ -92,7 +87,6 @@ def read(
         calmodel.volume_enc.volume_imbalance_upto_level
     )
     model.get_configuration(calmodel)
-    model.set_base_rates(np.array([0.14008215, 0.14451349, 6.4689, 6.0295], dtype=np.float))
 #    target=computation.avg_rates(model.data.number_of_event_types, 
 #                                model.data.observed_times,
 #                                model.data.observed_events, partial=False)
@@ -102,9 +96,9 @@ def read(
 #        num_iter=15, 
 #        max_number_of_events=30000
 #    )
-    model.reduce_price_volatility(reduction_coef=0.8)
-    model.enforce_price_symmetry()
-    model.enforce_price_symmetry()
+#    model.reduce_price_volatility(reduction_coef=0.8)
+    if enforce_price_symmetry:
+        model.enforce_price_symmetry()
     model.create_goodness_of_fit(type_of_input='empirical')
     model.store_2Dstates(type_of_input='empirical')
     if simulate:    
@@ -141,7 +135,7 @@ def read(
         os.mkdir(path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     except FileExistsError:
         pass
-    model.set_name_of_model('{}_sdhawkes_{}_{}_bm_thesis'.format(symbol, date, time_window))
+    model.set_name_of_model('{}_sdhawkes_{}_{}_corrections'.format(symbol, date, time_window))
     model.dump(path=path_impact+'/models/{}/{}_{}_{}'.format(symbol, symbol, date, time_window))
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
@@ -152,15 +146,24 @@ def measure_impact(
     symbol="INTC",
     date="2019-01-23",
     time_window="41400-45000",
+    enforce_price_symmetry=False, 
+    initial_inventory=10.0,
     liquidator_base_rate=0.150,
-    type_of_liquid = 'with_the_market', #constant_intensity or with_the_market or against_the_market
+    type_of_liquid = 'constant_intensity', #constant_intensity or with_the_market or against_the_market
     liquidator_control_type='fraction_of_bid_side', # fraction_of_inventory or fraction_of_bid_side
     liquidator_control=0.2,
-    count=0
+    count=0,
+    dump=True,
+    return_=False,
     ):    
-    with open(path_impact+'/models/{}/{}_{}_{}/{}_sdhawkes_{}_{}'\
-            .format(symbol, symbol, date, time_window, symbol, date, time_window), 'rb') as source:
+    dir_path = Path(path_impact) / 'models' / f'{symbol}' / f'{symbol}_{date}_{time_window}'
+    file_path = dir_path / f'{symbol}_sdhawkes_{date}_{time_window}_corrections'
+    print(str(file_path))
+    assert file_path.exists()
+    with open(file_path, 'rb') as source:
         model=pickle.load(source)
+    if enforce_price_symmetry:
+        model.enforce_price_symmetry()
     i=count
     name=str(model.name_of_model)+'_bm'+str(i)
     path=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol, date, time_window)
@@ -175,15 +178,14 @@ def measure_impact(
     path_readout=path_impact+'/models/{}/{}_{}_{}/'.format(symbol, symbol,date,time_window)\
             +name+'_readout'.format(symbol)
     fout, saveout = redirect_stdout(direction='from', message=message, path=path_readout)
-    initial_condition_times=np.array(model.data.observed_times[:10000],copy=True)
-    initial_condition_events=1+np.array(model.data.observed_events[:10000],copy=True)
-    initial_condition_states=np.array(model.data.observed_states[:10000],copy=True)
-    initial_condition_volumes=np.array(model.data.observed_volumes[:10000,:],copy=True)
+    initial_condition_times=np.array(model.data.observed_times[:5000],copy=True)
+    initial_condition_events=1+np.array(model.data.observed_events[:5000],copy=True)
+    initial_condition_states=np.array(model.data.observed_states[:5000],copy=True)
+    initial_condition_volumes=np.array(model.data.observed_volumes[:5000,:],copy=True)
 #    initial_condition_times=np.array(model.simulated_times,copy=True)
 #    initial_condition_events=1+np.array(model.simulated_events,copy=True)
 #    initial_condition_states=np.array(model.simulated_states,copy=True)
 #    initial_condition_volumes=np.array(model.simulated_volume,copy=True)
-    initial_inventory=10.0
     time_start=float(initial_condition_times[-1])
     time_end=time_start+1.00*60*60
     model.setup_liquidator(initial_inventory=initial_inventory,
@@ -200,7 +202,7 @@ def measure_impact(
         initial_condition_states=initial_condition_states,
         initial_condition_times=initial_condition_times,
         initial_condition_volumes=initial_condition_volumes,
-        max_number_of_events=1*10**5,
+        max_number_of_events=1*10**6,
         verbose=False,
         report_history_of_intensities = False,
         store_results=True
@@ -212,30 +214,38 @@ def measure_impact(
     model.store_price_trajectory(type_of_input='simulated', initial_price=model.data.mid_price.iloc[0,1],
                                  ticksize=model.data.ticksize)
     model.store_history_of_intensities()
-    model.dump(path=path)
+    if dump:
+        model.dump(path=path)
     now=datetime.datetime.now()
     message='\nEnds on {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year, now.month, now.day, now.hour, now.minute)
     redirect_stdout(direction='to', message=message, fout=fout, saveout=saveout)
+    if return_:
+        return model
 
 def panmeasure(
     symbol="INTC",
     date="2019-01-23",
     time_window="41400-45000",
+    initial_inventory=10.0,
     liquidator_base_rate=0.150,
-    liquidator_control=0.2
+    liquidator_control=0.2,
+    use_pbs_array_index=True,
     ):    
     count=0
-    for type_of_liquid in ['constant_intensity', 'with_the_market', 'with_price_move', 'against_price_move']:
+    for type_of_liquid in ['constant_intensity', 'with_the_market',  'against_the_market']:
         for liquidator_control_type in ['fraction_of_inventory', 'fraction_of_bid_side']:
-            array_index=int(os.environ['PBS_ARRAY_INDEX'])
+            array_index=int(os.environ['PBS_ARRAY_INDEX']) if use_pbs_array_index else count
             if count==array_index:
                 measure_impact(symbol, date, time_window,
+                        initial_inventory,
                         liquidator_base_rate,
                         type_of_liquid,
                         liquidator_control_type,
                         liquidator_control,
-			count
-			)
+                        count=count, 
+                        dump=True,
+                        return_=False
+                        )
             count+=1
 
 
@@ -243,6 +253,12 @@ def collect_results(
         symbol='INTC', date='2019-01-23', time_window="41400-45000"):
     now=datetime.datetime.now()
     message='\ndate of run: {}-{:02d}-{:02d} at {}:{:02d}\n'.format(now.year,now.month,now.day, now.hour, now.minute)
+    dir_path = Path(path_impact) / 'models' / f'{symbol}' / f'{symbol}_{date}_{time_window}'
+    file_path = dir_path / f'{symbol}_sdhawkes_{date}_{time_window}_corrections'
+    assert file_path.exists()
+    with open(file_path, 'rb') as source:
+        model=pickle.load(source)
+
     pathlist = glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm?'.format(symbol, symbol, date, time_window))
     pathlist += glob.glob(path_impact+'/models/{}/{}_{}_{}/*_bm??'.format(symbol, symbol, date, time_window))
     for path in pathlist:

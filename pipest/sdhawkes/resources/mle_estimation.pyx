@@ -260,13 +260,13 @@ def estimate_transition_probabilities(int n_event_types, int n_states,
 def estimate_liquidator_transition_prob(int n_states,
                                         np.ndarray[DTYPEi_t, ndim=1] events,
                                         np.ndarray[DTYPEi_t, ndim=1] states,
-                                        list weakly_defl_states,
+                                        list fallback_states,
                                         int liquidator_index = 0):
     cdef np.ndarray[DTYPEf_t, ndim=2] result = np.zeros((n_states,n_states), dtype=DTYPEf)
     cdef np.ndarray[DTYPEi_t, ndim=1] count = np.zeros(n_states, dtype=DTYPEi)
     cdef double [:,:] result_memview = result
     cdef long [:] count_memview = count
-    cdef DTYPEf_t unif_prob = 1.0/len(weakly_defl_states)
+    cdef DTYPEf_t unif_prob = 1.0/len(fallback_states)
     cdef int N = len(events)-1
     cdef int n = 0
     cdef int state_before,state_after
@@ -283,7 +283,7 @@ def estimate_liquidator_transition_prob(int n_states,
             for x2 in range(n_states):
                 result[x1, x2] /= size
         else:
-            for x2 in weakly_defl_states:
+            for x2 in fallback_states:
                 result[x1,x2]=unif_prob
             message = 'Warning: Transition probabilities from state ' + str(x1)
             message += ' when events of type ' + str(liquidator_index) + ' occur cannot be estimated because'

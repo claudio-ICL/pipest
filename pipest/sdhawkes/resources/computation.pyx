@@ -1361,13 +1361,27 @@ def produce_hawkes_param_for_symmetry(
     cdef np.ndarray[DTYPEf_t, ndim=1] nu = np.zeros_like(base_rates, dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=3] alpha = np.zeros_like(imp_coef, dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=3] beta = np.zeros_like(dec_coef, dtype=DTYPEf)
-    for e in [2*i for i in range(d_E//2)]:
-        nu[e]=0.5*(base_rates[e]+base_rates[e+1])
-        nu[e+1]=nu[e]
-        alpha[:,:,e]=0.5*(imp_coef[:,:,e]+imp_coef[:,:,e+1])
-        alpha[:,:,e+1]=alpha[:,:,e]
-        beta[:,:,e]=0.5*(dec_coef[:,:,e]+dec_coef[:,:,e+1])
-        beta[:,:,e+1]=beta[:,:,e]
+    def sigma_E(e):
+        map_dict = {
+                0:1,
+                1:0,
+                2:3,
+                3:2,
+                }
+        return map_dict.get(e,e)
+    codom = []
+    dom = []
+    for e in range(d_E):
+        if sigma_E(e) not in codom:
+            codom.append(sigma_E(e))
+            dom.append(e)
+    for e in dom:
+        nu[e]=0.5*(base_rates[e]+base_rates[sigma_E(e)])
+        nu[sigma_E(e)]=nu[e]
+        alpha[:,:,e]=0.5*(imp_coef[:,:,e]+imp_coef[:,:,sigma_E(e)])
+        alpha[:,:,sigma_E(e)]=alpha[:,:,e]
+        beta[:,:,e]=0.5*(dec_coef[:,:,e]+dec_coef[:,:,sigma_E(e)])
+        beta[:,:,sigma_E(e)]=beta[:,:,e]
     return nu, alpha, beta
 
 
@@ -1390,7 +1404,13 @@ def produce_phi_for_symmetry(
     # The permutation of event types is sigma(2*e)=2*e+1, sigma(2*e+1)=2*e
     assert num_event_types%2==0
     def sigma_E(e):
-        return 2*(e//2)+1-e%2
+        map_dict = {
+                0:1,
+                1:0,
+                2:3,
+                3:2,
+                }
+        return map_dict.get(e,e)
     cdef np.ndarray[DTYPEf_t, ndim=2] infl_sum = np.zeros((num_states, num_event_types), dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=2] defl_sum = np.zeros((num_states, num_event_types), dtype=DTYPEf)
     cdef np.ndarray[DTYPEf_t, ndim=2] stat_sum = np.zeros((num_states, num_event_types), dtype=DTYPEf)

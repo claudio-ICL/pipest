@@ -172,10 +172,11 @@ class Liquidator:
         print("liquidator.control: {}".format(self.control))
         print("liquidator.base_rate: {}".format(self.base_rate))
         print("liquidator.start_time: {}".format(self.start_time))
-        try:
+        if 'termination_time' in self.__dict__:
             print("liquidator.termination_time: {}".format(self.termination_time))
-        except:
-            pass
+        if 'impact' in self.__dict__ and 'bm_impact_profile' in self.impact.__dict__:
+            self.max_impact_profile = np.amax(self.impact.bm_impact_profile[:, 1])
+            print("liquidator.max_impact_profile: {}".format(self.max_impact_profile))
     def store_start_time(self, DTYPEf_t time):
         self.start_time=time
     def store_termination_time(self, DTYPEf_t termination_time):
@@ -187,6 +188,8 @@ class Liquidator:
         self.inventory_trajectory=trajectory
     def get_impact(self,impact):
         self.impact=impact
+        if 'bm_impact_profile' in impact.__dict__:
+            self.max_impact_profile = np.amax(impact.bm_impact_profile[:, 1])
 
 
 class SDHawkes:
@@ -208,7 +211,7 @@ class SDHawkes:
                  events_labels=False, states_labels=False,
                  int number_of_lob_levels=1,
                  int volume_imbalance_upto_level =1,
-                 list list_of_n_states=[3,5], int st1_deflationary=0, int st1_inflationary=2, int st1_stationary=1,
+                 list list_of_n_states=[3,3], int st1_deflationary=0, int st1_inflationary=2, int st1_stationary=1,
                  str name_of_model = 'SDHawkel_model',
                 ):
         """
@@ -1072,9 +1075,12 @@ class SDHawkes:
                                        report_full_volumes=report_full_volumes,
                                     )
         "Update the transition prombabilities corresponding to liquidator's interventions"
+        wdefl_states = self.state_enc.weakly_deflationary_states
+        defl_states = self.state_enc.deflationary_states
+        fallback_states = [x for x in wdefl_states if x not in defl_states]
         self.transition_probabilities[:,0,:] = mle_estim.estimate_liquidator_transition_prob(
             self.number_of_states, events, states,
-            self.state_enc.weakly_deflationary_states, liquidator_index=0)
+            fallback_states, liquidator_index=0)
         self.liquidator.store_start_time(liquid_start_time)
         self.liquidator.store_termination_time(liquid_termination_time)
         "Store inventory trajectory"
@@ -1135,19 +1141,19 @@ class SDHawkes:
             earliest_time=0.0
         try:
             p=prepare_traj(self.simulated_price)
-            ax.plot(p[:,0],p[:,1], label='simulation')
+            ax.step(p[:,0],p[:,1], where='post', label='simulation')
         except:
             print("I could not plot simulated price")
             pass
         try:
             p=prepare_traj(self.data.mid_price.values)
-            ax.plot(p[:,0],p[:,1], label='data')
+            ax.step(p[:,0],p[:,1], where='post', label='data')
         except:
             print("I could not plot data")
             pass
         try:
             p=prepare_traj(self.reconstructed_empirical_price)
-            ax.plot(p[:,0],p[:,1], label='reconstruction', linestyle='--')
+            ax.step(p[:,0],p[:,1], where='post', label='reconstruction', linestyle='--')
         except:
             print("I could not plot reconstructed_empirical_price")
             pass
